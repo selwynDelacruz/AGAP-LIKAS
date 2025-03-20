@@ -7,11 +7,12 @@ public class MainMenu : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         //Debug.Log(SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1));
-        Debug.Log("Player choosed the Flood disaster mode");
+        Debug.Log("Player chose the Flood disaster mode");
     }
 
     public void Earthquake()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 2);
+        Debug.Log("Player chose the Earthquake disaster mode");
     }
 }

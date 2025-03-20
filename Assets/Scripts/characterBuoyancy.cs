@@ -40,6 +40,7 @@ public class characterBuoyancy : MonoBehaviour
                 isSwimming = true;
                 thirdPersonController.MoveSpeed *= swimSpeedMultiplier; // Reduce movement speed for swimming
                 thirdPersonController.Gravity = 0f; // Disable gravity in water
+                //thirdPersonController.Grounded = true;
             }
 
             if (Input.GetKey(KeyCode.Space)) // Ascend (swim up)

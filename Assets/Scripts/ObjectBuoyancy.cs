@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent (typeof(Rigidbody))]
 public class ObjectBuoyancy : MonoBehaviour
 {
+    public Transform[] floaters;
     public float underWaterDrag = 3f;
     public float underWaterAngularDrag = 1f;
     public float airDrag = 0f;
@@ -11,6 +12,9 @@ public class ObjectBuoyancy : MonoBehaviour
     public float waterHeight = 0f;
 
     Rigidbody rb;
+
+    int floatersUnderwater;
+
     bool underwater;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -21,18 +25,24 @@ public class ObjectBuoyancy : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        float difference = transform.position.y - waterHeight;
-
-        if(difference  < 0 )
+        floatersUnderwater = 0;
+        for (int i = 0; i < floaters.Length; i++)
         {
-            rb.AddForceAtPosition(Vector3.up * floatingPower * Mathf.Abs(difference), transform.position, ForceMode.Force);
-            if(!underwater )
+            float difference = floaters[i].position.y - waterHeight;
+
+            if (difference < 0)
             {
-                underwater = true;
-                SwitchState(true);
+                rb.AddForceAtPosition(Vector3.up * floatingPower * Mathf.Abs(difference), floaters[i].position, ForceMode.Force);
+                floatersUnderwater += 1;
+                if (!underwater)
+                {
+                    underwater = true;
+                    SwitchState(true);
+                }
             }
         }
-        else if (underwater)
+        
+        if (underwater && floatersUnderwater == 0 )
         {
             underwater = false;
             SwitchState(false);
