@@ -58821,7 +58821,7 @@ MonoBehaviour:
   waterOffset: -0.25
   floatingPower: 50
   floatDamping: 2
-  swimSpeedMultiplier: 0.75
+  swimSpeedMultiplier: 1
 --- !u!4 &8393763707631186508
 Transform:
   m_ObjectHideFlags: 0
