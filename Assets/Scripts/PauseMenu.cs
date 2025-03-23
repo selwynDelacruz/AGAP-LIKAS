@@ -6,6 +6,7 @@ public class PauseMenu : MonoBehaviour
 
 {
     public GameObject pauseMenuUI;
+    public GameObject[] screenGUI;
     public bool isPaused;
     private StarterAssetsInputs playerInput;
 
@@ -31,6 +32,7 @@ public class PauseMenu : MonoBehaviour
     public void Resume()
     {
         pauseMenuUI.SetActive(false);
+        toggleOnScreenGUI(true);
         Time.timeScale = 1.0f;
         isPaused = false;
 
@@ -44,6 +46,8 @@ public class PauseMenu : MonoBehaviour
     public void Pause()
     {
         pauseMenuUI.SetActive(true);
+        toggleOnScreenGUI(false);
+
         Time.timeScale = 0f; // Pause Game
         isPaused = true;
 
@@ -66,5 +70,14 @@ public class PauseMenu : MonoBehaviour
         Application.Quit();
     }
   
-    
+    private void toggleOnScreenGUI(bool state)
+    {
+        foreach (GameObject canvas in screenGUI)
+        {
+            if (canvas != null)
+            {
+                canvas.SetActive(state);
+            }
+        }
+    }
 }
