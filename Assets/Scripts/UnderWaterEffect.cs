@@ -34,7 +34,7 @@ public class UnderWaterEffect : MonoBehaviour
     {
         isUnderwater = true;
         RenderSettings.fog = true;
-        RenderSettings.fogColor = new Color(0.1f, 0.4f, 0.7f, 1f);
+        RenderSettings.fogColor = new Color32(91, 97, 102, 255);
         RenderSettings.fogDensity = 0.05f;
 
         if (depthOfField != null)
