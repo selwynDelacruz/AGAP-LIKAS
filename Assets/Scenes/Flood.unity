@@ -27930,7 +27930,7 @@ MonoBehaviour:
   airDrag: 0
   airAngularDrag: 0.05
   floatingPower: 15
-  waterHeight: 0
+  waterHeight: 3.5
 --- !u!54 &844751403
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -49862,7 +49862,7 @@ MonoBehaviour:
   airDrag: 0
   airAngularDrag: 0.05
   floatingPower: 15
-  waterHeight: 0
+  waterHeight: 3.5
 --- !u!54 &1321128545
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -53950,7 +53950,7 @@ MonoBehaviour:
   airDrag: 0
   airAngularDrag: 0.05
   floatingPower: 15
-  waterHeight: 0
+  waterHeight: 3.5
 --- !u!54 &1451048430
 Rigidbody:
   m_ObjectHideFlags: 0
