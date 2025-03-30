@@ -9,6 +9,9 @@ public class UnderWaterEffect : MonoBehaviour
     private DepthOfField depthOfField;
     private bool isUnderwater = false;
 
+    public Material normalSkybox;
+    public Material underwaterSkybox;
+
     void Start()
     {
         // Get the Depth of Field effect from the Volume
@@ -35,7 +38,10 @@ public class UnderWaterEffect : MonoBehaviour
         isUnderwater = true;
         RenderSettings.fog = true;
         RenderSettings.fogColor = new Color32(91, 97, 102, 255);
-        RenderSettings.fogDensity = 0.05f;
+        RenderSettings.fogDensity = 0.5f;
+        RenderSettings.fogMode = FogMode.ExponentialSquared;
+
+        RenderSettings.skybox = underwaterSkybox; // Change the skybox to underwater skybox
 
         if (depthOfField != null)
         {
@@ -50,6 +56,7 @@ public class UnderWaterEffect : MonoBehaviour
     {
         isUnderwater = false;
         RenderSettings.fog = false;
+        RenderSettings.skybox = normalSkybox; // Change the skybox to normal skybox
 
         if (depthOfField != null)
         {
