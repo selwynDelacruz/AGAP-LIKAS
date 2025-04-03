@@ -25,12 +25,12 @@ public class Menu : MonoBehaviour
             case 0:
                 modeText.text = "Flood";
                 disasterImage.sprite = floodSprite;
-                SelectedDisaster = "FloodScene"; // Set scene name
+                SelectedDisaster = "Flood"; // Set scene name
                 break;
             case 1:
                 modeText.text = "Earthquake";
                 disasterImage.sprite = earthquakeSprite;
-                SelectedDisaster = "EarthquakeScene"; // Set scene name
+                SelectedDisaster = "Earthquake"; // Set scene name
                 break;
             default:
                 modeText.text = "Unknown";
