@@ -26,7 +26,7 @@ public class RescueInteraction : MonoBehaviour
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             currentVictim = null;
-            Debug.Log("clicked");
+
         });
 
         leaveButton.onClick.AddListener(() =>
@@ -35,7 +35,7 @@ public class RescueInteraction : MonoBehaviour
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             currentVictim = null;
-            Debug.Log("clicked");
+            
         });
     }
 
@@ -58,6 +58,7 @@ public class RescueInteraction : MonoBehaviour
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, interactionRange, victimLayer);
         currentVictim = hits.Length > 0 ? hits[0].gameObject : null;
+        
     }
     void ShowRescueDialog(GameObject victim)
     {
