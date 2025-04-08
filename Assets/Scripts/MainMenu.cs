@@ -28,4 +28,11 @@ public class MainMenu : MonoBehaviour
             Debug.LogWarning("No disaster mode selected! Choose Flood or Earthquake first.");
         }
     }
+
+    public void QuitGame()
+    {
+        Debug.Log("Quit button pressed. Exiting application...");
+        Application.Quit();
+
+    }
 }
