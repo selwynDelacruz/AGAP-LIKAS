@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "669435400803",
+    "project_id": "agap-likas-f0e86",
+    "storage_bucket": "agap-likas-f0e86.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669435400803:android:320a5a2e45fe17681c5e56",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.AgapLikas3DGameCAPSTONE"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5uES16kWetf3E_4syTT-MZBgr05ytBjc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
