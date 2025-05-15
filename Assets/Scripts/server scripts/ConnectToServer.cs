@@ -28,6 +28,6 @@ public class ConnectToServer : MonoBehaviourPunCallbacks
         Debug.Log("Joined Lobby");
         // Load the main game scene after joining the lobby
         // You can replace "GameScene" with the name of your actual game scene
-        SceneManager.LoadScene("Create Scenario Lobby");
+        SceneManager.LoadScene("Lobby");
     }
 }

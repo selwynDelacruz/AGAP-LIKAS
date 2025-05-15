@@ -4885,12 +4885,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdfe216db944dd0458aa200a59a658ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emailInputField: {fileID: 619388420}
-  passwordInputField: {fileID: 1091098747}
-  nameInputField: {fileID: 0}
-  ageInputField: {fileID: 0}
-  genderInputField: {fileID: 0}
-  messageText: {fileID: 0}
+  errorMessage: {fileID: 0}
+  dependencyStatus: 0
+  emailLoginField: {fileID: 619388420}
+  passwordLoginField: {fileID: 1091098747}
+  nameRegisterField: {fileID: 0}
+  emailRegisterField: {fileID: 0}
+  passwordRegisterField: {fileID: 0}
+  confirmPasswordRegisterField: {fileID: 0}
 --- !u!4 &658355064
 Transform:
   m_ObjectHideFlags: 0
@@ -7906,8 +7908,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 658355063}
-        m_TargetAssemblyTypeName: FirehaltAuthManager, Assembly-CSharp
-        m_MethodName: OnLoginButtonClicked
+        m_TargetAssemblyTypeName: AuthManager, Assembly-CSharp
+        m_MethodName: Login
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

@@ -129,7 +129,7 @@ public class AuthManager : MonoBehaviour
            Debug.LogFormat("{0} You Are Successfully Logged In", user.DisplayName);
 
            //References.userName = user.DisplayName;
-           UnityEngine.SceneManagement.SceneManager.LoadScene("Create Scene Lobby");
+           UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby");
        }
    }
 
