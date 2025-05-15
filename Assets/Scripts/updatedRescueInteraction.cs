@@ -80,7 +80,7 @@ public class RescueBoatInteraction : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         // Check if the collided object is a victim
-        if (other.CompareTag("Victim"))
+        if (other.CompareTag("randomVictim"))
         {
             currentVictim = other.gameObject;
             Time.timeScale = 0f; // Pause the game
@@ -92,7 +92,7 @@ public class RescueBoatInteraction : MonoBehaviour
     void OnTriggerExit(Collider other)
     {
         // Close dialog when the boat leaves the victim's trigger area
-        if (other.CompareTag("Victim") && currentVictim == other.gameObject)
+        if (other.CompareTag("randomVictim") && currentVictim == other.gameObject)
         {
             CloseDialog();
         }
