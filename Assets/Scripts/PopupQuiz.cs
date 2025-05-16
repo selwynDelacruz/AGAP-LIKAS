@@ -15,6 +15,9 @@ public class QuestionTriggerPopup : MonoBehaviour
     private string rightAnswer;
     private string wrongAnswer;
 
+    // Store the current victim GameObject
+    private GameObject currentVictim;
+
     private void Start()
     {
         if (questionDialogUI != null) questionDialogUI.SetActive(false);
@@ -31,6 +34,7 @@ public class QuestionTriggerPopup : MonoBehaviour
                 PauseGame();
                 LoadQuestionData(victim.questionIndex);
                 ShowQuestionPanel();
+                currentVictim = other.gameObject; // Store reference to victim
             }
         }
     }
@@ -75,6 +79,13 @@ public class QuestionTriggerPopup : MonoBehaviour
         questionDialogUI.SetActive(false);
         resultText.gameObject.SetActive(false);
         ResumeGame();
+
+        // Destroy the victim after interaction
+        if (currentVictim != null)
+        {
+            Destroy(currentVictim);
+            currentVictim = null;
+        }
     }
 
     void ShowQuestionPanel()
