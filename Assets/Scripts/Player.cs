@@ -43,7 +43,7 @@ public class Player : MonoBehaviour
         }
         else
         {
-            Debug.Log("Not enough stamina!");
+          
         }
 
         staminaBar.SetStamina(currentStamina);
@@ -59,7 +59,6 @@ public class Player : MonoBehaviour
         else
         {
             currentStamina = maxStamina;
-            Debug.Log("Stamina is full!");
         }
         staminaBar.SetStamina(currentStamina);
     }
