@@ -16,8 +16,18 @@ public class RescueBoatInteraction : MonoBehaviour
     public Transform passengerSeat2; // Second passenger seat for the second victim
     private int passengerCount = 0; // Tracks the number of rescued passengers
 
+    public TextMeshProUGUI scoreText; // Reference to UI text for score
+
+    public int score = 0; // Player's score
+
     void Start()
     {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score;
+        }
+
+
         // Ensure the dialog UI is hidden at the start
         if (rescueDialogUI != null)
         {
@@ -186,6 +196,8 @@ public class RescueBoatInteraction : MonoBehaviour
                 }
 
                 passengerCount++; // Increment passenger count
+                score++ ; // Add 1 point for each victim rescued
+                Debug.Log("Score: " + score);
                 CloseDialog();
             }
             else
