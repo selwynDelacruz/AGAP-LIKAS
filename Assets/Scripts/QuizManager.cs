@@ -25,14 +25,9 @@ public class QuizManager : MonoBehaviour
 
     void Start()
     {
-        // Clear previous saved data on startup
         ClearSavedData();
-
-        // Setup dropdown listener and initial sprite
         tmpDropdown.onValueChanged.AddListener(OnDropdownValueChanged);
-        OnDropdownValueChanged(tmpDropdown.value); // Set initial image
-
-        // Reset count and update UI
+        OnDropdownValueChanged(tmpDropdown.value);
         questionCount = 0;
         UpdateQuestionTotalText();
     }
@@ -41,7 +36,6 @@ public class QuizManager : MonoBehaviour
     {
         if (questionCount >= maxQuestions)
         {
-            Debug.LogWarning("Maximum of 3 questions reached.");
             errorText.text = "Maximum of 3 questions reached.";
             return;
         }
@@ -50,20 +44,22 @@ public class QuizManager : MonoBehaviour
             string.IsNullOrWhiteSpace(rightAnswerInput.text) ||
             string.IsNullOrWhiteSpace(wrongAnswerInput.text))
         {
-            Debug.LogWarning("All fields must be filled before saving.");
             errorText.text = "All fields must be filled before saving.";
             return;
         }
 
+        // Save question data
         PlayerPrefs.SetString($"Question_{questionCount}", questionInput.text);
         PlayerPrefs.SetString($"RightAnswer_{questionCount}", rightAnswerInput.text);
         PlayerPrefs.SetString($"WrongAnswer_{questionCount}", wrongAnswerInput.text);
         PlayerPrefs.SetInt($"DropdownIndex_{questionCount}", tmpDropdown.value);
 
+        // Save dropdown option name for prefab matching
+        string dropdownOptionName = tmpDropdown.options[tmpDropdown.value].text;
+        PlayerPrefs.SetString($"DropdownOptionName_{questionCount}", dropdownOptionName);
+
         PlayerPrefs.Save();
         questionCount++;
-
-        Debug.Log($"Saved question {questionCount}");
 
         ClearInputs();
         UpdateQuestionTotalText();
@@ -74,10 +70,6 @@ public class QuizManager : MonoBehaviour
         if (index >= 0 && index < optionSprites.Length)
         {
             targetImage.sprite = optionSprites[index];
-        }
-        else
-        {
-            Debug.LogWarning("No sprite assigned for this index.");
         }
     }
 
@@ -97,7 +89,6 @@ public class QuizManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("You must save at least 1 question to start.");
             errorText.text = "You must save at least 1 question to start.";
         }
     }
@@ -110,24 +101,11 @@ public class QuizManager : MonoBehaviour
             PlayerPrefs.DeleteKey($"RightAnswer_{i}");
             PlayerPrefs.DeleteKey($"WrongAnswer_{i}");
             PlayerPrefs.DeleteKey($"DropdownIndex_{i}");
+            PlayerPrefs.DeleteKey($"DropdownOptionName_{i}");
         }
         PlayerPrefs.Save();
         questionCount = 0;
         UpdateQuestionTotalText();
-        Debug.Log("All saved questions cleared.");
-    }
-
-    int GetSavedQuestionCount()
-    {
-        int count = 0;
-        for (int i = 0; i < maxQuestions; i++)
-        {
-            if (PlayerPrefs.HasKey($"Question_{i}"))
-            {
-                count++;
-            }
-        }
-        return count;
     }
 
     void UpdateQuestionTotalText()

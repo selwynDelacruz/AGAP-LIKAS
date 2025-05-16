@@ -6,11 +6,11 @@ using System.Collections;
 public class QuestionTriggerPopup : MonoBehaviour
 {
     [Header("Question UI")]
-    public GameObject questionDialogUI; // UI for question dialog
-    public TMP_Text questionText; // Text for the dialog/question
-    public Button answerButton1; //button for right answer
-    public Button answerButton2; // button for wrong answer
-    public TMP_Text resultText; // text for the result
+    public GameObject questionDialogUI;
+    public TMP_Text questionText;
+    public Button answerButton1;
+    public Button answerButton2;
+    public TMP_Text resultText;
 
     private string rightAnswer;
     private string wrongAnswer;
@@ -25,17 +25,21 @@ public class QuestionTriggerPopup : MonoBehaviour
     {
         if (other.CompareTag("Victim"))
         {
-            PauseGame();
-            LoadQuestionData();
-            ShowQuestionPanel();
+            VictimQuestion victim = other.GetComponent<VictimQuestion>();
+            if (victim != null)
+            {
+                PauseGame();
+                LoadQuestionData(victim.questionIndex);
+                ShowQuestionPanel();
+            }
         }
     }
 
-    void LoadQuestionData()
+    void LoadQuestionData(int index)
     {
-        string question = PlayerPrefs.GetString("Question");
-        rightAnswer = PlayerPrefs.GetString("RightAnswer");
-        wrongAnswer = PlayerPrefs.GetString("WrongAnswer");
+        string question = PlayerPrefs.GetString($"Question_{index}");
+        rightAnswer = PlayerPrefs.GetString($"RightAnswer_{index}");
+        wrongAnswer = PlayerPrefs.GetString($"WrongAnswer_{index}");
 
         questionText.text = question;
 
@@ -67,7 +71,7 @@ public class QuestionTriggerPopup : MonoBehaviour
 
     IEnumerator HideQuestionPanelAfterDelay(float delay)
     {
-        yield return new WaitForSecondsRealtime(delay); // Use realtime because game is paused
+        yield return new WaitForSecondsRealtime(delay);
         questionDialogUI.SetActive(false);
         resultText.gameObject.SetActive(false);
         ResumeGame();
