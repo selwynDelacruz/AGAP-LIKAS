@@ -10,62 +10,65 @@ public class QuizManager : MonoBehaviour
     public TMP_InputField rightAnswerInput;
     public TMP_InputField wrongAnswerInput;
 
-    [Header("Buttons")]
-    public Button saveButton;
-    //public Button startGameButton;
-
     [Header("Dropdown & Image")]
-    public TMP_Dropdown tmpDropdown;      // Reference to your TMP Dropdown
-    public Image targetImage;             // Image that will change
-    public Sprite[] optionSprites;        // Sprites to switch based on dropdown option
+    public TMP_Dropdown tmpDropdown;
+    public Image targetImage;
+    public Sprite[] optionSprites;
 
-    private bool dataSaved = false;
+    [Header("UI Elements")]
+    public Button saveButton;
+    public TMP_Text questionTotal;
+    public TMP_Text errorText;
+
+    private int questionCount = 0;
+    private const int maxQuestions = 3;
 
     void Start()
     {
-        // Optional: Set initial image based on default dropdown value
+        // Clear previous saved data on startup
+        ClearSavedData();
+
+        // Setup dropdown listener and initial sprite
         tmpDropdown.onValueChanged.AddListener(OnDropdownValueChanged);
-        OnDropdownValueChanged(tmpDropdown.value); // initialize the image
+        OnDropdownValueChanged(tmpDropdown.value); // Set initial image
+
+        // Reset count and update UI
+        questionCount = 0;
+        UpdateQuestionTotalText();
     }
 
     public void SaveData()
     {
+        if (questionCount >= maxQuestions)
+        {
+            Debug.LogWarning("Maximum of 3 questions reached.");
+            errorText.text = "Maximum of 3 questions reached.";
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(questionInput.text) ||
             string.IsNullOrWhiteSpace(rightAnswerInput.text) ||
             string.IsNullOrWhiteSpace(wrongAnswerInput.text))
         {
             Debug.LogWarning("All fields must be filled before saving.");
+            errorText.text = "All fields must be filled before saving.";
             return;
         }
 
-        PlayerPrefs.SetString("Question", questionInput.text);
-        PlayerPrefs.SetString("RightAnswer", rightAnswerInput.text);
-        PlayerPrefs.SetString("WrongAnswer", wrongAnswerInput.text);
+        PlayerPrefs.SetString($"Question_{questionCount}", questionInput.text);
+        PlayerPrefs.SetString($"RightAnswer_{questionCount}", rightAnswerInput.text);
+        PlayerPrefs.SetString($"WrongAnswer_{questionCount}", wrongAnswerInput.text);
+        PlayerPrefs.SetInt($"DropdownIndex_{questionCount}", tmpDropdown.value);
+
         PlayerPrefs.Save();
+        questionCount++;
 
-        Debug.Log("Saved");
-        DisableInputs();
-        dataSaved = true;
-        //startGameButton.interactable = true;
+        Debug.Log($"Saved question {questionCount}");
+
+        ClearInputs();
+        UpdateQuestionTotalText();
     }
 
-    void DisableInputs()
-    {
-        questionInput.interactable = false;
-        rightAnswerInput.interactable = false;
-        wrongAnswerInput.interactable = false;
-        saveButton.interactable = false;
-    }
-
-    public void StartGame()
-    {
-        if (dataSaved)
-        {
-            SceneManager.LoadScene("GameScene"); // replace with your actual scene name
-        }
-    }
-
-    // This is triggered when the dropdown changes
     void OnDropdownValueChanged(int index)
     {
         if (index >= 0 && index < optionSprites.Length)
@@ -75,6 +78,63 @@ public class QuizManager : MonoBehaviour
         else
         {
             Debug.LogWarning("No sprite assigned for this index.");
+        }
+    }
+
+    void ClearInputs()
+    {
+        questionInput.text = "";
+        rightAnswerInput.text = "";
+        wrongAnswerInput.text = "";
+        tmpDropdown.value = 0;
+    }
+
+    public void StartGame()
+    {
+        if (questionCount > 0)
+        {
+            SceneManager.LoadScene("GameScene");
+        }
+        else
+        {
+            Debug.LogWarning("You must save at least 1 question to start.");
+            errorText.text = "You must save at least 1 question to start.";
+        }
+    }
+
+    public void ClearSavedData()
+    {
+        for (int i = 0; i < maxQuestions; i++)
+        {
+            PlayerPrefs.DeleteKey($"Question_{i}");
+            PlayerPrefs.DeleteKey($"RightAnswer_{i}");
+            PlayerPrefs.DeleteKey($"WrongAnswer_{i}");
+            PlayerPrefs.DeleteKey($"DropdownIndex_{i}");
+        }
+        PlayerPrefs.Save();
+        questionCount = 0;
+        UpdateQuestionTotalText();
+        Debug.Log("All saved questions cleared.");
+    }
+
+    int GetSavedQuestionCount()
+    {
+        int count = 0;
+        for (int i = 0; i < maxQuestions; i++)
+        {
+            if (PlayerPrefs.HasKey($"Question_{i}"))
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    void UpdateQuestionTotalText()
+    {
+        if (questionTotal != null)
+        {
+            questionTotal.text = $"Saved Questions: {questionCount}/{maxQuestions}";
         }
     }
 }
