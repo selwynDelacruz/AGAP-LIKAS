@@ -811,71 +811,93 @@ public class AuthManager : MonoBehaviour
 }
 
 	private IEnumerator Register_Trainee(string _email, string _password, string _username, string _gender, string _name, int _age)
-	{
-		if (string.IsNullOrEmpty(_name) && string.IsNullOrEmpty(_gender) && string.IsNullOrEmpty(_username) && string.IsNullOrEmpty(CreateAccount_Password.text) && CreateAccount_Password.text.Length <= 5 && User_Age == 0)
-		{
-			CreateAccount_SetWarning_RegisterInfoText("Make sure all the data is correct!", "red");
-		}
-		else
-		{
-			if (string.IsNullOrEmpty(_name) || string.IsNullOrEmpty(_gender) || string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(CreateAccount_Password.text) || CreateAccount_Password.text.Length <= 5 || User_Age <= 0)
-			{
-				yield break;
-			}
-			Task<AuthResult> RegisterTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
-			yield return new WaitUntil(() => RegisterTask.IsCompleted);
-			if (RegisterTask.Exception != null)
-			{
-				Debug.LogWarning($"Failed to register task with {RegisterTask.Exception}");
-				AuthError errorCode = (AuthError)(RegisterTask.Exception.GetBaseException() as FirebaseException).ErrorCode;
-				string messsage = "Register Failed! Please check your internet connection";
-				switch (errorCode)
-				{
-				case AuthError.MissingEmail:
-					messsage = "Missing Username!";
-					break;
-				case AuthError.MissingPassword:
-					messsage = "Missing Password!";
-					break;
-				case AuthError.WeakPassword:
-					messsage = "Weak Password";
-					break;
-				case AuthError.EmailAlreadyInUse:
-					messsage = "Username already in use!";
-					break;
-				}
-				CreateAccount_SetWarning_RegisterInfoText(messsage, "red");
-				ManageAccount_RegisterBTN_UI.interactable = true;
-				yield break;
-			}
-			User = RegisterTask.Result.User;
-			if (User != null)
-			{
-				UserProfile profile = new UserProfile
-				{
-					DisplayName = _username
-				};
-				Task ProfileTask = User.UpdateUserProfileAsync(profile);
-				yield return new WaitUntil(() => ProfileTask.IsCompleted);
-				if (ProfileTask.Exception != null)
-				{
-					Debug.LogWarning($"Failed to register task with {ProfileTask.Exception}");
-					_ = (ProfileTask.Exception.GetBaseException() as FirebaseException).ErrorCode;
-					CreateAccount_SetWarning_RegisterInfoText("Username set Failed!", "red");
-					ManageAccount_RegisterBTN_UI.interactable = true;
-				}
-				else
-				{
-					SetDefaultPlayerData("trainee");
-					isOnLoadingPanel = true;
-					yield return new WaitForSeconds(5f);
-					isOnLoadingPanel = false;
-					CreateAccount_RegisterNewAccount();
-				}
-			}
-		}
-	}
+{
+    // Validate input data
+    if (string.IsNullOrEmpty(_name) || 
+        string.IsNullOrEmpty(_gender) || 
+        string.IsNullOrEmpty(_username) || 
+        string.IsNullOrEmpty(_password) || 
+        _password.Length <= 5 || 
+        _age <= 0)
+    {
+        CreateAccount_SetWarning_RegisterInfoText("Make sure all the data is correct!", "red");
+        yield break;
+    }
 
+    // Create auth account
+    var RegisterTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
+    yield return new WaitUntil(() => RegisterTask.IsCompleted);
+
+    if (RegisterTask.Exception != null)
+    {
+        // Handle registration errors
+        Debug.LogWarning($"Failed to register task with {RegisterTask.Exception}");
+        AuthError errorCode = (AuthError)(RegisterTask.Exception.GetBaseException() as FirebaseException).ErrorCode;
+        string message = "Register Failed! Please check your internet connection";
+        
+        switch (errorCode)
+        {
+            case AuthError.MissingEmail:
+                message = "Missing Username!";
+                break;
+            case AuthError.MissingPassword:
+                message = "Missing Password!";
+                break;
+            case AuthError.WeakPassword:
+                message = "Weak Password";
+                break;
+            case AuthError.EmailAlreadyInUse:
+                message = "Username already in use!";
+                break;
+        }
+        CreateAccount_SetWarning_RegisterInfoText(message, "red");
+        ManageAccount_RegisterBTN_UI.interactable = true;
+        yield break;
+    }
+
+    User = RegisterTask.Result.User;
+    if (User != null)
+    {
+        // Set display name
+        UserProfile profile = new UserProfile { DisplayName = _username };
+        var ProfileTask = User.UpdateUserProfileAsync(profile);
+        yield return new WaitUntil(() => ProfileTask.IsCompleted);
+
+        if (ProfileTask.Exception != null)
+        {
+            Debug.LogWarning($"Failed to register task with {ProfileTask.Exception}");
+            CreateAccount_SetWarning_RegisterInfoText("Username set Failed!", "red");
+            ManageAccount_RegisterBTN_UI.interactable = true;
+            yield break;
+        }
+
+        // Save all trainee data including username and password
+        var DBTask = DBreference.Child("trainee").Child(User.UserId).SetValueAsync(new Dictionary<string, object>
+        {
+            { "User_Name", _name },
+            { "User_Gender", _gender },
+            { "User_Username", _username },
+            { "User_Password", _password },
+            { "User_Age", _age },
+            { "User_Type", "trainee" },
+            { "User_Score", 0 }
+        });
+
+        yield return new WaitUntil(() => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
+            CreateAccount_SetWarning_RegisterInfoText("Failed to save user data!", "red");
+            yield break;
+        }
+
+        isOnLoadingPanel = true;
+        yield return new WaitForSeconds(5f);
+        isOnLoadingPanel = false;
+        CreateAccount_RegisterNewAccount();
+    }
+}
 	private void SuperAdmin_RegisterFieldChecker()
 	{
 		if (User_Name != "" && User_Gender != "" && UsernameNew_ToSet != "" && SuperAdmin_passwordRegisterField.text != "" && SuperAdmin_passwordRegisterField.text.Length > 5 && User_Age > 0)
@@ -1504,45 +1526,104 @@ public class AuthManager : MonoBehaviour
 	}
 
 	private IEnumerator LoadTraineeList()
-	{
-		if (DBreference == null)
-		{
-			yield break;
-		}
-		Task<DataSnapshot> DBTask = DBreference.Child("trainee").OrderByChild("User_Name").GetValueAsync();
-		yield return new WaitUntil(() => DBTask.IsCompleted);
-		if (DBTask.Exception != null)
-		{
-			Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
-			yield break;
-		}
-		DataSnapshot result = DBTask.Result;
-		foreach (Transform item in UsersListContent)
-		{
-			Object.Destroy(item.gameObject);
-		}
-		if (result.Children.Reverse() == null)
-		{
-			yield break;
-		}
-		foreach (DataSnapshot item2 in result.Children.Reverse())
-		{
-			string value = item2.Child("User_Name").Value.ToString();
-			int age = int.Parse(item2.Child("User_Age").Value.ToString());
-			string gender = item2.Child("User_Gender").Value.ToString();
-			string username = item2.Child("User_Username").Value.ToString();
-			if (!string.IsNullOrEmpty(item2.Child("User_Password").Value.ToString()))
-			{
-				string password = item2.Child("User_Password").Value.ToString();
-				string usertype = item2.Child("User_Type").Value.ToString();
-				if (!string.IsNullOrEmpty(value))
-				{
-					Object.Instantiate(playerData, UsersListContent).GetComponent<UsersElement>().ListData(usertype, value, age, gender, username, password);
-				}
-			}
-		}
-	}
+{
+    Debug.Log("Starting LoadTraineeList");
 
+    // Validate references
+    if (DBreference == null || UsersListContent == null || playerData == null)
+    {
+        Debug.LogError($"Missing references - DBreference: {DBreference != null}, UsersListContent: {UsersListContent != null}, playerData: {playerData != null}");
+        yield break;
+    }
+
+    // Get trainee data with detailed logging
+    Debug.Log("Fetching trainee data from Firebase...");
+    Task<DataSnapshot> DBTask = DBreference.Child("trainee").OrderByChild("User_Name").GetValueAsync();
+    yield return new WaitUntil(() => DBTask.IsCompleted);
+
+    if (DBTask.Exception != null)
+    {
+        Debug.LogError($"Firebase query failed: {DBTask.Exception}");
+        yield break;
+    }
+
+    DataSnapshot result = DBTask.Result;
+    Debug.Log($"Query complete - Has data: {result.Exists}, Child count: {result.ChildrenCount}");
+
+    // Clear existing items
+    foreach (Transform item in UsersListContent)
+    {
+        if (item != null)
+            Destroy(item.gameObject);
+    }
+
+    if (result == null || !result.HasChildren)
+    {
+        Debug.Log("No trainee data found in database");
+        yield break;
+    }
+
+    try
+    {
+        Debug.Log("Starting to process trainee data...");
+        foreach (DataSnapshot trainee in result.Children.Reverse())
+        {
+            if (trainee == null) continue;
+
+            // Safely get values with null checks
+            var nameSnapshot = trainee.Child("User_Name").Value;
+            var ageSnapshot = trainee.Child("User_Age").Value;
+            var genderSnapshot = trainee.Child("User_Gender").Value;
+            var usernameSnapshot = trainee.Child("User_Username").Value;
+            var passwordSnapshot = trainee.Child("User_Password").Value;
+            var typeSnapshot = trainee.Child("User_Type").Value;
+
+            // Check if any required data is missing
+            if (nameSnapshot == null || ageSnapshot == null || 
+                genderSnapshot == null || usernameSnapshot == null || 
+                passwordSnapshot == null || typeSnapshot == null)
+            {
+                Debug.LogWarning($"Skipping trainee {trainee.Key} - missing required data");
+                continue;
+            }
+
+            string name = nameSnapshot.ToString();
+            string ageStr = ageSnapshot.ToString();
+            string gender = genderSnapshot.ToString();
+            string username = usernameSnapshot.ToString();
+            string password = passwordSnapshot.ToString();
+            string usertype = typeSnapshot.ToString();
+
+            Debug.Log($"Processing trainee: {name}, Username: {username}");
+
+            if (!string.IsNullOrEmpty(name) && int.TryParse(ageStr, out int age))
+            {
+                var newItem = Instantiate(playerData, UsersListContent);
+                if (newItem != null)
+                {
+                    var element = newItem.GetComponent<UsersElement>();
+                    if (element != null)
+                    {
+                        element.ListData(usertype, name, age, gender, username, password);
+                        Debug.Log($"Successfully created list item for {name}");
+                    }
+                    else
+                    {
+                        Debug.LogError("UsersElement component missing on prefab");
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Invalid data for trainee {trainee.Key}");
+            }
+        }
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"Error processing trainee data: {ex.Message}\n{ex.StackTrace}");
+    }
+}
 	private IEnumerator LoadTraineeList_SearchBar(string searchUsername)
 	{
 		if (DBreference == null)
