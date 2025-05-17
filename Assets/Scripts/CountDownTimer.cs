@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class CountDownTimer : MonoBehaviour
 {
@@ -25,7 +26,7 @@ public class CountDownTimer : MonoBehaviour
             if (timeLeft <= 0)
             {
                 isRunning = false;
-                // Handle timer end (optional)
+                SceneManager.LoadScene("ResultScene"); // Change "ResultScene" to your actual result scene name
             }
         }
     }
