@@ -16,18 +16,8 @@ public class RescueBoatInteraction : MonoBehaviour
     public Transform passengerSeat2; // Second passenger seat for the second victim
     private int passengerCount = 0; // Tracks the number of rescued passengers
 
-    public TextMeshProUGUI scoreText; // Reference to UI text for score
-
-    public int score = 0; // Player's score
-
     void Start()
     {
-        if (scoreText != null)
-        {
-            scoreText.text = "Score: " + score;
-        }
-
-
         // Ensure the dialog UI is hidden at the start
         if (rescueDialogUI != null)
         {
@@ -90,7 +80,7 @@ public class RescueBoatInteraction : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         // Check if the collided object is a victim
-        if (other.CompareTag("Victim"))
+        if (other.CompareTag("randomVictim"))
         {
             currentVictim = other.gameObject;
             Time.timeScale = 0f; // Pause the game
@@ -102,7 +92,7 @@ public class RescueBoatInteraction : MonoBehaviour
     void OnTriggerExit(Collider other)
     {
         // Close dialog when the boat leaves the victim's trigger area
-        if (other.CompareTag("Victim") && currentVictim == other.gameObject)
+        if (other.CompareTag("randomVictim") && currentVictim == other.gameObject)
         {
             CloseDialog();
         }
@@ -196,8 +186,6 @@ public class RescueBoatInteraction : MonoBehaviour
                 }
 
                 passengerCount++; // Increment passenger count
-                score++ ; // Add 1 point for each victim rescued
-                Debug.Log("Score: " + score);
                 CloseDialog();
             }
             else
