@@ -1,32 +1,23 @@
-using TMPro;
 using UnityEngine;
+using TMPro;
 
 public class UsersElement : MonoBehaviour
 {
-	public TextMeshProUGUI user_Name;
+    [Header("UI Elements")]
+    public TextMeshProUGUI nameText;
+    public TextMeshProUGUI ageText;
+    public TextMeshProUGUI genderText;
+    public TextMeshProUGUI usernameText;
+    public TextMeshProUGUI passwordText;
+    public TextMeshProUGUI userTypeText;
 
-	public TextMeshProUGUI user_Age;
-
-	public TextMeshProUGUI user_Gender;
-
-	public TextMeshProUGUI user_Username;
-
-	public TextMeshProUGUI user_Password;
-
-	private string userType_;
-
-	public void ListData(string usertype, string _name, int _age, string _gender, string _username, string _password)
-	{
-		user_Name.text = _name;
-		user_Age.text = _age.ToString();
-		user_Gender.text = _gender;
-		user_Username.text = _username;
-		user_Password.text = _password;
-		userType_ = usertype;
-	}
-
-	public void ManageAccount()
-	{
-		AuthManager.Instance.ManageAccountButton(userType_, user_Name, user_Age, user_Gender, user_Username, user_Password);
-	}
+    public void ListData(string userType, string name, int age, string gender, string username, string password)
+    {
+        if (nameText != null) nameText.text = name;
+        if (ageText != null) ageText.text = age.ToString();
+        if (genderText != null) genderText.text = gender;
+        if (usernameText != null) usernameText.text = username;
+        if (passwordText != null) passwordText.text = password;
+        if (userTypeText != null) userTypeText.text = userType;
+    }
 }

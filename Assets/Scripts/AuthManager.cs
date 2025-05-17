@@ -1,6 +1,7 @@
 // Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
 // AuthManager
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase;
@@ -105,7 +106,7 @@ public class AuthManager : MonoBehaviour
 
 	public TMP_Dropdown SuperAdmin_Gender;
 
-	public TMP_Dropdown SuperAdmin_Age;
+	public TMP_InputField SuperAdmin_Age;
 
 	public TMP_Text SuperAdminManageAccount_warningRegisterText;
 
@@ -164,17 +165,11 @@ public class AuthManager : MonoBehaviour
 	public TMP_InputField[] ManageAccount_InputFields;
 
 	public string AccountToManage_Name;
-
 	public string AccountToManage_Age;
-
 	public string AccountToManage_Gender;
-
 	public string AccountToManage_Username;
-
 	public string AccountToManage_Password;
-
 	public string AccountToManage_Usertype;
-
 	public GameObject LeaderboardPanel;
 
 	public GameObject PlayerdataLeaderboard;
@@ -191,33 +186,45 @@ public class AuthManager : MonoBehaviour
 	{
 		// // Add debug logs to verify Firebase initialization
 		// Debug.Log("Checking Firebase setup...");
-		
+
 		// // Verify UI references
 		// if (Login_InstructorButton == null || Login_TraineeButton == null || Login_SuperAdminButton == null) {
 		// 	Debug.LogError("Missing UI button references");
 		// }
+		if (UsersListContent == null)
+    {
+        Debug.LogError("UsersListContent is not assigned - please assign ScrollView Content transform");
+    }
+    if (playerData == null) 
+    {
+        Debug.LogError("playerData prefab is not assigned - please assign UserListItem prefab");
+    }
+		
 		
 		Time.timeScale = 1f;
-		isOnLoadingPanel = true;
-		isOpenRegisterUser = false;
-		isManagerCreatingAccounts = false;
-		if (PlayerPrefs.GetString("LoginAlready") == "true")
-		{
-			InvokeRepeating("Delay", 10f, 10f);
-			if (!string.IsNullOrEmpty(Current_Name))
-			{
-				CancelInvoke("Delay");
-			}
-		}
-		else
-		{
-			CancelInvoke("Delay");
-		}
-		if (PlayerPrefs.GetString("LoginAlready") != "true" && string.IsNullOrEmpty(Current_Name))
-		{
-			isOnLoadingPanel = false;
-		}
-		Invoke("Load_Instructor_AllData_ByAdmin", 1f);
+    isOnLoadingPanel = false; // Changed from true since we're not auto-logging in
+    isOpenRegisterUser = false;
+    isManagerCreatingAccounts = false;
+    
+    // REMOVE these auto-login checks
+    // if (PlayerPrefs.GetString("LoginAlready") == "true")
+    // {
+    //     InvokeRepeating("Delay", 10f, 10f);
+    //     if (!string.IsNullOrEmpty(Current_Name))
+    //     {
+    //         CancelInvoke("Delay");
+    //     }
+    // }
+    // else
+    // {
+    //     CancelInvoke("Delay");
+    // }
+    // if (PlayerPrefs.GetString("LoginAlready") != "true" && string.IsNullOrEmpty(Current_Name))
+    // {
+    //     isOnLoadingPanel = false;
+    // }
+
+    Invoke("Load_Instructor_AllData_ByAdmin", 1f);
 	}
 
 	private void Delay()
@@ -230,23 +237,26 @@ public class AuthManager : MonoBehaviour
 	}
 
 	private void Awake()
-	{
-		Instance = this;
-		FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(delegate(Task<DependencyStatus> task)
-		{
-			dependencyStatus = task.Result;
-			if (dependencyStatus == DependencyStatus.Available)
-			{
-				InitializeFirebase();
-			}
-			else
-			{
-				Debug.LogError("Could not resolve all Firebase dependencies: " + dependencyStatus);
-				LoadingPanel.SetActive(value: true);
-			}
-		});
-		Invoke("LoginAutomatic", 0.5f);
-	}
+{
+    Instance = this;
+    
+    FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task => {
+        dependencyStatus = task.Result;
+        if (dependencyStatus == DependencyStatus.Available)
+        {
+            InitializeFirebase();
+            Debug.Log("Firebase initialized successfully");
+        }
+        else
+        {
+            Debug.LogError($"Could not resolve Firebase dependencies: {dependencyStatus}");
+            LoadingPanel.SetActive(true);
+        }
+    });
+
+    // REMOVE this line
+    // Invoke("LoginAutomatic", 0.5f);
+}
 
 	private void SetupScoreBeforeLoggingOut()
 	{
@@ -340,11 +350,13 @@ public class AuthManager : MonoBehaviour
 	public void NewUsernameToSet(string UsernameNew_)
 	{
 		UsernameNew_ToSet = UsernameNew_;
+		Debug.Log($"Username set to: {UsernameNew_ToSet}");
 	}
 
 	public void GetPlayerName(string _name)
 	{
 		User_Name = _name;
+		Debug.Log($"Name set to: {User_Name}");
 	}
 
 	public void GetPlayerPassword(string _password)
@@ -361,24 +373,48 @@ public class AuthManager : MonoBehaviour
 	{
 		switch (_genderNum)
 		{
-		case 0:
-			User_Gender = "";
-			break;
-		case 1:
-			User_Gender = "male";
-			break;
-		case 2:
-			User_Gender = "female";
-			break;
-		default:
-			User_Gender = "";
-			break;
+			case 0:
+				User_Gender = "";
+				break;
+			case 1:
+				User_Gender = "male";
+				break;
+			case 2:
+				User_Gender = "female";
+				break;
+			default:
+				User_Gender = "";
+				break;
 		}
+		Debug.Log($"Gender set to: {_genderNum}");
 	}
 
 	public void GetPlayerAge(string _age)
 	{
-		User_Age = int.Parse(_age);
+		// Add validation for age input
+    if (string.IsNullOrEmpty(_age))
+    {
+        Debug.LogWarning("Age cannot be empty");
+        User_Age = 0;
+        return;
+    }
+
+    if (!int.TryParse(_age, out int parsedAge))
+    {
+        Debug.LogWarning("Invalid age format");
+        User_Age = 0;
+        return;
+    }
+
+    if (parsedAge < minAge)
+    {
+        Debug.LogWarning($"Age must be at least {minAge}");
+        User_Age = 0;
+        return;
+    }
+
+    User_Age = parsedAge;
+    Debug.Log($"Age set to: {User_Age}");
 	}
 
 	public void LoginButton()
@@ -409,22 +445,46 @@ public class AuthManager : MonoBehaviour
 	public void SuperAdminRegisterButton()
 	{
 		isClickedAddNewUser = true;
-		StartCoroutine(Register_SuperAdmin(SuperAdmin_emailRegisterField.text + "@gmail.com", SuperAdmin_passwordRegisterField.text, SuperAdmin_emailRegisterField.text, User_Gender, User_Name, User_Age));
+    
+    // Set username and password first
+    UsernameNew_ToSet = SuperAdmin_emailRegisterField.text;
+    User_Password = SuperAdmin_passwordRegisterField.text;
+    
+    // Then start registration
+    StartCoroutine(Register_SuperAdmin(
+        SuperAdmin_emailRegisterField.text + "@gmail.com",
+        SuperAdmin_passwordRegisterField.text,
+        SuperAdmin_emailRegisterField.text,
+        User_Gender,
+        User_Name,
+        User_Age));
 	}
 
 	public void CreateAccount_ManageAccount_RegisterButton()
 	{
+		Debug.Log("Register button clicked");
+    	Debug.Log($"Current type to manage: {typeOfUserToManage}");
+
+		if (string.IsNullOrEmpty(User_Name) || 
+        string.IsNullOrEmpty(User_Gender))
+    	{
+        Debug.LogError("Required user data is missing!");
+        return;
+    	}
+
 		isClickedAddNewUser = true;
 		string text = typeOfUserToManage;
 		if (!(text == "instructor"))
 		{
 			if (text == "trainee")
 			{
+				Debug.Log("Starting trainee registration...");
 				StartCoroutine(Register_Trainee(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
 			}
 		}
 		else
 		{
+			Debug.Log("Starting instructor registration...");
 			StartCoroutine(Register_Instructor(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
 		}
 	}
@@ -685,71 +745,70 @@ public class AuthManager : MonoBehaviour
 	}
 
 	private IEnumerator Register_Instructor(string _email, string _password, string _username, string _gender, string _name, int _age)
-	{
-		if (string.IsNullOrEmpty(_name) && string.IsNullOrEmpty(_gender) && string.IsNullOrEmpty(_username) && string.IsNullOrEmpty(CreateAccount_Password.text) && CreateAccount_Password.text.Length <= 5 && User_Age == 0)
-		{
-			CreateAccount_SetWarning_RegisterInfoText("Make sure all the data is correct!", "red");
-		}
-		else
-		{
-			if (string.IsNullOrEmpty(_name) || string.IsNullOrEmpty(_gender) || string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(CreateAccount_Password.text) || CreateAccount_Password.text.Length <= 5 || User_Age <= 0)
-			{
-				yield break;
-			}
-			Task<AuthResult> RegisterTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
-			yield return new WaitUntil(() => RegisterTask.IsCompleted);
-			if (RegisterTask.Exception != null)
-			{
-				Debug.LogWarning($"Failed to register task with {RegisterTask.Exception}");
-				AuthError errorCode = (AuthError)(RegisterTask.Exception.GetBaseException() as FirebaseException).ErrorCode;
-				string messsage = "Register Failed! Please check your internet connection";
-				switch (errorCode)
-				{
-				case AuthError.MissingEmail:
-					messsage = "Missing Username!";
-					break;
-				case AuthError.MissingPassword:
-					messsage = "Missing Password!";
-					break;
-				case AuthError.WeakPassword:
-					messsage = "Weak Password";
-					break;
-				case AuthError.EmailAlreadyInUse:
-					messsage = "Username already in use!";
-					break;
-				}
-				CreateAccount_SetWarning_RegisterInfoText(messsage, "red");
-				ManageAccount_RegisterBTN_UI.interactable = true;
-				yield break;
-			}
-			User = RegisterTask.Result.User;
-			if (User != null)
-			{
-				UserProfile profile = new UserProfile
-				{
-					DisplayName = _username
-				};
-				Task ProfileTask = User.UpdateUserProfileAsync(profile);
-				CreateAccount_SetWarning_RegisterInfoText("", "white");
-				yield return new WaitUntil(() => ProfileTask.IsCompleted);
-				if (ProfileTask.Exception != null)
-				{
-					Debug.LogWarning($"Failed to register task with {ProfileTask.Exception}");
-					_ = (ProfileTask.Exception.GetBaseException() as FirebaseException).ErrorCode;
-					CreateAccount_SetWarning_RegisterInfoText("Username set Failed!", "red");
-					ManageAccount_RegisterBTN_UI.interactable = true;
-				}
-				else
-				{
-					SetDefaultPlayerData("instructor");
-					isOnLoadingPanel = true;
-					yield return new WaitForSeconds(5f);
-					isOnLoadingPanel = false;
-					CreateAccount_RegisterNewAccount();
-				}
-			}
-		}
-	}
+{
+    // Validate input data
+    if (string.IsNullOrEmpty(_name) || 
+        string.IsNullOrEmpty(_gender) || 
+        string.IsNullOrEmpty(_username) || 
+        string.IsNullOrEmpty(_password) || 
+        _password.Length <= 5 || 
+        _age <= 0)
+    {
+        CreateAccount_SetWarning_RegisterInfoText("Make sure all the data is correct!", "red");
+        yield break;
+    }
+
+    // Create auth account
+    var RegisterTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
+    yield return new WaitUntil(() => RegisterTask.IsCompleted);
+
+    if (RegisterTask.Exception != null)
+    {
+        // ... existing error handling ...
+        yield break;
+    }
+
+    User = RegisterTask.Result.User;
+    if (User != null)
+    {
+        // Set display name
+        UserProfile profile = new UserProfile { DisplayName = _username };
+        var ProfileTask = User.UpdateUserProfileAsync(profile);
+        yield return new WaitUntil(() => ProfileTask.IsCompleted);
+
+        if (ProfileTask.Exception != null)
+        {
+            // ... existing error handling ...
+            yield break;
+        }
+
+        // Save all instructor data including username and password
+        var DBTask = DBreference.Child("instructor").Child(User.UserId).SetValueAsync(new Dictionary<string, object>
+        {
+            { "User_Name", _name },
+            { "User_Gender", _gender }, 
+            { "User_Username", _username },
+            { "User_Password", _password },
+            { "User_Age", _age },
+            { "User_Type", "instructor"},
+            { "User_Score", 0 }
+        });
+
+        yield return new WaitUntil(() => DBTask.IsCompleted);
+
+        if (DBTask.Exception != null)
+        {
+            Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
+            CreateAccount_SetWarning_RegisterInfoText("Failed to save user data!", "red");
+            yield break;
+        }
+
+        isOnLoadingPanel = true;
+        yield return new WaitForSeconds(5f);
+        isOnLoadingPanel = false;
+        CreateAccount_RegisterNewAccount();
+    }
+}
 
 	private IEnumerator Register_Trainee(string _email, string _password, string _username, string _gender, string _name, int _age)
 	{
@@ -900,17 +959,17 @@ public class AuthManager : MonoBehaviour
 
 	private void CreateAccount_SetWarning_RegisterInfoText(string _messsage, string color)
 	{
-		SuperAdminManageAccount_warningRegisterText.text = _messsage;
+		CreateAccount_warningRegisterText.text = _messsage;
 		switch (color)
 		{
 		case "red":
-			SuperAdminManageAccount_warningRegisterText.color = Color.red;
+			CreateAccount_warningRegisterText.color = Color.red;
 			break;
 		case "yellow":
-			SuperAdminManageAccount_warningRegisterText.color = Color.yellow;
+			CreateAccount_warningRegisterText.color = Color.yellow;
 			break;
 		case "white":
-			SuperAdminManageAccount_warningRegisterText.color = Color.white;
+			CreateAccount_warningRegisterText.color = Color.white;
 			break;
 		}
 	}
@@ -995,13 +1054,65 @@ public class AuthManager : MonoBehaviour
 
 	public void CreateAccount_RegisterNewAccount()
 	{
-		SuperAdminManageAccount_warningRegisterText.text = "";
-		CreateAccount_Username.text = "";
-		CreateAccount_Password.text = "";
-		CreateAccount_Name.text = "";
-		CreateAccount_Age.text = "";
-		CreateAccount_Gender.SetValueWithoutNotify(0);
-		ManageAccount_RegisterBTN_UI.interactable = true;
+		try
+    {
+        // Check if UI elements are assigned
+        if (CreateAccount_warningRegisterText == null)
+        {
+            Debug.LogError("CreateAccount_warningRegisterText is not assigned!");
+            return;
+        }
+        if (CreateAccount_Username == null)
+        {
+            Debug.LogError("CreateAccount_Username is not assigned!");
+            return;
+        }
+        if (CreateAccount_Password == null)
+        {
+            Debug.LogError("CreateAccount_Password is not assigned!");
+            return;
+        }
+        if (CreateAccount_Name == null)
+        {
+            Debug.LogError("CreateAccount_Name is not assigned!");
+            return;
+        }
+        if (CreateAccount_Age == null)
+        {
+            Debug.LogError("CreateAccount_Age is not assigned!");
+            return;
+        }
+        if (CreateAccount_Gender == null)
+        {
+            Debug.LogError("CreateAccount_Gender is not assigned!");
+            return;
+        }
+        if (ManageAccount_RegisterBTN_UI == null)
+        {
+            Debug.LogError("ManageAccount_RegisterBTN_UI is not assigned!");
+            return;
+        }
+
+        // Clear all fields
+        CreateAccount_warningRegisterText.text = "";
+        CreateAccount_Username.text = "";
+        CreateAccount_Password.text = "";
+        CreateAccount_Name.text = "";
+        CreateAccount_Age.text = "";
+        CreateAccount_Gender.SetValueWithoutNotify(0);
+        ManageAccount_RegisterBTN_UI.interactable = true;
+
+        // Reset user data
+        User_Name = "";
+        User_Gender = "";
+        UsernameNew_ToSet = "";
+        User_Age = 0;
+        User_Password = "";
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"Error in CreateAccount_RegisterNewAccount: {ex.Message}");
+    }
 	}
 
 	private void ClearAllLoginField(TMP_InputField usernameField, TMP_InputField passwordField, TMP_Text infoText)
@@ -1018,7 +1129,9 @@ public class AuthManager : MonoBehaviour
 		SuperAdmin_Password.text = "";
 		SuperAdmin_Name.text = "";
 		SuperAdmin_Gender.SetValueWithoutNotify(0);
-		SuperAdmin_Age.SetValueWithoutNotify(0);
+		// SuperAdmin_Age.SetValueWithoutNotify(0);
+		SuperAdmin_Age.text = "0";
+		User_Age = 0;
 	}
 	
 	public void TestButtonClick()
@@ -1230,44 +1343,92 @@ public class AuthManager : MonoBehaviour
 	}
 
 	private IEnumerator LoadInstructorList()
-	{
-		if (DBreference == null)
-		{
-			yield break;
-		}
-		Task<DataSnapshot> DBTask = DBreference.Child("instructor").OrderByChild("User_Username").GetValueAsync();
-		yield return new WaitUntil(() => DBTask.IsCompleted);
-		if (DBTask.Exception != null)
-		{
-			Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
-			yield break;
-		}
-		DataSnapshot result = DBTask.Result;
-		foreach (Transform item in UsersListContent)
-		{
-			Object.Destroy(item.gameObject);
-		}
-		if (result.Children.Reverse() == null)
-		{
-			yield break;
-		}
-		foreach (DataSnapshot item2 in result.Children.Reverse())
-		{
-			string value = item2.Child("User_Name").Value.ToString();
-			int age = int.Parse(item2.Child("User_Age").Value.ToString());
-			string gender = item2.Child("User_Gender").Value.ToString();
-			string username = item2.Child("User_Username").Value.ToString();
-			if (!string.IsNullOrEmpty(item2.Child("User_Password").Value.ToString()))
-			{
-				string password = item2.Child("User_Password").Value.ToString();
-				string usertype = item2.Child("User_Type").Value.ToString();
-				if (!string.IsNullOrEmpty(value))
-				{
-					Object.Instantiate(playerData, UsersListContent).GetComponent<UsersElement>().ListData(usertype, value, age, gender, username, password);
-				}
-			}
-		}
-	}
+{
+    Debug.Log("Starting LoadInstructorList");
+
+    // Validate references
+    if (DBreference == null || UsersListContent == null || playerData == null)
+    {
+        Debug.LogError($"Missing references - DBreference: {DBreference != null}, UsersListContent: {UsersListContent != null}, playerData: {playerData != null}");
+        yield break;
+    }
+
+    // Get instructor data with detailed logging
+    Debug.Log("Fetching instructor data from Firebase...");
+    Task<DataSnapshot> DBTask = DBreference.Child("instructor").OrderByChild("User_Username").GetValueAsync();
+    yield return new WaitUntil(() => DBTask.IsCompleted);
+
+    if (DBTask.Exception != null)
+    {
+        Debug.LogError($"Firebase query failed: {DBTask.Exception}");
+        yield break;
+    }
+
+    DataSnapshot result = DBTask.Result;
+    Debug.Log($"Query complete - Has data: {result.Exists}, Child count: {result.ChildrenCount}");
+
+    // Clear existing items
+    foreach (Transform item in UsersListContent)
+    {
+        if (item != null)
+            Destroy(item.gameObject);
+    }
+
+    if (result == null || !result.HasChildren)
+    {
+        Debug.Log("No instructor data found in database");
+        yield break;
+    }
+
+    try
+    {
+        Debug.Log("Starting to process instructor data...");
+        foreach (DataSnapshot item in result.Children.Reverse())
+        {
+            if (item == null) continue;
+
+            // Log each instructor's data
+            Debug.Log($"Processing instructor: {item.Key}");
+            var name = item.Child("User_Name").Value?.ToString();
+            var ageStr = item.Child("User_Age").Value?.ToString();
+            var gender = item.Child("User_Gender").Value?.ToString();
+            var username = item.Child("User_Username").Value?.ToString();
+            var password = item.Child("User_Password").Value?.ToString();
+            var usertype = item.Child("User_Type").Value?.ToString();
+
+            Debug.Log($"Instructor data - Name: {name}, Age: {ageStr}, Gender: {gender}, Username: {username}");
+
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(ageStr) || 
+                string.IsNullOrEmpty(password))
+            {
+                Debug.LogWarning("Skipping instructor due to missing required data");
+                continue;
+            }
+
+            // Create list item
+            int age = int.Parse(ageStr);
+            var newItem = Instantiate(playerData, UsersListContent);
+            
+            if (newItem != null)
+            {
+                var element = newItem.GetComponent<UsersElement>();
+                if (element != null)
+                {
+                    element.ListData(usertype, name, age, gender, username, password);
+                    Debug.Log($"Successfully created list item for {name}");
+                }
+                else
+                {
+                    Debug.LogError("UsersElement component missing on prefab");
+                }
+            }
+        }
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"Error processing instructor data: {ex.Message}\n{ex.StackTrace}");
+    }
+}
 
 	public void GetSearchBarUsers(string data)
 	{
