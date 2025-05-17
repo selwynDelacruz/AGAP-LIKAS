@@ -23301,8 +23301,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 141a46e95117be046a7072b355d7232d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  traineePrefab: {fileID: 2656430601054655240, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
-  traineeSpawnPoint: {fileID: 2333413736761623413, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
+  traineePrefab: {fileID: 9054007977188753717, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
+  traineeSpawnPoint: {fileID: 4187207950403637678, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
   instructorPrefab: {fileID: 0}
 --- !u!4 &571257712
 Transform:
@@ -91585,6 +91585,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerRescueboat
       objectReference: {fileID: 0}
+    - target: {fileID: 2842708535336760063, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4187207950403637678, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 50.17
@@ -91624,6 +91628,10 @@ PrefabInstance:
     - target: {fileID: 4187207950403637678, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9054007977188753717, guid: dd1bb0dfc2281a44cae828f988c726a0, type: 3}
+      propertyPath: sceneViewId
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
