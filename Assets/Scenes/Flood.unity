@@ -9812,7 +9812,7 @@ GameObject:
   - component: {fileID: 268017850}
   - component: {fileID: 268017849}
   m_Layer: 5
-  m_Name: Rescue
+  m_Name: RescueButton2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16209,7 +16209,7 @@ GameObject:
   - component: {fileID: 431613429}
   - component: {fileID: 431613428}
   m_Layer: 5
-  m_Name: Leave
+  m_Name: QuestionButton2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25016,7 +25016,7 @@ GameObject:
   - component: {fileID: 607596693}
   - component: {fileID: 607596692}
   m_Layer: 5
-  m_Name: result (1)
+  m_Name: QuestionResultText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36275,7 +36275,7 @@ GameObject:
   - component: {fileID: 913657633}
   - component: {fileID: 913657632}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: QuestionText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36908,7 +36908,7 @@ GameObject:
   - component: {fileID: 927134850}
   - component: {fileID: 927134849}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: QuestionPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36928,8 +36928,8 @@ RectTransform:
   m_Children:
   - {fileID: 913657631}
   - {fileID: 607596691}
-  - {fileID: 431613427}
   - {fileID: 1531519778}
+  - {fileID: 431613427}
   m_Father: {fileID: 2087169681}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -41462,7 +41462,7 @@ GameObject:
   - component: {fileID: 1043357451}
   - component: {fileID: 1043357450}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: RescuePanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67624,7 +67624,7 @@ GameObject:
   - component: {fileID: 1531519780}
   - component: {fileID: 1531519779}
   m_Layer: 5
-  m_Name: Rescue
+  m_Name: QuestionButton1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -81144,7 +81144,7 @@ GameObject:
   - component: {fileID: 1875959642}
   - component: {fileID: 1875959641}
   m_Layer: 5
-  m_Name: Leave
+  m_Name: RescueButton1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -87478,7 +87478,7 @@ GameObject:
   - component: {fileID: 2040871978}
   - component: {fileID: 2040871977}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: RescueText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
