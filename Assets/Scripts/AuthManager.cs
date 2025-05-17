@@ -479,13 +479,13 @@ public class AuthManager : MonoBehaviour
 			if (text == "trainee")
 			{
 				Debug.Log("Starting trainee registration...");
-				StartCoroutine(Register_Trainee(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
+				StartCoroutine(Register_Trainee(CreateAccount_Name.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
 			}
 		}
 		else
 		{
 			Debug.Log("Starting instructor registration...");
-			StartCoroutine(Register_Instructor(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
+			StartCoroutine(Register_Instructor(CreateAccount_Name.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
 		}
 	}
 
@@ -1434,15 +1434,16 @@ public class AuthManager : MonoBehaviour
             if (newItem != null)
             {
                 var element = newItem.GetComponent<UsersElement>();
-                if (element != null)
-                {
-                    element.ListData(usertype, name, age, gender, username, password);
-                    Debug.Log($"Successfully created list item for {name}");
+					if (element != null)
+					{
+						element.ListData(usertype, name, age, gender, username, password);
+						Debug.Log($"Successfully created list item for {name}");
+						Debug.Log($"Successfully created list item for {username}");
                 }
-                else
-                {
-                    Debug.LogError("UsersElement component missing on prefab");
-                }
+					else
+					{
+						Debug.LogError("UsersElement component missing on prefab");
+					}
             }
         }
     }
