@@ -7,7 +7,7 @@ public class RescueBoatInteraction : MonoBehaviour
     public GameObject rescueDialogUI; // UI for rescue dialog
     public Button rescueButton; // Button to rescue the victim
     public Button leaveButton; // Button to leave the victim
-    public TextMeshProUGUI dialogText; // Text for the dialog UI
+    public TMP_Text dialogText; // Text for the dialog UI
     public bool isPaused; // Tracks if the game is paused
     public int maxPassengers = 2; // Maximum number of passengers allowed
 
@@ -15,7 +15,21 @@ public class RescueBoatInteraction : MonoBehaviour
     public Transform passengerSeat1; // First passenger seat for the first victim
     public Transform passengerSeat2; // Second passenger seat for the second victim
     private int passengerCount = 0; // Tracks the number of rescued passengers
+    private void Awake()
+    {
+        // Auto-assign UI references if not set in Inspector
+        if (rescueDialogUI == null)
+            rescueDialogUI = transform.Find("RescueDialogUI")?.gameObject;
 
+        if (dialogText == null)
+            dialogText = rescueDialogUI?.transform.Find("RescuePanel/RescueText")?.GetComponent<TMP_Text>();
+
+        if (rescueButton == null)
+            rescueButton = rescueDialogUI?.transform.Find("RescuePanel/RescueButton1")?.GetComponent<Button>();
+
+        if (leaveButton == null)
+            leaveButton = rescueDialogUI?.transform.Find("RescuePanel/RescueButton2")?.GetComponent<Button>();
+    }
     void Start()
     {
         // Ensure the dialog UI is hidden at the start

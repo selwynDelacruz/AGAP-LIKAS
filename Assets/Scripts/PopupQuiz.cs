@@ -17,7 +17,24 @@ public class QuestionTriggerPopup : MonoBehaviour
 
     // Store the current victim GameObject
     private GameObject currentVictim;
+    private void Awake()
+    {
+        // Auto-assign UI references if not set in Inspector
+        if (questionDialogUI == null)
+            questionDialogUI = transform.Find("QuestionDialogUI")?.gameObject;
 
+        if (questionText == null)
+            questionText = questionDialogUI?.transform.Find("QuestionPanel/QuestionText")?.GetComponent<TMP_Text>();
+
+        if (answerButton1 == null)
+            answerButton1 = questionDialogUI?.transform.Find("QuestionPanel/QuestionButton1")?.GetComponent<Button>();
+
+        if (answerButton2 == null)
+            answerButton2 = questionDialogUI?.transform.Find("QuestionPanel/QuestionButton2")?.GetComponent<Button>();
+
+        if (resultText == null)
+            resultText = questionDialogUI?.transform.Find("QuestionPanel/QuestionResultText")?.GetComponent<TMP_Text>();
+    }
     private void Start()
     {
         if (questionDialogUI != null) questionDialogUI.SetActive(false);

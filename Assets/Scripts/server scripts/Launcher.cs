@@ -32,6 +32,13 @@ public class Launcher : MonoBehaviourPunCallbacks
         // Load the main game scene after joining the lobby
         // You can replace "GameScene" with the name of your actual game scene
         // Use the spawn point's position and rotation
-        PhotonNetwork.Instantiate(traineePrefab.name, traineeSpawnPoint.position, traineeSpawnPoint.rotation);
+        GameObject boatInstance = PhotonNetwork.Instantiate(traineePrefab.name, traineeSpawnPoint.position, traineeSpawnPoint.rotation);
+        //instantiated the boat prefab and get the instance references
+        // Find the camera and set its follow target
+        BoatCameraFollow cameraFollow = Camera.main.GetComponent<BoatCameraFollow>();
+        if (cameraFollow != null)
+        {
+            cameraFollow.boat = boatInstance.transform;
+        }
     }
 }
