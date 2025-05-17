@@ -1,6 +1,9 @@
 using UnityEngine;
 using TMPro;
+<<<<<<< HEAD
 using UnityEngine.UI;
+=======
+>>>>>>> main
 
 public class UsersElement : MonoBehaviour
 {
@@ -10,8 +13,12 @@ public class UsersElement : MonoBehaviour
     public TextMeshProUGUI genderText;
     public TextMeshProUGUI usernameText;
     public TextMeshProUGUI passwordText;
+<<<<<<< HEAD
     public string userTypeText;
      public Button manageButton;
+=======
+    public TextMeshProUGUI userTypeText;
+>>>>>>> main
 
     public void ListData(string userType, string name, int age, string gender, string username, string password)
     {
@@ -20,6 +27,7 @@ public class UsersElement : MonoBehaviour
         if (genderText != null) genderText.text = gender;
         if (usernameText != null) usernameText.text = username;
         if (passwordText != null) passwordText.text = password;
+<<<<<<< HEAD
         userTypeText = userType;
     }
 
@@ -29,4 +37,8 @@ public class UsersElement : MonoBehaviour
 	}
 
     
+=======
+        if (userTypeText != null) userTypeText.text = userType;
+    }
+>>>>>>> main
 }

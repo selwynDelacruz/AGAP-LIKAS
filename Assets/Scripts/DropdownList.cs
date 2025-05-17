@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections.Generic;
 
 public class DropdownList : MonoBehaviour
 {
@@ -14,6 +15,14 @@ public class DropdownList : MonoBehaviour
 
     void Start()
     {
+        // Initialize dropdown options if not set in Inspector
+        if (disasterDropdown.options.Count == 0)
+        {
+            List<string> options = new List<string> { "Flood", "Earthquake" };
+            disasterDropdown.ClearOptions();
+            disasterDropdown.AddOptions(options);
+        }
+
         // Initialize selection
         UpdateDisaster(disasterDropdown.value);
         disasterDropdown.onValueChanged.AddListener(UpdateDisaster);
@@ -40,5 +49,4 @@ public class DropdownList : MonoBehaviour
                 break;
         }
     }
-
 }
