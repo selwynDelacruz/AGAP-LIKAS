@@ -9560,9 +9560,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dependencyStatus: 0
   Instructor_emailLoginField: {fileID: 1352842848}
-  Instructor_passwordLoginField: {fileID: 1651481976}
-  Instructor_confirmLoginText: {fileID: 249312859}
-  Login_InstructorButton: {fileID: 749261577}
+  Instructor_passwordLoginField: {fileID: 1625317584}
+  Instructor_confirmLoginText: {fileID: 845481281}
+  Login_InstructorButton: {fileID: 898484690}
   Trainee_emailLoginField: {fileID: 619388420}
   Trainee_passwordLoginField: {fileID: 1091098747}
   Trainee_confirmLoginText: {fileID: 129400705}
