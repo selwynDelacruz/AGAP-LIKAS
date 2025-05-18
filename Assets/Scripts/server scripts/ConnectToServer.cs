@@ -25,9 +25,9 @@ public class ConnectToServer : MonoBehaviourPunCallbacks
     public override void OnJoinedLobby()
     {
         // This method is called when the client successfully joins a lobby on the Photon server.
-        Debug.Log("Joined Lobby");
+        Debug.Log("Joined Lobby, loading the next scene");
         // Load the main game scene after joining the lobby
         // You can replace "GameScene" with the name of your actual game scene
-        SceneManager.LoadScene("Lobby");
+        SceneManager.LoadScene("Main Menu");
     }
 }
