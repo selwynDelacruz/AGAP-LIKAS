@@ -424,6 +424,7 @@ public class AuthManager : MonoBehaviour
 		case "instructor":
 			if (Login_Instructor_Panel.activeSelf)
 			{
+				Debug.Log(Login_Instructor_Panel.activeSelf);
 				StartCoroutine(Login(Instructor_emailLoginField.text + "@gmail.com", Instructor_passwordLoginField.text));
 			}
 			break;
@@ -465,34 +466,59 @@ public class AuthManager : MonoBehaviour
 		Debug.Log("Register button clicked");
     	Debug.Log($"Current type to manage: {typeOfUserToManage}");
 
-		if (string.IsNullOrEmpty(User_Name) || 
-        string.IsNullOrEmpty(User_Gender))
-    	{
+    // Validate required fields
+    if (string.IsNullOrEmpty(User_Name) || string.IsNullOrEmpty(User_Gender))
+    {
+        CreateAccount_warningRegisterText.text = "Please fill in all required fields!";
+        CreateAccount_warningRegisterText.color = Color.red;
         Debug.LogError("Required user data is missing!");
         return;
-    	}
+    }
 
-		isClickedAddNewUser = true;
-		string text = typeOfUserToManage;
-		if (!(text == "instructor"))
-		{
-			if (text == "trainee")
-			{
-				Debug.Log("Starting trainee registration...");
-				StartCoroutine(Register_Trainee(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
-			}
-		}
-		else
-		{
-			Debug.Log("Starting instructor registration...");
-			StartCoroutine(Register_Instructor(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
-		}
+    isClickedAddNewUser = true;
+
+    switch (typeOfUserToManage)
+    {
+        case "instructor":
+            Debug.Log("Starting instructor registration...");
+            StartCoroutine(Register_Instructor(
+                CreateAccount_Username.text + "@gmail.com", 
+                CreateAccount_Password.text, 
+                CreateAccount_Username.text, 
+                User_Gender, 
+                User_Name, 
+                User_Age
+            ));
+            // Success message will be shown in RegisterSuccessShowPanel
+            break;
+
+        case "trainee":
+            Debug.Log("Starting trainee registration...");
+            StartCoroutine(Register_Trainee(
+                CreateAccount_Username.text + "@gmail.com", 
+                CreateAccount_Password.text, 
+                CreateAccount_Username.text, 
+                User_Gender, 
+                User_Name, 
+                User_Age
+            ));
+            // Success message will be shown in RegisterSuccessShowPanel
+            break;
+
+        default:
+            CreateAccount_warningRegisterText.text = "Invalid user type!";
+            CreateAccount_warningRegisterText.color = Color.red;
+            Debug.LogError($"Invalid user type: {typeOfUserToManage}");
+            break;
+    }
 	}
 
 	private IEnumerator Login(string _email, string _password)
 	{
+		// First authenticate with Firebase
 		Task<AuthResult> LoginTask = auth.SignInWithEmailAndPasswordAsync(_email, _password);
 		yield return new WaitUntil(() => LoginTask.IsCompleted);
+
 		if (LoginTask.Exception != null)
 		{
 			isOnLoadingPanel = false;
@@ -541,8 +567,37 @@ public class AuthManager : MonoBehaviour
 			yield break;
 		}
 		User = LoginTask.Result.User;
+
+		// Get user data to verify user type
+		string attemptedUserType = PlayerPrefs.GetString("Type_Of_User");
+		Task<DataSnapshot> userTypeTask = DBreference.Child(attemptedUserType)
+			.Child(User.UserId)
+			.Child("User_Type")
+			.GetValueAsync();
+
+		yield return new WaitUntil(() => userTypeTask.IsCompleted);
+
+		if (userTypeTask.Exception != null)
+		{
+			Debug.LogError("Failed to verify user type");
+			SetWarning_LoginInfoText("Login Failed: Invalid credentials", "red");
+			auth.SignOut();
+			yield break;
+		}
+
+		DataSnapshot snapshot = userTypeTask.Result;
+		if (!snapshot.Exists || snapshot.Value == null || 
+			snapshot.Value.ToString() != attemptedUserType)
+		{
+			Debug.LogWarning($"User tried to log in as {attemptedUserType} but is actually a different type");
+			SetWarning_LoginInfoText("Invalid login type for this account", "red");
+			auth.SignOut();
+			yield break;
+		}
+
+		// Continue with existing login success logic
 		Debug.LogFormat("User signed in successfully: {0} ({1})", User.DisplayName, User.Email);
-		StartCoroutine(LoadUserData(PlayerPrefs.GetString("Type_Of_User")));
+		StartCoroutine(LoadUserData(attemptedUserType));
 		PlayerPrefs.SetString("LoginAlready", "true");
 		SetWarning_LoginInfoText("", "white");
 		switch (PlayerPrefs.GetString("Type_Of_User"))
@@ -734,6 +789,8 @@ public class AuthManager : MonoBehaviour
 					isOpenRegisterUser = false;
 					Login_SuperAdmin_Panel.SetActive(value: true);
 					Register_SuperAdmin_Panel.SetActive(value: false);
+					CreateAccount_warningRegisterText.text = $"Successfully created {typeOfUserToManage} account!";
+    				Debug.Log($"Successfully created {typeOfUserToManage} account!");
 					SuperAdmin_RegisterNewAccount();
 				}
 			}
@@ -746,17 +803,29 @@ public class AuthManager : MonoBehaviour
 
 	private IEnumerator Register_Instructor(string _email, string _password, string _username, string _gender, string _name, int _age)
 {
-    // Validate input data
-    if (string.IsNullOrEmpty(_name) || 
-        string.IsNullOrEmpty(_gender) || 
-        string.IsNullOrEmpty(_username) || 
-        string.IsNullOrEmpty(_password) || 
-        _password.Length <= 5 || 
-        _age <= 0)
-    {
-        CreateAccount_SetWarning_RegisterInfoText("Make sure all the data is correct!", "red");
-        yield break;
-    }
+		// Check required fields first
+	if (string.IsNullOrEmpty(_name) || 
+		string.IsNullOrEmpty(_gender) || 
+		string.IsNullOrEmpty(_username) || 
+		string.IsNullOrEmpty(_password))
+	{
+		CreateAccount_SetWarning_RegisterInfoText("All fields are required!", "red");
+		yield break;
+	}
+
+	// Specific check for password length
+	if (_password.Length <= 5)
+	{
+		CreateAccount_SetWarning_RegisterInfoText("Password must be at least 6 characters long!", "yellow");
+		yield break;
+	}
+
+	// Check age
+	if (_age <= 0)
+	{
+		CreateAccount_SetWarning_RegisterInfoText("Please enter a valid age!", "red");
+		yield break;
+	}
 
     // Create auth account
     var RegisterTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
@@ -769,60 +838,74 @@ public class AuthManager : MonoBehaviour
     }
 
     User = RegisterTask.Result.User;
-    if (User != null)
-    {
-        // Set display name
-        UserProfile profile = new UserProfile { DisplayName = _username };
-        var ProfileTask = User.UpdateUserProfileAsync(profile);
-        yield return new WaitUntil(() => ProfileTask.IsCompleted);
+		if (User != null)
+		{
+			// Set display name
+			UserProfile profile = new UserProfile { DisplayName = _username };
+			var ProfileTask = User.UpdateUserProfileAsync(profile);
+			yield return new WaitUntil(() => ProfileTask.IsCompleted);
 
-        if (ProfileTask.Exception != null)
-        {
-            // ... existing error handling ...
-            yield break;
-        }
+			if (ProfileTask.Exception != null)
+			{
+				// ... existing error handling ...
+				yield break;
+			}
 
-        // Save all instructor data including username and password
-        var DBTask = DBreference.Child("instructor").Child(User.UserId).SetValueAsync(new Dictionary<string, object>
-        {
-            { "User_Name", _name },
-            { "User_Gender", _gender }, 
-            { "User_Username", _username },
-            { "User_Password", _password },
-            { "User_Age", _age },
-            { "User_Type", "instructor"},
-            { "User_Score", 0 }
-        });
+			// Save all instructor data including username and password
+			var DBTask = DBreference.Child("instructor").Child(User.UserId).SetValueAsync(new Dictionary<string, object>
+		{
+			{ "User_Name", _name },
+			{ "User_Gender", _gender },
+			{ "User_Username", _username },
+			{ "User_Password", _password },
+			{ "User_Age", _age },
+			{ "User_Type", "instructor"},
+			{ "User_Score", 0 }
+		});
 
-        yield return new WaitUntil(() => DBTask.IsCompleted);
+			yield return new WaitUntil(() => DBTask.IsCompleted);
 
-        if (DBTask.Exception != null)
-        {
-            Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
-            CreateAccount_SetWarning_RegisterInfoText("Failed to save user data!", "red");
-            yield break;
-        }
+			if (DBTask.Exception != null)
+			{
+				Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
+				CreateAccount_SetWarning_RegisterInfoText("Failed to save user data!", "red");
+				yield break;
+			}
 
-        isOnLoadingPanel = true;
-        yield return new WaitForSeconds(5f);
-        isOnLoadingPanel = false;
-        CreateAccount_RegisterNewAccount();
+			isOnLoadingPanel = true;
+			yield return new WaitForSeconds(5f);
+			isOnLoadingPanel = false;
+			CreateAccount_RegisterNewAccount();
+			CreateAccount_warningRegisterText.text = $"Successfully created {typeOfUserToManage} account!";
+			CreateAccount_warningRegisterText.color = Color.green;
     }
 }
 
 	private IEnumerator Register_Trainee(string _email, string _password, string _username, string _gender, string _name, int _age)
-{
-    // Validate input data
-    if (string.IsNullOrEmpty(_name) || 
-        string.IsNullOrEmpty(_gender) || 
-        string.IsNullOrEmpty(_username) || 
-        string.IsNullOrEmpty(_password) || 
-        _password.Length <= 5 || 
-        _age <= 0)
-    {
-        CreateAccount_SetWarning_RegisterInfoText("Make sure all the data is correct!", "red");
-        yield break;
-    }
+	{
+		// Validate input data
+		if (string.IsNullOrEmpty(_name) || 
+		string.IsNullOrEmpty(_gender) || 
+		string.IsNullOrEmpty(_username) || 
+		string.IsNullOrEmpty(_password))
+	{
+		CreateAccount_SetWarning_RegisterInfoText("All fields are required!", "red");
+		yield break;
+	}
+
+	// Specific check for password length
+	if (_password.Length <= 5)
+	{
+		CreateAccount_SetWarning_RegisterInfoText("Password must be at least 6 characters long!", "yellow");
+		yield break;
+	}
+
+	// Check age
+	if (_age <= 0)
+	{
+		CreateAccount_SetWarning_RegisterInfoText("Please enter a valid age!", "red");
+		yield break;
+	}
 
     // Create auth account
     var RegisterTask = auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
@@ -856,46 +939,48 @@ public class AuthManager : MonoBehaviour
     }
 
     User = RegisterTask.Result.User;
-    if (User != null)
-    {
-        // Set display name
-        UserProfile profile = new UserProfile { DisplayName = _username };
-        var ProfileTask = User.UpdateUserProfileAsync(profile);
-        yield return new WaitUntil(() => ProfileTask.IsCompleted);
+		if (User != null)
+		{
+			// Set display name
+			UserProfile profile = new UserProfile { DisplayName = _username };
+			var ProfileTask = User.UpdateUserProfileAsync(profile);
+			yield return new WaitUntil(() => ProfileTask.IsCompleted);
 
-        if (ProfileTask.Exception != null)
-        {
-            Debug.LogWarning($"Failed to register task with {ProfileTask.Exception}");
-            CreateAccount_SetWarning_RegisterInfoText("Username set Failed!", "red");
-            ManageAccount_RegisterBTN_UI.interactable = true;
-            yield break;
-        }
+			if (ProfileTask.Exception != null)
+			{
+				Debug.LogWarning($"Failed to register task with {ProfileTask.Exception}");
+				CreateAccount_SetWarning_RegisterInfoText("Username set Failed!", "red");
+				ManageAccount_RegisterBTN_UI.interactable = true;
+				yield break;
+			}
 
-        // Save all trainee data including username and password
-        var DBTask = DBreference.Child("trainee").Child(User.UserId).SetValueAsync(new Dictionary<string, object>
-        {
-            { "User_Name", _name },
-            { "User_Gender", _gender },
-            { "User_Username", _username },
-            { "User_Password", _password },
-            { "User_Age", _age },
-            { "User_Type", "trainee" },
-            { "User_Score", 0 }
-        });
+			// Save all trainee data including username and password
+			var DBTask = DBreference.Child("trainee").Child(User.UserId).SetValueAsync(new Dictionary<string, object>
+		{
+			{ "User_Name", _name },
+			{ "User_Gender", _gender },
+			{ "User_Username", _username },
+			{ "User_Password", _password },
+			{ "User_Age", _age },
+			{ "User_Type", "trainee" },
+			{ "User_Score", 0 }
+		});
 
-        yield return new WaitUntil(() => DBTask.IsCompleted);
+			yield return new WaitUntil(() => DBTask.IsCompleted);
 
-        if (DBTask.Exception != null)
-        {
-            Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
-            CreateAccount_SetWarning_RegisterInfoText("Failed to save user data!", "red");
-            yield break;
-        }
+			if (DBTask.Exception != null)
+			{
+				Debug.LogWarning($"Failed to register task with {DBTask.Exception}");
+				CreateAccount_SetWarning_RegisterInfoText("Failed to save user data!", "red");
+				yield break;
+			}
 
-        isOnLoadingPanel = true;
-        yield return new WaitForSeconds(5f);
-        isOnLoadingPanel = false;
-        CreateAccount_RegisterNewAccount();
+			isOnLoadingPanel = true;
+			yield return new WaitForSeconds(5f);
+			isOnLoadingPanel = false;
+			CreateAccount_RegisterNewAccount();
+			CreateAccount_warningRegisterText.text = $"Successfully created {typeOfUserToManage} account!";
+			CreateAccount_warningRegisterText.color = Color.green;
     }
 }
 	private void SuperAdmin_RegisterFieldChecker()
@@ -1171,12 +1256,14 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("Type_Of_User", UserType);
 				PlayerPrefs.Save();
 				Debug.Log("instructor clicked");
+				Debug.Log("UserType: " + UserType);
 				break;
 			case "trainee":
 				Login_Trainee_Panel.SetActive(value: true);
 				ChooseTypeOfUserPanel.SetActive(value: false);
 				PlayerPrefs.SetString("Type_Of_User", UserType);
 				Debug.Log("trainee clicked");
+				Debug.Log("UserType: " + UserType);
 				PlayerPrefs.Save();
 				break;
 			case "super_admin":
@@ -1185,7 +1272,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("Type_Of_User", UserType);
 				PlayerPrefs.Save();
 				Debug.Log("superadmin clicked");
-
+				Debug.Log("UserType: " + UserType);
 				break;
 		}
 	}
@@ -1207,27 +1294,94 @@ public class AuthManager : MonoBehaviour
 	{
 		switch (PlayerPrefs.GetString("Type_Of_User"))
 		{
-		case "instructor":
-			ClearAllLoginField(Instructor_emailLoginField, Instructor_passwordLoginField, Instructor_confirmLoginText);
-			Login_Instructor_Panel.SetActive(value: false);
-			ChooseTypeOfUserPanel.SetActive(value: true);
-			PlayerPrefs.SetString("Type_Of_User", "");
-			PlayerPrefs.Save();
-			break;
-		case "trainee":
-			ClearAllLoginField(Trainee_emailLoginField, Trainee_passwordLoginField, Trainee_confirmLoginText);
-			Login_Trainee_Panel.SetActive(value: false);
-			ChooseTypeOfUserPanel.SetActive(value: true);
-			PlayerPrefs.SetString("Type_Of_User", "");
-			PlayerPrefs.Save();
-			break;
-		case "super_admin":
-			ClearAllLoginField(SuperAdmin_emailLoginField, SuperAdmin_passwordLoginField, SuperAdmin_confirmLoginText);
-			Login_SuperAdmin_Panel.SetActive(value: false);
-			ChooseTypeOfUserPanel.SetActive(value: true);
-			PlayerPrefs.SetString("Type_Of_User", "");
-			PlayerPrefs.Save();
-			break;
+			case "instructor":
+				// Clear UI fields
+				ClearAllLoginField(Instructor_emailLoginField, Instructor_passwordLoginField, Instructor_confirmLoginText);
+				Login_Instructor_Panel.SetActive(false);
+				MenuPanel_Instructor.SetActive(false);
+				ChooseTypeOfUserPanel.SetActive(true);
+				
+				// Handle logout
+				if (auth != null && auth.CurrentUser != null)
+				{
+					auth.SignOut();
+					Debug.Log("Instructor signed out");
+				}
+				
+				// Clear preferences and cached data
+				PlayerPrefs.DeleteAll();
+				PlayerPrefs.Save();
+				
+				// Reset UI state
+				Instructor_confirmLoginText.text = "";
+				Login_InstructorButton.interactable = true;
+				
+				// Clear cached user data
+				Current_Name = "";
+				Current_Username = "";
+				Current_Gender = "";
+				Current_Age = 0;
+				Current_Score = 0;
+				break;
+
+			case "trainee":
+				// Clear UI fields
+				ClearAllLoginField(Trainee_emailLoginField, Trainee_passwordLoginField, Trainee_confirmLoginText);
+				Login_Trainee_Panel.SetActive(false);
+				MenuPanel_Trainee.SetActive(false);
+				ChooseTypeOfUserPanel.SetActive(true);
+				
+				// Handle logout
+				if (auth != null && auth.CurrentUser != null)
+				{
+					auth.SignOut();
+					Debug.Log("Trainee signed out");
+				}
+				
+				// Clear preferences and cached data
+				PlayerPrefs.DeleteAll();
+				PlayerPrefs.Save();
+				
+				// Reset UI state
+				Trainee_confirmLoginText.text = "";
+				Login_TraineeButton.interactable = true;
+				
+				// Clear cached user data
+				Current_Name = "";
+				Current_Username = "";
+				Current_Gender = "";
+				Current_Age = 0;
+				Current_Score = 0;
+				break;
+
+			case "super_admin":
+				// Clear UI fields
+				ClearAllLoginField(SuperAdmin_emailLoginField, SuperAdmin_passwordLoginField, SuperAdmin_confirmLoginText);
+				MenuPanel_SuperAdmin.SetActive(false);
+				ChooseTypeOfUserPanel.SetActive(true);
+				
+				// Handle logout
+				if (auth != null && auth.CurrentUser != null)
+				{
+					auth.SignOut();
+					Debug.Log("SuperAdmin signed out");
+				}
+				
+				// Clear preferences and cached data
+				PlayerPrefs.DeleteAll();
+				PlayerPrefs.Save();
+				
+				// Reset UI state
+				SuperAdmin_confirmLoginText.text = "";
+				Login_SuperAdminButton.interactable = true;
+				
+				// Clear cached user data
+				Current_Name = "";
+				Current_Username = "";
+				Current_Gender = "";
+				Current_Age = 0;
+				Current_Score = 0;
+				break;
 		}
 	}
 
@@ -1244,14 +1398,24 @@ public class AuthManager : MonoBehaviour
 	public void RefreshData()
 	{
 		Object.Destroy(RoomManager.Instance.gameObject);
-		SceneManager.LoadScene("MainMenu");
+		SceneManager.LoadScene("Main Menu");
 	}
 
 	private IEnumerator RegisterSuccessShowPanel()
 	{
-		SuccessfullyCreatedAccount.SetActive(value: true);
-		yield return new WaitForSeconds(0.5f);
-		SuccessfullyCreatedAccount.SetActive(value: false);
+		 // Show success message in CreateAccount_warningRegisterText
+   		CreateAccount_warningRegisterText.text = $"Successfully created {typeOfUserToManage} account!";
+    	
+		Debug.Log("Successfully created account!");
+
+    	// Show the success panel
+		SuccessfullyCreatedAccount.SetActive(true);
+    
+    	yield return new WaitForSeconds(1f);
+    
+    	// Hide the success panel and clear the text
+    	SuccessfullyCreatedAccount.SetActive(false);
+    	CreateAccount_warningRegisterText.text = "";
 	}
 
 	private IEnumerator UpdateuserName(string usernamenew_, string _typeOfUser)
@@ -1347,7 +1511,7 @@ public class AuthManager : MonoBehaviour
 			Current_Gender = result.Child("User_Gender").Value.ToString();
 			Current_Age = int.Parse(result.Child("User_Age").Value.ToString());
 			Current_Score = int.Parse(result.Child("User_Score").Value.ToString());
-			AdminNameText.text = "Admin Name : " + Current_Name;
+			AdminNameText.text = Current_Name;
 			// Launcher.Instance.CallForSetupNickName();
 			// Launcher.Instance.StopMethodRepeating();
 			if (PlayerPrefs.GetString("SetNewScoreLeaderboard") == "true")
@@ -1434,15 +1598,16 @@ public class AuthManager : MonoBehaviour
             if (newItem != null)
             {
                 var element = newItem.GetComponent<UsersElement>();
-                if (element != null)
-                {
-                    element.ListData(usertype, name, age, gender, username, password);
-                    Debug.Log($"Successfully created list item for {name}");
+					if (element != null)
+					{
+						element.ListData(usertype, name, age, gender, username, password);
+						Debug.Log($"Successfully created list item for {name}");
+						Debug.Log($"Successfully created list item for {username}");
                 }
-                else
-                {
-                    Debug.LogError("UsersElement component missing on prefab");
-                }
+					else
+					{
+						Debug.LogError("UsersElement component missing on prefab");
+					}
             }
         }
     }
@@ -1453,16 +1618,38 @@ public class AuthManager : MonoBehaviour
 }
 
 	public void GetSearchBarUsers(string data)
-	{
-		if (SelectedUserTypeToShow.value == 0)
-		{
-			StartCoroutine(LoadInstructorList_SearchBar(data));
-		}
-		else
-		{
-			StartCoroutine(LoadTraineeList_SearchBar(data));
-		}
-	}
+{
+    // Add null checks and debug logging
+    if (SelectedUserTypeToShow == null)
+    {
+        Debug.LogError("SelectedUserTypeToShow dropdown is not assigned in Inspector!");
+        return;
+    }
+
+    if (SearchBarInputField == null)
+    {
+        Debug.LogError("SearchBarInputField is not assigned in Inspector!");
+        return;
+    }
+
+    try 
+    {
+        if (SelectedUserTypeToShow.value == 0)
+        {
+            StartCoroutine(LoadInstructorList_SearchBar(data));
+            Debug.Log($"Searching instructors for: {data}");
+        }
+        else
+        {
+            StartCoroutine(LoadTraineeList_SearchBar(data));
+            Debug.Log($"Searching trainees for: {data}");
+        }
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"Error in GetSearchBarUsers: {ex.Message}");
+    }
+}
 
 	public void LoadUserData(int num)
 	{
@@ -1722,6 +1909,7 @@ public class AuthManager : MonoBehaviour
 	public void ManageAccountButton(string _userType, TextMeshProUGUI _name, TextMeshProUGUI _age, TextMeshProUGUI _gender, TextMeshProUGUI _username, TextMeshProUGUI _password)
 	{
 		ManageAccountPanel.SetActive(value: true);
+		Debug.Log("manageaccountpanel: active");
 		ManageAccount_InputFields[0].text = _name.text;
 		ManageAccount_InputFields[1].text = _age.text;
 		ManageAccount_InputFields[2].text = _gender.text;
@@ -1796,8 +1984,10 @@ public class AuthManager : MonoBehaviour
 			{
 				ManageAccount_InputFields[i].text = "";
 			}
-			ManageAccountPanel.SetActive(value: false);
+
 		}
-		RefreshData();
+		ManageAccountPanel.SetActive(false);
+    	MenuPanel_SuperAdmin.SetActive(true);
+		//RefreshData();
 	}
 }
