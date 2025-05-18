@@ -9300,8 +9300,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29a488aaa16f707479c065ca1ca3c37d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_color1: {r: 1, g: 1, b: 1, a: 1}
-  m_color2: {r: 0.6150943, g: 0.6150943, b: 0.6150943, a: 1}
+  m_color1:
+    r: 1
+    g: 1
+    b: 1
+    a: 1
+  m_color2:
+    r: 1
+    g: 1
+    b: 1
+    a: 1
   m_angle: 0
   m_ignoreRatio: 1
 --- !u!1 &670148837
@@ -21352,8 +21360,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29a488aaa16f707479c065ca1ca3c37d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_color1: {r: 1, g: 1, b: 1, a: 1}
-  m_color2: {r: 0.7830188, g: 0.90607655, b: 1, a: 1}
+  m_color1:
+    r: 1
+    g: 1
+    b: 1
+    a: 1
+  m_color2:
+    r: 1
+    g: 1
+    b: 1
+    a: 1
   m_angle: 0
   m_ignoreRatio: 1
 --- !u!1 &1555332813
