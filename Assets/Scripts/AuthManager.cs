@@ -479,13 +479,13 @@ public class AuthManager : MonoBehaviour
 			if (text == "trainee")
 			{
 				Debug.Log("Starting trainee registration...");
-				StartCoroutine(Register_Trainee(CreateAccount_Name.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
+				StartCoroutine(Register_Trainee(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
 			}
 		}
 		else
 		{
 			Debug.Log("Starting instructor registration...");
-			StartCoroutine(Register_Instructor(CreateAccount_Name.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
+			StartCoroutine(Register_Instructor(CreateAccount_Username.text + "@gmail.com", CreateAccount_Password.text, CreateAccount_Username.text, User_Gender, User_Name, User_Age));
 		}
 	}
 
@@ -1223,11 +1223,31 @@ public class AuthManager : MonoBehaviour
 			break;
 		case "super_admin":
 			ClearAllLoginField(SuperAdmin_emailLoginField, SuperAdmin_passwordLoginField, SuperAdmin_confirmLoginText);
-			Login_SuperAdmin_Panel.SetActive(value: false);
-			ChooseTypeOfUserPanel.SetActive(value: true);
-			PlayerPrefs.SetString("Type_Of_User", "");
-			PlayerPrefs.Save();
-			break;
+            MenuPanel_SuperAdmin.SetActive(false);
+            ChooseTypeOfUserPanel.SetActive(true);
+            
+            // Add logout functionality for SuperAdmin
+            if (auth != null && auth.CurrentUser != null)
+            {
+                auth.SignOut();
+                Debug.Log("SuperAdmin signed out");
+            }
+            
+            // Clear all PlayerPrefs
+            PlayerPrefs.DeleteAll();
+            PlayerPrefs.Save();
+            
+            // Reset UI states
+            SuperAdmin_confirmLoginText.text = "";
+            Login_SuperAdminButton.interactable = true;
+            
+            // Clear any cached data
+            Current_Name = "";
+            Current_Username = "";
+            Current_Gender = "";
+            Current_Age = 0;
+            Current_Score = 0;
+            break;
 		}
 	}
 
@@ -1244,7 +1264,7 @@ public class AuthManager : MonoBehaviour
 	public void RefreshData()
 	{
 		Object.Destroy(RoomManager.Instance.gameObject);
-		SceneManager.LoadScene("MainMenu");
+		SceneManager.LoadScene("Main Menu");
 	}
 
 	private IEnumerator RegisterSuccessShowPanel()
@@ -1723,6 +1743,7 @@ public class AuthManager : MonoBehaviour
 	public void ManageAccountButton(string _userType, TextMeshProUGUI _name, TextMeshProUGUI _age, TextMeshProUGUI _gender, TextMeshProUGUI _username, TextMeshProUGUI _password)
 	{
 		ManageAccountPanel.SetActive(value: true);
+		Debug.Log("manageaccountpanel: active");
 		ManageAccount_InputFields[0].text = _name.text;
 		ManageAccount_InputFields[1].text = _age.text;
 		ManageAccount_InputFields[2].text = _gender.text;
@@ -1799,6 +1820,6 @@ public class AuthManager : MonoBehaviour
 			}
 			ManageAccountPanel.SetActive(value: false);
 		}
-		RefreshData();
+		//RefreshData();
 	}
 }
