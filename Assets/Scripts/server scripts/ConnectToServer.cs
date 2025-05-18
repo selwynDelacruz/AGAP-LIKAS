@@ -17,7 +17,7 @@ public class ConnectToServer : MonoBehaviourPunCallbacks
     public override void OnConnectedToMaster()
     {
         // This method is called when the client successfully connects to the Photon server.
-        Debug.Log("Connected to Master Server");
+        Debug.Log("Connected to Master Server, joining Lobby");
         // Join a lobby after connecting to the master server
         PhotonNetwork.JoinLobby();
     }
