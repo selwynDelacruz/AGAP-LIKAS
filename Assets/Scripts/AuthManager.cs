@@ -1444,7 +1444,7 @@ public class AuthManager : MonoBehaviour
 			Current_Gender = result.Child("User_Gender").Value.ToString();
 			Current_Age = int.Parse(result.Child("User_Age").Value.ToString());
 			Current_Score = int.Parse(result.Child("User_Score").Value.ToString());
-			AdminNameText.text = "Admin Name : " + Current_Name;
+			AdminNameText.text = Current_Name;
 			// Launcher.Instance.CallForSetupNickName();
 			// Launcher.Instance.StopMethodRepeating();
 			if (PlayerPrefs.GetString("SetNewScoreLeaderboard") == "true")
