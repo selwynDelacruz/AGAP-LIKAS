@@ -17,6 +17,13 @@ public class QuestionTriggerPopup : MonoBehaviour
 
     // Store the current victim GameObject
     private GameObject currentVictim;
+
+    // Track the number of right answers
+    private int rightAnswerCount = 0;
+
+    // Store the initial number of Victims in the scene
+    private int initialVictimCount = 0;
+
     private void Awake()
     {
         // Auto-assign UI references if not set in Inspector
@@ -39,6 +46,10 @@ public class QuestionTriggerPopup : MonoBehaviour
     {
         if (questionDialogUI != null) questionDialogUI.SetActive(false);
         if (resultText != null) resultText.gameObject.SetActive(false);
+
+        // Get the initial number of Victims in the scene
+        initialVictimCount = GameObject.FindGameObjectsWithTag("Victim").Length;
+        Debug.Log("Initial Victim Count: " + initialVictimCount);
     }
 
     void OnTriggerEnter(Collider other)
@@ -87,6 +98,14 @@ public class QuestionTriggerPopup : MonoBehaviour
     {
         resultText.gameObject.SetActive(true);
         resultText.text = isCorrect ? "Correct Answer!" : "Wrong Answer!";
+
+        // Track right answers
+        if (isCorrect)
+        {
+            rightAnswerCount++;
+            Debug.Log("Right Answers: " + rightAnswerCount);
+        }
+
         StartCoroutine(HideQuestionPanelAfterDelay(2f));
     }
 
@@ -125,4 +144,8 @@ public class QuestionTriggerPopup : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
+
+    // Public getters if you want to access these values elsewhere
+    public int GetRightAnswerCount() => rightAnswerCount;
+    public int GetInitialVictimCount() => initialVictimCount;
 }

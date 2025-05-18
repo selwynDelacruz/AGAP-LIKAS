@@ -15,6 +15,9 @@ public class RescueBoatInteraction : MonoBehaviour
     public Transform passengerSeat1; // First passenger seat for the first victim
     public Transform passengerSeat2; // Second passenger seat for the second victim
     private int passengerCount = 0; // Tracks the number of rescued passengers
+
+    // New: Track total rescued victims
+    public int rescuedVictim = 0;
     private void Awake()
     {
         // Auto-assign UI references if not set in Inspector
@@ -100,6 +103,31 @@ public class RescueBoatInteraction : MonoBehaviour
             Time.timeScale = 0f; // Pause the game
             isPaused = true;
             ShowRescueDialog();
+        }
+
+        // Check if entered the safe spot
+        if (other.gameObject.name == "safe spot")
+        {
+            // Despawn all rescued victims (children of passenger seats)
+            bool victimDespawned = false;
+            if (passengerSeat1.childCount > 0)
+            {
+                Destroy(passengerSeat1.GetChild(0).gameObject);
+                passengerCount--;
+                rescuedVictim++;
+                victimDespawned = true;
+            }
+            if (passengerSeat2.childCount > 0)
+            {
+                Destroy(passengerSeat2.GetChild(0).gameObject);
+                passengerCount--;
+                rescuedVictim++;
+                victimDespawned = true;
+            }
+            if (victimDespawned)
+            {
+                Debug.Log("Victim(s) delivered to safe spot! Total rescued: " + rescuedVictim);
+            }
         }
     }
 
@@ -212,5 +240,9 @@ public class RescueBoatInteraction : MonoBehaviour
         {
             Debug.LogWarning("Cannot rescue victim: Victim is null.");
         }
+    }
+    public int GetRescuedVictimCount()
+    {
+        return rescuedVictim;
     }
 }

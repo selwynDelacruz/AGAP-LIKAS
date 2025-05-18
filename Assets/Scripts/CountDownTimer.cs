@@ -5,7 +5,8 @@ using Photon.Pun;
 
 public class CountDownTimer : MonoBehaviourPun
 {
-    public TMP_Text durationText;
+    public TMP_Text TraineeDurationText;
+    public TMP_Text InstructorDurationText;
     private float timeLeft;
     private bool isRunning = false;
 
@@ -38,7 +39,7 @@ public class CountDownTimer : MonoBehaviourPun
     [PunRPC]
     void GoToResultScene()
     {
-        SceneManager.LoadScene("ResultScene"); // Use your actual result scene name
+        SceneManager.LoadScene("Result"); // Use your actual result scene name
     }
 
     public void PauseTimer()
@@ -55,6 +56,7 @@ public class CountDownTimer : MonoBehaviourPun
     {
         int minutes = Mathf.FloorToInt(timeLeft / 60);
         int seconds = Mathf.FloorToInt(timeLeft % 60);
-        durationText.text = $"{minutes:00}:{seconds:00}";
+        TraineeDurationText.text = $"{minutes:00}:{seconds:00}";
+        InstructorDurationText.text = $"{minutes:00}:{seconds:00}";
     }
 }

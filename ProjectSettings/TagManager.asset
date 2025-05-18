@@ -8,6 +8,7 @@ TagManager:
   - Water
   - Victim
   - randomVictim
+  - building
   layers:
   - Default
   - TransparentFX
