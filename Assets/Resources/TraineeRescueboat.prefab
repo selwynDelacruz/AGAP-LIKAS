@@ -2077,7 +2077,7 @@ GameObject:
   - component: {fileID: 2948230666888244392}
   - component: {fileID: 9054007977188753717}
   m_Layer: 0
-  m_Name: PlayerRescueboat
+  m_Name: TraineeRescueboat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

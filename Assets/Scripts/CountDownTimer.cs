@@ -1,8 +1,9 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
+using Photon.Pun;
 
-public class CountDownTimer : MonoBehaviour
+public class CountDownTimer : MonoBehaviourPun
 {
     public TMP_Text durationText;
     private float timeLeft;
@@ -26,9 +27,18 @@ public class CountDownTimer : MonoBehaviour
             if (timeLeft <= 0)
             {
                 isRunning = false;
-                SceneManager.LoadScene("ResultScene"); // Change "ResultScene" to your actual result scene name
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    photonView.RPC("GoToResultScene", RpcTarget.All);
+                }
             }
         }
+    }
+
+    [PunRPC]
+    void GoToResultScene()
+    {
+        SceneManager.LoadScene("ResultScene"); // Use your actual result scene name
     }
 
     public void PauseTimer()

@@ -972,8 +972,8 @@ MonoBehaviour:
   instructorNameText: {fileID: 510553920}
   traineeNameText: {fileID: 1498830433}
   roomCodeText: {fileID: 1239399362}
-  traineePanelInstructorNameText: {fileID: 216080614}
-  traineePanelTraineeNameText: {fileID: 1421483215}
+  traineePanelInstructorNameText: {fileID: 1473273068}
+  traineePanelTraineeNameText: {fileID: 1552108433}
   traineePanelRoomCodeText: {fileID: 372092272}
   startButton: {fileID: 840673637}
 --- !u!4 &80685800

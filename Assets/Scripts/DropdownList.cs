@@ -3,8 +3,11 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections.Generic;
+using Photon.Pun;
+using Photon.Realtime;
+using ExitGames.Client.Photon; // For Hashtable
 
-public class DropdownList : MonoBehaviour
+public class DropdownList : MonoBehaviourPunCallbacks
 {
     [Header("Disaster Selection")]
     [SerializeField] private TMP_Text modeText;
@@ -15,7 +18,6 @@ public class DropdownList : MonoBehaviour
     [Header("Duration Selection")]
     [SerializeField] private TMP_Dropdown durationDropdown;
 
-    // Set these to match your dropdown options
     private readonly int[] durations = { 60, 180, 300 }; // 1, 3, 5 minutes
 
     public static string SelectedDisaster { get; private set; } // Stores the selected value
@@ -36,6 +38,14 @@ public class DropdownList : MonoBehaviour
         if (durationDropdown != null)
         {
             durationDropdown.onValueChanged.AddListener(OnDurationChanged);
+        }
+
+        // On join, read the current duration from room properties
+        if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("duration"))
+        {
+            int duration = (int)PhotonNetwork.CurrentRoom.CustomProperties["duration"];
+            DurationManager.DurationSeconds = duration;
+            SetDropdownToDuration(duration);
         }
     }
 
@@ -65,7 +75,38 @@ public class DropdownList : MonoBehaviour
     {
         if (index >= 0 && index < durations.Length)
         {
-            DurationManager.DurationSeconds = durations[index];
+            int selectedDuration = durations[index];
+            DurationManager.DurationSeconds = selectedDuration;
+
+            // Only instructor (master client) sets the room property
+            if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
+            {
+                Hashtable props = new Hashtable { { "duration", selectedDuration } };
+                PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+            }
+        }
+    }
+
+    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+    {
+        if (propertiesThatChanged.ContainsKey("duration"))
+        {
+            int duration = (int)propertiesThatChanged["duration"];
+            DurationManager.DurationSeconds = duration;
+            SetDropdownToDuration(duration);
+        }
+    }
+
+    private void SetDropdownToDuration(int duration)
+    {
+        if (durationDropdown == null) return;
+        for (int i = 0; i < durations.Length; i++)
+        {
+            if (durations[i] == duration)
+            {
+                durationDropdown.SetValueWithoutNotify(i);
+                break;
+            }
         }
     }
 
