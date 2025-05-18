@@ -1270,7 +1270,7 @@ public class AuthManager : MonoBehaviour
 	private IEnumerator RegisterSuccessShowPanel()
 	{
 		SuccessfullyCreatedAccount.SetActive(value: true);
-		yield return new WaitForSeconds(0.5f);
+		yield return new WaitForSeconds(1.5f);
 		SuccessfullyCreatedAccount.SetActive(value: false);
 	}
 
@@ -1818,8 +1818,10 @@ public class AuthManager : MonoBehaviour
 			{
 				ManageAccount_InputFields[i].text = "";
 			}
-			ManageAccountPanel.SetActive(value: false);
+
 		}
+		ManageAccountPanel.SetActive(false);
+    	MenuPanel_SuperAdmin.SetActive(true);
 		//RefreshData();
 	}
 }
