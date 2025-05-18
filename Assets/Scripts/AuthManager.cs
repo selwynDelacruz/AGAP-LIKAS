@@ -424,6 +424,7 @@ public class AuthManager : MonoBehaviour
 		case "instructor":
 			if (Login_Instructor_Panel.activeSelf)
 			{
+				Debug.Log(Login_Instructor_Panel.activeSelf);
 				StartCoroutine(Login(Instructor_emailLoginField.text + "@gmail.com", Instructor_passwordLoginField.text));
 			}
 			break;
@@ -491,8 +492,10 @@ public class AuthManager : MonoBehaviour
 
 	private IEnumerator Login(string _email, string _password)
 	{
+		// First authenticate with Firebase
 		Task<AuthResult> LoginTask = auth.SignInWithEmailAndPasswordAsync(_email, _password);
 		yield return new WaitUntil(() => LoginTask.IsCompleted);
+
 		if (LoginTask.Exception != null)
 		{
 			isOnLoadingPanel = false;
@@ -541,8 +544,37 @@ public class AuthManager : MonoBehaviour
 			yield break;
 		}
 		User = LoginTask.Result.User;
+
+		// Get user data to verify user type
+		string attemptedUserType = PlayerPrefs.GetString("Type_Of_User");
+		Task<DataSnapshot> userTypeTask = DBreference.Child(attemptedUserType)
+			.Child(User.UserId)
+			.Child("User_Type")
+			.GetValueAsync();
+
+		yield return new WaitUntil(() => userTypeTask.IsCompleted);
+
+		if (userTypeTask.Exception != null)
+		{
+			Debug.LogError("Failed to verify user type");
+			SetWarning_LoginInfoText("Login Failed: Invalid credentials", "red");
+			auth.SignOut();
+			yield break;
+		}
+
+		DataSnapshot snapshot = userTypeTask.Result;
+		if (!snapshot.Exists || snapshot.Value == null || 
+			snapshot.Value.ToString() != attemptedUserType)
+		{
+			Debug.LogWarning($"User tried to log in as {attemptedUserType} but is actually a different type");
+			SetWarning_LoginInfoText("Invalid login type for this account", "red");
+			auth.SignOut();
+			yield break;
+		}
+
+		// Continue with existing login success logic
 		Debug.LogFormat("User signed in successfully: {0} ({1})", User.DisplayName, User.Email);
-		StartCoroutine(LoadUserData(PlayerPrefs.GetString("Type_Of_User")));
+		StartCoroutine(LoadUserData(attemptedUserType));
 		PlayerPrefs.SetString("LoginAlready", "true");
 		SetWarning_LoginInfoText("", "white");
 		switch (PlayerPrefs.GetString("Type_Of_User"))
@@ -1171,12 +1203,14 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("Type_Of_User", UserType);
 				PlayerPrefs.Save();
 				Debug.Log("instructor clicked");
+				Debug.Log("UserType: " + UserType);
 				break;
 			case "trainee":
 				Login_Trainee_Panel.SetActive(value: true);
 				ChooseTypeOfUserPanel.SetActive(value: false);
 				PlayerPrefs.SetString("Type_Of_User", UserType);
 				Debug.Log("trainee clicked");
+				Debug.Log("UserType: " + UserType);
 				PlayerPrefs.Save();
 				break;
 			case "super_admin":
@@ -1185,7 +1219,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("Type_Of_User", UserType);
 				PlayerPrefs.Save();
 				Debug.Log("superadmin clicked");
-
+				Debug.Log("UserType: " + UserType);
 				break;
 		}
 	}
@@ -1207,47 +1241,90 @@ public class AuthManager : MonoBehaviour
 	{
 		switch (PlayerPrefs.GetString("Type_Of_User"))
 		{
-		case "instructor":
-			ClearAllLoginField(Instructor_emailLoginField, Instructor_passwordLoginField, Instructor_confirmLoginText);
-			Login_Instructor_Panel.SetActive(value: false);
-			ChooseTypeOfUserPanel.SetActive(value: true);
-			PlayerPrefs.SetString("Type_Of_User", "");
-			PlayerPrefs.Save();
-			break;
-		case "trainee":
-			ClearAllLoginField(Trainee_emailLoginField, Trainee_passwordLoginField, Trainee_confirmLoginText);
-			Login_Trainee_Panel.SetActive(value: false);
-			ChooseTypeOfUserPanel.SetActive(value: true);
-			PlayerPrefs.SetString("Type_Of_User", "");
-			PlayerPrefs.Save();
-			break;
-		case "super_admin":
-			ClearAllLoginField(SuperAdmin_emailLoginField, SuperAdmin_passwordLoginField, SuperAdmin_confirmLoginText);
-            MenuPanel_SuperAdmin.SetActive(false);
-            ChooseTypeOfUserPanel.SetActive(true);
-            
-            // Add logout functionality for SuperAdmin
-            if (auth != null && auth.CurrentUser != null)
-            {
-                auth.SignOut();
-                Debug.Log("SuperAdmin signed out");
-            }
-            
-            // Clear all PlayerPrefs
-            PlayerPrefs.DeleteAll();
-            PlayerPrefs.Save();
-            
-            // Reset UI states
-            SuperAdmin_confirmLoginText.text = "";
-            Login_SuperAdminButton.interactable = true;
-            
-            // Clear any cached data
-            Current_Name = "";
-            Current_Username = "";
-            Current_Gender = "";
-            Current_Age = 0;
-            Current_Score = 0;
-            break;
+			case "instructor":
+				// Clear UI fields
+				ClearAllLoginField(Instructor_emailLoginField, Instructor_passwordLoginField, Instructor_confirmLoginText);
+				Login_Instructor_Panel.SetActive(false);
+				MenuPanel_Instructor.SetActive(false);
+				ChooseTypeOfUserPanel.SetActive(true);
+				
+				// Handle logout
+				if (auth != null && auth.CurrentUser != null)
+				{
+					auth.SignOut();
+					Debug.Log("Instructor signed out");
+				}
+				
+				// Clear preferences and cached data
+				PlayerPrefs.DeleteAll();
+				PlayerPrefs.Save();
+				
+				// Reset UI state
+				Instructor_confirmLoginText.text = "";
+				Login_InstructorButton.interactable = true;
+				
+				// Clear cached user data
+				Current_Name = "";
+				Current_Username = "";
+				Current_Gender = "";
+				Current_Age = 0;
+				Current_Score = 0;
+				break;
+
+			case "trainee":
+				// Clear UI fields
+				ClearAllLoginField(Trainee_emailLoginField, Trainee_passwordLoginField, Trainee_confirmLoginText);
+				Login_Trainee_Panel.SetActive(false);
+				MenuPanel_Trainee.SetActive(false);
+				ChooseTypeOfUserPanel.SetActive(true);
+				
+				// Handle logout
+				if (auth != null && auth.CurrentUser != null)
+				{
+					auth.SignOut();
+					Debug.Log("Trainee signed out");
+				}
+				
+				// Clear preferences and cached data
+				PlayerPrefs.DeleteAll();
+				PlayerPrefs.Save();
+				
+				// Reset UI state
+				Trainee_confirmLoginText.text = "";
+				Login_TraineeButton.interactable = false;
+				
+				// Clear cached user data
+				Current_Name = "";
+				Current_Username = "";
+				Current_Gender = "";
+				Current_Age = 0;
+				Current_Score = 0;
+				break;
+
+			case "super_admin":
+				// Existing super admin logout code
+				ClearAllLoginField(SuperAdmin_emailLoginField, SuperAdmin_passwordLoginField, SuperAdmin_confirmLoginText);
+				MenuPanel_SuperAdmin.SetActive(false);
+				ChooseTypeOfUserPanel.SetActive(true);
+				
+				if (auth != null && auth.CurrentUser != null)
+				{
+					auth.SignOut();
+					Debug.Log("SuperAdmin signed out");
+				}
+				
+				PlayerPrefs.DeleteAll();
+				PlayerPrefs.Save();
+				
+				SuperAdmin_confirmLoginText.text = "";
+				Login_SuperAdminButton.interactable = true;
+				
+				Current_Name = "";
+				Current_Username = "";
+				Current_Gender = "";
+				Current_Age = 0;
+				Current_Score = 0;
+				break;
 		}
 	}
 
@@ -1474,16 +1551,38 @@ public class AuthManager : MonoBehaviour
 }
 
 	public void GetSearchBarUsers(string data)
-	{
-		if (SelectedUserTypeToShow.value == 0)
-		{
-			StartCoroutine(LoadInstructorList_SearchBar(data));
-		}
-		else
-		{
-			StartCoroutine(LoadTraineeList_SearchBar(data));
-		}
-	}
+{
+    // Add null checks and debug logging
+    if (SelectedUserTypeToShow == null)
+    {
+        Debug.LogError("SelectedUserTypeToShow dropdown is not assigned in Inspector!");
+        return;
+    }
+
+    if (SearchBarInputField == null)
+    {
+        Debug.LogError("SearchBarInputField is not assigned in Inspector!");
+        return;
+    }
+
+    try 
+    {
+        if (SelectedUserTypeToShow.value == 0)
+        {
+            StartCoroutine(LoadInstructorList_SearchBar(data));
+            Debug.Log($"Searching instructors for: {data}");
+        }
+        else
+        {
+            StartCoroutine(LoadTraineeList_SearchBar(data));
+            Debug.Log($"Searching trainees for: {data}");
+        }
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"Error in GetSearchBarUsers: {ex.Message}");
+    }
+}
 
 	public void LoadUserData(int num)
 	{
