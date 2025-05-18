@@ -1,16 +1,22 @@
 using UnityEngine;
+using UnityEngine.UI;
+using Photon.Pun;
 
-public class CreateAndJoin : MonoBehaviour
+public class CreateAndJoin : MonoBehaviourPunCallbacks
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public InputField createInput;
+    public InputField joinInput;
 
-    // Update is called once per frame
-    void Update()
+    public void createRoom()
     {
-        
+        PhotonNetwork.CreateRoom(createInput.text);
+    }
+    public void joinRoom()
+    {
+        PhotonNetwork.JoinRoom(joinInput.text);
+    }
+    public override void OnJoinedRoom()
+    {
+        PhotonNetwork.LoadLevel("Lobby");
     }
 }

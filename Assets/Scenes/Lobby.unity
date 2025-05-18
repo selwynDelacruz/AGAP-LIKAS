@@ -3384,7 +3384,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &499959621
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5626,8 +5626,6 @@ GameObject:
   - component: {fileID: 840673639}
   - component: {fileID: 840673638}
   - component: {fileID: 840673637}
-  - component: {fileID: 840673636}
-  - component: {fileID: 840673640}
   m_Layer: 0
   m_Name: StartButton
   m_TagString: Untagged
@@ -5655,18 +5653,6 @@ RectTransform:
   m_AnchoredPosition: {x: -134.07, y: -428}
   m_SizeDelta: {x: 200, y: 63.1007}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &840673636
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 840673634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f0f71bac0e172244afdb2eae841d575, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &840673637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5711,9 +5697,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 840673636}
-        m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
-        m_MethodName: LoadSelectedScene
+      - m_Target: {fileID: 1675384174}
+        m_TargetAssemblyTypeName: DropdownList, Assembly-CSharp
+        m_MethodName: OnStartButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5761,19 +5747,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 840673634}
   m_CullTransparentMesh: 1
---- !u!114 &840673640
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 840673634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2305a9115aa1b947a2b3099d50505fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  durationDropdown: {fileID: 740610940}
 --- !u!1 &867599271
 GameObject:
   m_ObjectHideFlags: 0
@@ -6034,7 +6007,6 @@ GameObject:
   - component: {fileID: 904576683}
   - component: {fileID: 904576682}
   - component: {fileID: 904576681}
-  - component: {fileID: 904576680}
   m_Layer: 0
   m_Name: Disaster_Dropdown
   m_TagString: Untagged
@@ -6064,23 +6036,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 169}
   m_SizeDelta: {x: 468.15, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &904576680
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 904576678}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00ee4a0765544304d85dd0db2e6e8b6d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  modeText: {fileID: 814144467}
-  disasterImage: {fileID: 344483782}
-  floodSprite: {fileID: 21300000, guid: cfeec4b315274214d97e1c08674b56e8, type: 3}
-  earthquakeSprite: {fileID: 21300000, guid: 350c0f31ce8e50648af6d1ca9f3d7c7d, type: 3}
-  disasterDropdown: {fileID: 904576681}
 --- !u!114 &904576681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10230,6 +10185,56 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1671749222}
   m_CullTransparentMesh: 1
+--- !u!1 &1675384173
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1675384175}
+  - component: {fileID: 1675384174}
+  m_Layer: 0
+  m_Name: DropdownManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1675384174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1675384173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00ee4a0765544304d85dd0db2e6e8b6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  modeText: {fileID: 814144467}
+  disasterImage: {fileID: 344483782}
+  floodSprite: {fileID: 21300000, guid: cfeec4b315274214d97e1c08674b56e8, type: 3}
+  earthquakeSprite: {fileID: 21300000, guid: 350c0f31ce8e50648af6d1ca9f3d7c7d, type: 3}
+  disasterDropdown: {fileID: 904576681}
+  durationDropdown: {fileID: 740610940}
+--- !u!4 &1675384175
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1675384173}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 960, y: 540, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1676122100
 GameObject:
   m_ObjectHideFlags: 0
@@ -12326,3 +12331,4 @@ SceneRoots:
   - {fileID: 1086065465}
   - {fileID: 1078684160}
   - {fileID: 1548737277}
+  - {fileID: 1675384175}
