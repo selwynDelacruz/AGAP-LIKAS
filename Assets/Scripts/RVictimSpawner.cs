@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro; // Add this for TMP_Text
+using TMPro;
+using Photon.Pun; // Add this
 
 public class RVictimSpawner : MonoBehaviour
 {
@@ -11,30 +12,27 @@ public class RVictimSpawner : MonoBehaviour
     [SerializeField] private List<Transform> spawnPoints = new List<Transform>();
 
     [Header("UI")]
-    [SerializeField] private TMP_Text spawnedCountText; // Reference to TMP text
+    [SerializeField] private TMP_Text spawnedCountText;
 
-    // Internal tracking of used spawn points
     private HashSet<Transform> usedSpawnPoints = new HashSet<Transform>();
-
-    // Track number of spawned prefabs
     private int spawnedCount = 0;
-    private const int maxSpawnCount = 5; // Maximum allowed spawns
+    private const int maxSpawnCount = 5;
 
     private void Start()
     {
         UpdateSpawnedCountText();
     }
 
-    // Call this from TMP button OnClick
     public void SpawnVictim()
     {
+        if (!PhotonNetwork.IsMasterClient) return; // Only MasterClient spawns
+
         if (spawnedCount >= maxSpawnCount)
         {
             Debug.LogWarning("Spawn limit reached!");
             return;
         }
 
-        // Get available spawn points
         List<Transform> availablePoints = new List<Transform>();
         foreach (var point in spawnPoints)
         {
@@ -54,21 +52,16 @@ public class RVictimSpawner : MonoBehaviour
             return;
         }
 
-        // Pick a random available spawn point
         int spawnIndex = Random.Range(0, availablePoints.Count);
         Transform chosenPoint = availablePoints[spawnIndex];
 
-        // Pick a random prefab
         int prefabIndex = Random.Range(0, victimPrefabs.Count);
         GameObject chosenPrefab = victimPrefabs[prefabIndex];
 
-        // Spawn the prefab
-        Instantiate(chosenPrefab, chosenPoint.position, chosenPoint.rotation);
+        // Use Photon to spawn
+        PhotonNetwork.Instantiate(chosenPrefab.name, chosenPoint.position, chosenPoint.rotation);
 
-        // Mark this spawn point as used
         usedSpawnPoints.Add(chosenPoint);
-
-        // Increment and update UI
         spawnedCount++;
         UpdateSpawnedCountText();
     }

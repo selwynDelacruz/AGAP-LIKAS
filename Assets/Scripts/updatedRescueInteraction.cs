@@ -1,8 +1,9 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Photon.Pun;
 
-public class RescueBoatInteraction : MonoBehaviour
+public class RescueBoatInteraction : MonoBehaviourPun
 {
     public GameObject rescueDialogUI; // UI for rescue dialog
     public Button rescueButton; // Button to rescue the victim
@@ -108,18 +109,17 @@ public class RescueBoatInteraction : MonoBehaviour
         // Check if entered the safe spot
         if (other.gameObject.name == "safe spot")
         {
-            // Despawn all rescued victims (children of passenger seats)
             bool victimDespawned = false;
             if (passengerSeat1.childCount > 0)
             {
-                Destroy(passengerSeat1.GetChild(0).gameObject);
+                Photon.Pun.PhotonNetwork.Destroy(passengerSeat1.GetChild(0).gameObject);
                 passengerCount--;
                 rescuedVictim++;
                 victimDespawned = true;
             }
             if (passengerSeat2.childCount > 0)
             {
-                Destroy(passengerSeat2.GetChild(0).gameObject);
+                Photon.Pun.PhotonNetwork.Destroy(passengerSeat2.GetChild(0).gameObject);
                 passengerCount--;
                 rescuedVictim++;
                 victimDespawned = true;
@@ -151,17 +151,25 @@ public class RescueBoatInteraction : MonoBehaviour
         }
         rescueDialogUI.SetActive(true);
 
-        // Unlock cursor for UI interaction
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        // Photon-aware cursor logic
+        if (photonView.IsMine)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 
     void CloseDialog()
     {
-        // Hide the dialog and reset cursor
         rescueDialogUI.SetActive(false);
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+
+        // Photon-aware cursor logic
+        if (photonView.IsMine)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
         Time.timeScale = 1.0f; // Resume game
         isPaused = false;
         currentVictim = null; // Clear the reference

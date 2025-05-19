@@ -4,13 +4,14 @@ using Photon.Realtime;
 
 public class SpawnPlayers : MonoBehaviour
 {
-    public GameObject instructorPrefab; // Assign in Inspector
-    public GameObject traineePrefab;    // Assign in Inspector
-    public Transform traineeSpawnPoint; // Assign in Inspector
-    public Transform instructorSpawnPoint; // Assign in Inspector
+    public GameObject traineePrefab;
+    public Transform traineeSpawnPoint;
 
-    public GameObject instructorScreenGUI; // Assign in Inspector
-    public GameObject traineeScreenGUI;    // Assign in Inspector
+    public GameObject instructorScreenGUI;
+    public GameObject traineeScreenGUI;
+
+    // Cache the last followed trainee for instructor
+    private Transform lastTraineeTransform;
 
     void Start()
     {
@@ -18,26 +19,73 @@ public class SpawnPlayers : MonoBehaviour
 
         if (isInstructor)
         {
-            // Spawn Instructor
-            GameObject instructor = PhotonNetwork.Instantiate(instructorPrefab.name, instructorSpawnPoint.position, instructorSpawnPoint.rotation);
-            // Enable Instructor GUI, disable Trainee GUI
             if (instructorScreenGUI) instructorScreenGUI.SetActive(true);
             if (traineeScreenGUI) traineeScreenGUI.SetActive(false);
+
+            StartCoroutine(SetupSpectatorCamera());
         }
         else
         {
-            // Spawn Trainee
             GameObject trainee = PhotonNetwork.Instantiate(traineePrefab.name, traineeSpawnPoint.position, traineeSpawnPoint.rotation);
-            // Enable Trainee GUI, disable Instructor GUI
             if (instructorScreenGUI) instructorScreenGUI.SetActive(false);
             if (traineeScreenGUI) traineeScreenGUI.SetActive(true);
 
-            // Set camera to follow the trainee
             BoatCameraFollow cameraFollow = Camera.main.GetComponent<BoatCameraFollow>();
             if (cameraFollow != null)
             {
                 cameraFollow.boat = trainee.transform;
             }
         }
+    }
+
+    void Update()
+    {
+        // Only instructor needs to update the camera target
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Transform currentTrainee = FindTraineeTransform();
+            if (currentTrainee != null && currentTrainee != lastTraineeTransform)
+            {
+                BoatCameraFollow cameraFollow = Camera.main.GetComponent<BoatCameraFollow>();
+                if (cameraFollow != null)
+                {
+                    cameraFollow.boat = currentTrainee;
+                    cameraFollow.mouseSensitivity = 0f;
+                }
+                lastTraineeTransform = currentTrainee;
+            }
+        }
+    }
+
+    // Coroutine to find the trainee and set as camera target (initial setup)
+    System.Collections.IEnumerator SetupSpectatorCamera()
+    {
+        yield return new WaitForSeconds(1f);
+
+        Transform traineeTransform = FindTraineeTransform();
+        if (traineeTransform != null)
+        {
+            BoatCameraFollow cameraFollow = Camera.main.GetComponent<BoatCameraFollow>();
+            if (cameraFollow != null)
+            {
+                cameraFollow.boat = traineeTransform;
+                cameraFollow.mouseSensitivity = 0f;
+            }
+            lastTraineeTransform = traineeTransform;
+        }
+    }
+
+    // Helper to find the trainee's transform
+    private Transform FindTraineeTransform()
+    {
+        PhotonView[] allViews = GameObject.FindObjectsOfType<PhotonView>();
+        foreach (var view in allViews)
+        {
+            if (!view.IsMine && view.gameObject.CompareTag("Trainee"))
+            {
+                return view.transform;
+            }
+        }
+        return null;
     }
 }

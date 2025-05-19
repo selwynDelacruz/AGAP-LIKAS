@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using Photon.Pun;
 
-public class QuestionTriggerPopup : MonoBehaviour
+public class QuestionTriggerPopup : MonoBehaviourPun
 {
     [Header("Question UI")]
     public GameObject questionDialogUI;
@@ -119,7 +120,8 @@ public class QuestionTriggerPopup : MonoBehaviour
         // Destroy the victim after interaction
         if (currentVictim != null)
         {
-            Destroy(currentVictim);
+            // Use Photon destroy for networked victim
+            Photon.Pun.PhotonNetwork.Destroy(currentVictim);
             currentVictim = null;
         }
     }
@@ -127,22 +129,31 @@ public class QuestionTriggerPopup : MonoBehaviour
     void ShowQuestionPanel()
     {
         questionDialogUI.SetActive(true);
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        if (photonView.IsMine)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 
     void PauseGame()
     {
         Time.timeScale = 0f;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        if (photonView.IsMine)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 
     void ResumeGame()
     {
         Time.timeScale = 1f;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (photonView.IsMine)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     // Public getters if you want to access these values elsewhere

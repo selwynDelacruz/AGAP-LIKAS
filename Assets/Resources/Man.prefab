@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &6808321630729522133
+--- !u!1001 &6107844228471934603
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -50,11 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       propertyPath: m_Name
-      value: RVictimMan
+      value: Man
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       propertyPath: m_TagString
-      value: randomVictim
+      value: Victim
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       propertyPath: m_Avatar
@@ -74,23 +74,29 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8965981713378397782}
+      addedObject: {fileID: 6396000413419435302}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 629449792340788985}
+      addedObject: {fileID: 8215117006014690255}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7148550005740628523}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4095169178775510473}
   m_SourcePrefab: {fileID: 100100000, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
---- !u!1 &5962042026813879940 stripped
+--- !u!1 &6341633591439553498 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
-  m_PrefabInstance: {fileID: 6808321630729522133}
+  m_PrefabInstance: {fileID: 6107844228471934603}
   m_PrefabAsset: {fileID: 0}
---- !u!54 &8965981713378397782
+--- !u!54 &6396000413419435302
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5962042026813879940}
+  m_GameObject: {fileID: 6341633591439553498}
   serializedVersion: 4
   m_Mass: 1
   m_Drag: 0
@@ -111,13 +117,13 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &629449792340788985
+--- !u!65 &8215117006014690255
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5962042026813879940}
+  m_GameObject: {fileID: 6341633591439553498}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -132,3 +138,38 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.2307215, y: 10.180357, z: 6.3405375}
   m_Center: {x: 0.83649683, y: 0, z: 0.6251795}
+--- !u!114 &7148550005740628523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6341633591439553498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63712ce34c9203449a226334882d69ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  questionIndex: 0
+--- !u!114 &4095169178775510473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6341633591439553498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0

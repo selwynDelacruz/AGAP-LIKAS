@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+using System.Collections.Generic;
+using ExitGames.Client.Photon; // For Hashtable
 
 public class LobbyManager : MonoBehaviourPunCallbacks
 {
@@ -23,23 +25,33 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     [Header("Start Button")]
     public Button startButton; // Only visible to Instructor
 
+    [Header("Disaster Selection")]
+    [SerializeField] private TMP_Text modeText;
+    [SerializeField] private Image disasterImage;
+    [SerializeField] private Sprite floodSprite, earthquakeSprite;
+    [SerializeField] private TMP_Dropdown disasterDropdown;
+
+    [Header("Duration Selection")]
+    [SerializeField] private TMP_Dropdown durationDropdown;
+
+    private readonly int[] durations = { 60, 180, 300 }; // 1, 3, 5 minutes
+
+    public static string SelectedDisaster { get; private set; } // Stores the selected value
+
     void Start()
     {
+        // Panel setup
         if (PhotonNetwork.IsMasterClient)
         {
             instructorPanel.SetActive(true);
             traineePanel.SetActive(false);
             startButton.gameObject.SetActive(true);
-
-            // Optionally update instructor panel fields here if needed
         }
         else
         {
             instructorPanel.SetActive(false);
             traineePanel.SetActive(true);
             startButton.gameObject.SetActive(false);
-
-            // Update Trainee Lobby TMP_Text fields
             UpdateTraineePanelFields();
         }
 
@@ -49,6 +61,33 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         if (roomCodeText != null && PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom != null)
         {
             roomCodeText.text = "Lobby Code: " + PhotonNetwork.CurrentRoom.Name;
+        }
+
+        // Disaster dropdown setup
+        if (disasterDropdown != null && disasterDropdown.options.Count == 0)
+        {
+            List<string> options = new List<string> { "Flood", "Earthquake" };
+            disasterDropdown.ClearOptions();
+            disasterDropdown.AddOptions(options);
+        }
+        if (disasterDropdown != null)
+        {
+            UpdateDisaster(disasterDropdown.value);
+            disasterDropdown.onValueChanged.AddListener(UpdateDisaster);
+        }
+
+        // Duration dropdown setup
+        if (durationDropdown != null)
+        {
+            durationDropdown.onValueChanged.AddListener(OnDurationChanged);
+        }
+
+        // On join, read the current duration from room properties
+        if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("duration"))
+        {
+            int duration = (int)PhotonNetwork.CurrentRoom.CustomProperties["duration"];
+            DurationManager.DurationSeconds = duration;
+            SetDropdownToDuration(duration);
         }
     }
 
@@ -86,8 +125,10 @@ public class LobbyManager : MonoBehaviourPunCallbacks
                 traineeName = player.NickName;
         }
 
-        instructorNameText.text = instructorName;
-        traineeNameText.text = traineeName;
+        if (instructorNameText != null)
+            instructorNameText.text = instructorName;
+        if (traineeNameText != null)
+            traineeNameText.text = traineeName;
     }
 
     public override void OnPlayerEnteredRoom(Photon.Realtime.Player otherPlayer)
@@ -104,17 +145,85 @@ public class LobbyManager : MonoBehaviourPunCallbacks
             UpdateTraineePanelFields();
     }
 
+    // Disaster selection logic
+    public void UpdateDisaster(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                if (modeText != null) modeText.text = "Flood";
+                if (disasterImage != null) disasterImage.sprite = floodSprite;
+                SelectedDisaster = "Flood";
+                break;
+            case 1:
+                if (modeText != null) modeText.text = "Earthquake";
+                if (disasterImage != null) disasterImage.sprite = earthquakeSprite;
+                SelectedDisaster = "Earthquake";
+                break;
+            default:
+                if (modeText != null) modeText.text = "Unknown";
+                if (disasterImage != null) disasterImage.sprite = null;
+                SelectedDisaster = "";
+                break;
+        }
+    }
+
+    // Duration selection logic
+    void OnDurationChanged(int index)
+    {
+        if (index >= 0 && index < durations.Length)
+        {
+            int selectedDuration = durations[index];
+            DurationManager.DurationSeconds = selectedDuration;
+
+            // Only instructor (master client) sets the room property
+            if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
+            {
+                Hashtable props = new Hashtable { { "duration", selectedDuration } };
+                PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+            }
+        }
+    }
+
+    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+    {
+        if (propertiesThatChanged.ContainsKey("duration"))
+        {
+            int duration = (int)propertiesThatChanged["duration"];
+            DurationManager.DurationSeconds = duration;
+            SetDropdownToDuration(duration);
+        }
+    }
+
+    private void SetDropdownToDuration(int duration)
+    {
+        if (durationDropdown == null) return;
+        for (int i = 0; i < durations.Length; i++)
+        {
+            if (durations[i] == duration)
+            {
+                durationDropdown.SetValueWithoutNotify(i);
+                break;
+            }
+        }
+    }
+
     // Called by Instructor's Start Button
     public void OnStartButtonPressed()
     {
+        // Ensure duration is set before starting
+        if (durationDropdown != null && durationDropdown.value >= 0 && durationDropdown.value < durations.Length)
+        {
+            DurationManager.DurationSeconds = durations[durationDropdown.value];
+        }
         photonView.RPC("StartDisasterScene", RpcTarget.All);
     }
 
     [PunRPC]
     void StartDisasterScene()
     {
-        // Use the selected disaster from DropdownList
-        string sceneName = DropdownList.SelectedDisaster;
+        // Use the selected disaster from dropdown
+        string sceneName = SelectedDisaster;
         if (!string.IsNullOrEmpty(sceneName))
         {
             PhotonNetwork.LoadLevel(sceneName);

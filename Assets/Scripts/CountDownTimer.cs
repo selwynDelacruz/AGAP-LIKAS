@@ -56,7 +56,21 @@ public class CountDownTimer : MonoBehaviourPun
     {
         int minutes = Mathf.FloorToInt(timeLeft / 60);
         int seconds = Mathf.FloorToInt(timeLeft % 60);
-        TraineeDurationText.text = $"{minutes:00}:{seconds:00}";
-        InstructorDurationText.text = $"{minutes:00}:{seconds:00}";
+
+        if (TraineeDurationText != null && TraineeDurationText.gameObject.activeInHierarchy)
+            TraineeDurationText.text = $"{minutes:00}:{seconds:00}";
+
+        if (InstructorDurationText != null && InstructorDurationText.gameObject.activeInHierarchy)
+            InstructorDurationText.text = $"{minutes:00}:{seconds:00}";
+    }
+
+
+    // Add this method for the End Session button
+    public void EndSession()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            photonView.RPC("GoToResultScene", RpcTarget.All);
+        }
     }
 }

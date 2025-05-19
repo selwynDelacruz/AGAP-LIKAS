@@ -9,6 +9,7 @@ TagManager:
   - Victim
   - randomVictim
   - building
+  - Trainee
   layers:
   - Default
   - TransparentFX

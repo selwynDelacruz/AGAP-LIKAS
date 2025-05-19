@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &1222413486207064733
+--- !u!1001 &3894924723129307488
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -50,11 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: db40c2946f5812644a120673af19d9fd, type: 3}
       propertyPath: m_Name
-      value: RVictimOldman
+      value: Old Man
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: db40c2946f5812644a120673af19d9fd, type: 3}
       propertyPath: m_TagString
-      value: randomVictim
+      value: Victim
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: db40c2946f5812644a120673af19d9fd, type: 3}
       propertyPath: m_Controller
@@ -66,23 +66,29 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db40c2946f5812644a120673af19d9fd, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 72968898515685708}
+      addedObject: {fileID: 7261216155003381435}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db40c2946f5812644a120673af19d9fd, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3071160611708710748}
+      addedObject: {fileID: 3077795129457078890}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db40c2946f5812644a120673af19d9fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8996653847050061881}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db40c2946f5812644a120673af19d9fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 967958834402547609}
   m_SourcePrefab: {fileID: 100100000, guid: db40c2946f5812644a120673af19d9fd, type: 3}
---- !u!1 &2033246894545299404 stripped
+--- !u!1 &4237012826781084721 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: db40c2946f5812644a120673af19d9fd, type: 3}
-  m_PrefabInstance: {fileID: 1222413486207064733}
+  m_PrefabInstance: {fileID: 3894924723129307488}
   m_PrefabAsset: {fileID: 0}
---- !u!54 &72968898515685708
+--- !u!54 &7261216155003381435
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2033246894545299404}
+  m_GameObject: {fileID: 4237012826781084721}
   serializedVersion: 4
   m_Mass: 1
   m_Drag: 0
@@ -103,13 +109,13 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &3071160611708710748
+--- !u!65 &3077795129457078890
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2033246894545299404}
+  m_GameObject: {fileID: 4237012826781084721}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -124,3 +130,38 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.2307215, y: 10.180357, z: 6.3405375}
   m_Center: {x: 0.83649683, y: 0, z: 0.6251795}
+--- !u!114 &8996653847050061881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4237012826781084721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63712ce34c9203449a226334882d69ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  questionIndex: 1
+--- !u!114 &967958834402547609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4237012826781084721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
