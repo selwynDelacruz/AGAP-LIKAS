@@ -95,6 +95,25 @@ public class RescueBoatInteraction : MonoBehaviourPun
         }
     }
 
+    void Update()
+    {
+        if (photonView.IsMine && rescueDialogUI != null && rescueDialogUI.activeSelf)
+        {
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                RescueVictim();
+                Time.timeScale = 1.0f;
+                isPaused = false;
+            }
+            else if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                CloseDialog();
+                Time.timeScale = 1.0f;
+                isPaused = false;
+            }
+        }
+    }
+
     void OnTriggerEnter(Collider other)
     {
         // Check if the collided object is a victim

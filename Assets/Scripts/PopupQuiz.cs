@@ -53,6 +53,20 @@ public class QuestionTriggerPopup : MonoBehaviourPun
         Debug.Log("Initial Victim Count: " + initialVictimCount);
     }
 
+    void Update()
+    {
+        if (photonView.IsMine && questionDialogUI != null && questionDialogUI.activeSelf)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                answerButton1.onClick.Invoke();
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                answerButton2.onClick.Invoke();
+            }
+        }
+    }
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Victim"))
