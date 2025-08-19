@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Photon.Pun; // Add this
 
 public class VictimSpawner : MonoBehaviour
 {
@@ -15,9 +14,6 @@ public class VictimSpawner : MonoBehaviour
         {
             availableSpawnIndices.Add(i);
         }
-
-        // Only the MasterClient spawns the victims
-        if (!PhotonNetwork.IsMasterClient) return;
 
         for (int i = 0; i < maxQuestions; i++)
         {
@@ -45,8 +41,8 @@ public class VictimSpawner : MonoBehaviour
             int spawnPointIndex = availableSpawnIndices[randomIndex];
             availableSpawnIndices.RemoveAt(randomIndex);
 
-            // Spawn the victim at the chosen spawn point using Photon
-            GameObject victim = PhotonNetwork.Instantiate(prefab.name, spawnPoints[spawnPointIndex].position, spawnPoints[spawnPointIndex].rotation);
+            // Spawn the victim at the chosen spawn point locally
+            GameObject victim = Instantiate(prefab, spawnPoints[spawnPointIndex].position, spawnPoints[spawnPointIndex].rotation);
             victim.tag = "Victim";
 
             // Assign the question index

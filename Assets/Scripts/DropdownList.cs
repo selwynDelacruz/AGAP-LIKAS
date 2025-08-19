@@ -3,11 +3,8 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections.Generic;
-using Photon.Pun;
-using Photon.Realtime;
-using ExitGames.Client.Photon; // For Hashtable
 
-public class DropdownList : MonoBehaviourPunCallbacks
+public class DropdownList : MonoBehaviour
 {
     [Header("Disaster Selection")]
     [SerializeField] private TMP_Text modeText;
@@ -40,13 +37,9 @@ public class DropdownList : MonoBehaviourPunCallbacks
             durationDropdown.onValueChanged.AddListener(OnDurationChanged);
         }
 
-        // On join, read the current duration from room properties
-        if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("duration"))
-        {
-            int duration = (int)PhotonNetwork.CurrentRoom.CustomProperties["duration"];
-            DurationManager.DurationSeconds = duration;
-            SetDropdownToDuration(duration);
-        }
+        // Set initial duration
+        DurationManager.DurationSeconds = durations[0];
+        SetDropdownToDuration(durations[0]);
     }
 
     public void UpdateDisaster(int index)
@@ -77,23 +70,7 @@ public class DropdownList : MonoBehaviourPunCallbacks
         {
             int selectedDuration = durations[index];
             DurationManager.DurationSeconds = selectedDuration;
-
-            // Only instructor (master client) sets the room property
-            if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
-            {
-                Hashtable props = new Hashtable { { "duration", selectedDuration } };
-                PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-            }
-        }
-    }
-
-    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
-    {
-        if (propertiesThatChanged.ContainsKey("duration"))
-        {
-            int duration = (int)propertiesThatChanged["duration"];
-            DurationManager.DurationSeconds = duration;
-            SetDropdownToDuration(duration);
+            SetDropdownToDuration(selectedDuration);
         }
     }
 
@@ -124,3 +101,4 @@ public class DropdownList : MonoBehaviourPunCallbacks
         }
     }
 }
+

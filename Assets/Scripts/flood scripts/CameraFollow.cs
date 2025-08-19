@@ -1,5 +1,4 @@
 using UnityEngine;
-using Photon.Pun; // Add this
 
 public class BoatCameraFollow : MonoBehaviour
 {
@@ -14,15 +13,9 @@ public class BoatCameraFollow : MonoBehaviour
     private float currentYaw = 0f;
     private float currentPitch = 20f; // Up/down angle
 
-    private PhotonView boatPhotonView; // Add this
-
     void LateUpdate()
     {
         if (boat == null) return;
-
-        // Only control camera if this is the local player's boat
-        if (boatPhotonView != null && !boatPhotonView.IsMine)
-            return;
 
         // Mouse input
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
@@ -43,33 +36,11 @@ public class BoatCameraFollow : MonoBehaviour
         transform.LookAt(boat.position + Vector3.up * 2f); // Slightly above boat center
     }
 
-    void OnEnable()
-    {
-        // Try to get the PhotonView from the boat
-        if (boat != null)
-        {
-            boatPhotonView = boat.GetComponent<PhotonView>();
-        }
-    }
-
     void Update()
     {
-        // In case the boat is assigned after Start/OnEnable
-        if (boatPhotonView == null && boat != null)
-        {
-            boatPhotonView = boat.GetComponent<PhotonView>();
-        }
-
-        // Only lock/hide cursor for the local player controlling their own boat
-        if (boatPhotonView != null && boatPhotonView.IsMine)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        // Always lock/hide cursor for local camera control
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 }
+

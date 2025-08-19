@@ -1,9 +1,8 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
-using Photon.Pun;
 
-public class CountDownTimer : MonoBehaviourPun
+public class CountDownTimer : MonoBehaviour
 {
     public TMP_Text TraineeDurationText;
     public TMP_Text InstructorDurationText;
@@ -28,15 +27,11 @@ public class CountDownTimer : MonoBehaviourPun
             if (timeLeft <= 0)
             {
                 isRunning = false;
-                if (PhotonNetwork.IsMasterClient)
-                {
-                    photonView.RPC("GoToResultScene", RpcTarget.All);
-                }
+                GoToResultScene();
             }
         }
     }
 
-    [PunRPC]
     void GoToResultScene()
     {
         SceneManager.LoadScene("Result"); // Use your actual result scene name
@@ -64,13 +59,10 @@ public class CountDownTimer : MonoBehaviourPun
             InstructorDurationText.text = $"{minutes:00}:{seconds:00}";
     }
 
-
     // Add this method for the End Session button
     public void EndSession()
     {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            photonView.RPC("GoToResultScene", RpcTarget.All);
-        }
+        GoToResultScene();
     }
 }
+

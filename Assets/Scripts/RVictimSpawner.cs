@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using Photon.Pun; // Add this
 
 public class RVictimSpawner : MonoBehaviour
 {
@@ -25,8 +24,6 @@ public class RVictimSpawner : MonoBehaviour
 
     public void SpawnVictim()
     {
-        if (!PhotonNetwork.IsMasterClient) return; // Only MasterClient spawns
-
         if (spawnedCount >= maxSpawnCount)
         {
             Debug.LogWarning("Spawn limit reached!");
@@ -58,8 +55,8 @@ public class RVictimSpawner : MonoBehaviour
         int prefabIndex = Random.Range(0, victimPrefabs.Count);
         GameObject chosenPrefab = victimPrefabs[prefabIndex];
 
-        // Use Photon to spawn
-        PhotonNetwork.Instantiate(chosenPrefab.name, chosenPoint.position, chosenPoint.rotation);
+        // Local spawn
+        Instantiate(chosenPrefab, chosenPoint.position, chosenPoint.rotation);
 
         usedSpawnPoints.Add(chosenPoint);
         spawnedCount++;
@@ -81,3 +78,4 @@ public class RVictimSpawner : MonoBehaviour
         }
     }
 }
+

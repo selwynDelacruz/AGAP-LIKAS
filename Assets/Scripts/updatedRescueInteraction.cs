@@ -1,9 +1,8 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Photon.Pun;
 
-public class RescueBoatInteraction : MonoBehaviourPun
+public class RescueBoatInteraction : MonoBehaviour
 {
     public GameObject rescueDialogUI; // UI for rescue dialog
     public Button rescueButton; // Button to rescue the victim
@@ -97,7 +96,7 @@ public class RescueBoatInteraction : MonoBehaviourPun
 
     void Update()
     {
-        if (photonView.IsMine && rescueDialogUI != null && rescueDialogUI.activeSelf)
+        if (rescueDialogUI != null && rescueDialogUI.activeSelf)
         {
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
             {
@@ -131,14 +130,14 @@ public class RescueBoatInteraction : MonoBehaviourPun
             bool victimDespawned = false;
             if (passengerSeat1.childCount > 0)
             {
-                Photon.Pun.PhotonNetwork.Destroy(passengerSeat1.GetChild(0).gameObject);
+                Destroy(passengerSeat1.GetChild(0).gameObject);
                 passengerCount--;
                 rescuedVictim++;
                 victimDespawned = true;
             }
             if (passengerSeat2.childCount > 0)
             {
-                Photon.Pun.PhotonNetwork.Destroy(passengerSeat2.GetChild(0).gameObject);
+                Destroy(passengerSeat2.GetChild(0).gameObject);
                 passengerCount--;
                 rescuedVictim++;
                 victimDespawned = true;
@@ -170,24 +169,18 @@ public class RescueBoatInteraction : MonoBehaviourPun
         }
         rescueDialogUI.SetActive(true);
 
-        // Photon-aware cursor logic
-        if (photonView.IsMine)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        // Cursor logic
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     void CloseDialog()
     {
         rescueDialogUI.SetActive(false);
 
-        // Photon-aware cursor logic
-        if (photonView.IsMine)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        // Cursor logic
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         Time.timeScale = 1.0f; // Resume game
         isPaused = false;

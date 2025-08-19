@@ -1,12 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
-using Photon.Pun;
-using Photon.Realtime;
 using TMPro;
 using System.Collections.Generic;
-using ExitGames.Client.Photon; // For Hashtable
 
-public class LobbyManager : MonoBehaviourPunCallbacks
+public class LobbyManager : MonoBehaviour
 {
     [Header("Panels")]
     public GameObject instructorPanel; // "Instructor Disaster Setup"
@@ -38,10 +35,16 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     public static string SelectedDisaster { get; private set; } // Stores the selected value
 
+    // Local state for instructor/trainee simulation
+    private bool isInstructor = true;
+    private string instructorName = "Instructor";
+    private string traineeName = "Trainee";
+    private string roomCode = "LOCAL123";
+
     void Start()
     {
-        // Panel setup
-        if (PhotonNetwork.IsMasterClient)
+        // Panel setup (simulate instructor/trainee locally)
+        if (isInstructor)
         {
             instructorPanel.SetActive(true);
             traineePanel.SetActive(false);
@@ -58,9 +61,9 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         UpdatePlayerNames();
 
         // Set the room code text for the main UI (if needed)
-        if (roomCodeText != null && PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom != null)
+        if (roomCodeText != null)
         {
-            roomCodeText.text = "Lobby Code: " + PhotonNetwork.CurrentRoom.Name;
+            roomCodeText.text = "Lobby Code: " + roomCode;
         }
 
         // Disaster dropdown setup
@@ -82,67 +85,29 @@ public class LobbyManager : MonoBehaviourPunCallbacks
             durationDropdown.onValueChanged.AddListener(OnDurationChanged);
         }
 
-        // On join, read the current duration from room properties
-        if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("duration"))
-        {
-            int duration = (int)PhotonNetwork.CurrentRoom.CustomProperties["duration"];
-            DurationManager.DurationSeconds = duration;
-            SetDropdownToDuration(duration);
-        }
+        // Set initial duration
+        DurationManager.DurationSeconds = durations[0];
+        SetDropdownToDuration(durations[0]);
     }
 
     void UpdateTraineePanelFields()
     {
-        string instructorName = "";
-        string traineeName = PhotonNetwork.NickName;
-
-        foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
-        {
-            if (player.IsMasterClient)
-                instructorName = player.NickName;
-        }
-
         if (traineePanelInstructorNameText != null)
             traineePanelInstructorNameText.text = instructorName;
 
         if (traineePanelTraineeNameText != null)
             traineePanelTraineeNameText.text = traineeName;
 
-        if (traineePanelRoomCodeText != null && PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom != null)
-            traineePanelRoomCodeText.text = "Lobby Code: " + PhotonNetwork.CurrentRoom.Name;
+        if (traineePanelRoomCodeText != null)
+            traineePanelRoomCodeText.text = "Lobby Code: " + roomCode;
     }
 
     void UpdatePlayerNames()
     {
-        string instructorName = "";
-        string traineeName = "";
-
-        foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
-        {
-            if (player.IsMasterClient)
-                instructorName = player.NickName;
-            else
-                traineeName = player.NickName;
-        }
-
         if (instructorNameText != null)
             instructorNameText.text = instructorName;
         if (traineeNameText != null)
             traineeNameText.text = traineeName;
-    }
-
-    public override void OnPlayerEnteredRoom(Photon.Realtime.Player otherPlayer)
-    {
-        UpdatePlayerNames();
-        if (!PhotonNetwork.IsMasterClient)
-            UpdateTraineePanelFields();
-    }
-
-    public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
-    {
-        UpdatePlayerNames();
-        if (!PhotonNetwork.IsMasterClient)
-            UpdateTraineePanelFields();
     }
 
     // Disaster selection logic
@@ -175,23 +140,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         {
             int selectedDuration = durations[index];
             DurationManager.DurationSeconds = selectedDuration;
-
-            // Only instructor (master client) sets the room property
-            if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
-            {
-                Hashtable props = new Hashtable { { "duration", selectedDuration } };
-                PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-            }
-        }
-    }
-
-    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
-    {
-        if (propertiesThatChanged.ContainsKey("duration"))
-        {
-            int duration = (int)propertiesThatChanged["duration"];
-            DurationManager.DurationSeconds = duration;
-            SetDropdownToDuration(duration);
+            SetDropdownToDuration(selectedDuration);
         }
     }
 
@@ -216,17 +165,16 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         {
             DurationManager.DurationSeconds = durations[durationDropdown.value];
         }
-        photonView.RPC("StartDisasterScene", RpcTarget.All);
+        StartDisasterScene();
     }
 
-    [PunRPC]
     void StartDisasterScene()
     {
         // Use the selected disaster from dropdown
         string sceneName = SelectedDisaster;
         if (!string.IsNullOrEmpty(sceneName))
         {
-            PhotonNetwork.LoadLevel(sceneName);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         }
     }
 }

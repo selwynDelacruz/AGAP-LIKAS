@@ -2,9 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-using Photon.Pun;
 
-public class QuestionTriggerPopup : MonoBehaviourPun
+public class QuestionTriggerPopup : MonoBehaviour
 {
     [Header("Question UI")]
     public GameObject questionDialogUI;
@@ -55,7 +54,7 @@ public class QuestionTriggerPopup : MonoBehaviourPun
 
     void Update()
     {
-        if (photonView.IsMine && questionDialogUI != null && questionDialogUI.activeSelf)
+        if (questionDialogUI != null && questionDialogUI.activeSelf)
         {
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
@@ -134,8 +133,7 @@ public class QuestionTriggerPopup : MonoBehaviourPun
         // Destroy the victim after interaction
         if (currentVictim != null)
         {
-            // Use Photon destroy for networked victim
-            Photon.Pun.PhotonNetwork.Destroy(currentVictim);
+            Destroy(currentVictim);
             currentVictim = null;
         }
     }
@@ -143,31 +141,22 @@ public class QuestionTriggerPopup : MonoBehaviourPun
     void ShowQuestionPanel()
     {
         questionDialogUI.SetActive(true);
-        if (photonView.IsMine)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     void PauseGame()
     {
         Time.timeScale = 0f;
-        if (photonView.IsMine)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     void ResumeGame()
     {
         Time.timeScale = 1f;
-        if (photonView.IsMine)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     // Public getters if you want to access these values elsewhere
