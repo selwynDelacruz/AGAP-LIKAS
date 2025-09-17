@@ -19,7 +19,7 @@ public class UsersElement : MonoBehaviour
         if (ageText != null) ageText.text = age.ToString();
         if (genderText != null) genderText.text = gender;
         if (usernameText != null) usernameText.text = username;
-        if (passwordText != null) passwordText.text = password;
+        if (passwordText != null) passwordText.text = MaskPassword(password);
         userTypeText = userType;
 
         // Debugging logs to check if the text components are assigned correctly
@@ -35,8 +35,20 @@ public class UsersElement : MonoBehaviour
 
     public void ManageAccount()
 	{
-		AuthManager.Instance.ManageAccountButton(userTypeText, usernameText, ageText, genderText, usernameText, passwordText);
+		AuthManager.Instance.ManageAccountButton(userTypeText, nameText, ageText, genderText, usernameText, passwordText);
 	}
-
+    
+    // Helper method to mask passwords
+    private string MaskPassword(string password)
+    {
+        if (string.IsNullOrEmpty(password))
+            return "";
+            
+        // Show only first and last characters, mask the rest with asterisks
+        if (password.Length <= 2)
+            return new string('*', password.Length);
+            
+        return password[0] + new string('*', password.Length - 2) + password[password.Length - 1];
+    }
     
 }
