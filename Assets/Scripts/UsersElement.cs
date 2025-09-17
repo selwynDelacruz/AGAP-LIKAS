@@ -18,7 +18,7 @@ public class UsersElement : MonoBehaviour
         if (nameText != null) nameText.text = name;
         if (ageText != null) ageText.text = age.ToString();
         if (genderText != null) genderText.text = gender;
-        if (usernameText != null) usernameText.text = username;
+        if (usernameText != null) usernameText.text = MaskUsername(username);
         if (passwordText != null) passwordText.text = MaskPassword(password);
         userTypeText = userType;
 
@@ -51,4 +51,16 @@ public class UsersElement : MonoBehaviour
         return password[0] + new string('*', password.Length - 2) + password[password.Length - 1];
     }
     
+    private string MaskUsername(string username)
+    {
+        if (string.IsNullOrEmpty(username))
+            return "";
+            
+        // Show only first and last characters, mask the rest with asterisks
+        if (username.Length <= 2)
+            return new string('*', username.Length);
+            
+        return username[0] + new string('*', username.Length - 5) + username[username.Length - 1];
+    }
+
 }
