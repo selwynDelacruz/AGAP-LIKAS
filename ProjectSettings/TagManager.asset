@@ -9,18 +9,19 @@ TagManager:
   - Victim
   - randomVictim
   - building
-  - Trainee
+  - spectatePlayer
+  - Instructor
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - pushableLayer
+  - Building
   - Water
   - UI
-  - Victim
-  - 
-  - 
-  - 
+  - Ground
+  - ProjectedPlayer
+  - LandPrevention
+  - CharacterRep
   - 
   - 
   - 
