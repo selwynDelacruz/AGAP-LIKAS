@@ -6,20 +6,22 @@ public class MapSpawner : MonoBehaviour
     public GameObject[] mapPrefabs;   // All 6 of your map prefabs
 
     [Header("Size of each map (adjust to your prefab size)")]
-    public float mapSize = 182.4f;
+    public float mapSize = 121f;
 
     private GameObject[] selectedMaps = new GameObject[4];
 
     void Start()
     {
-        // STEP 1: Randomly select 4 maps from the 6
+        // STEP 1: Shuffle the mapPrefabs array
+        ShuffleArray(mapPrefabs);
+
+        // STEP 2: Take the first 4 maps after shuffle
         for (int i = 0; i < 4; i++)
         {
-            int randomIndex = Random.Range(0, mapPrefabs.Length);
-            selectedMaps[i] = mapPrefabs[randomIndex];
+            selectedMaps[i] = mapPrefabs[i];
         }
 
-        // STEP 2: Spawn them in a 2x2 grid
+        // STEP 3: Spawn them in a 2x2 grid
         SpawnMap(selectedMaps[0], new Vector3(0, 0, 0));                     // bottom-left
         SpawnMap(selectedMaps[1], new Vector3(0, 0, mapSize));               // top-left
         SpawnMap(selectedMaps[2], new Vector3(mapSize, 0, 0));               // bottom-right
@@ -29,5 +31,17 @@ public class MapSpawner : MonoBehaviour
     void SpawnMap(GameObject prefab, Vector3 position)
     {
         Instantiate(prefab, position, Quaternion.identity);
+    }
+
+    // Fisher-Yates shuffle algorithm
+    void ShuffleArray(GameObject[] array)
+    {
+        for (int i = array.Length - 1; i > 0; i--)
+        {
+            int randomIndex = Random.Range(0, i + 1);
+            GameObject temp = array[i];
+            array[i] = array[randomIndex];
+            array[randomIndex] = temp;
+        }
     }
 }
