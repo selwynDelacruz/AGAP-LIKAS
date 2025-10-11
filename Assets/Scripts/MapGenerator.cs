@@ -1,46 +1,52 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
-public class MapGenerator : MonoBehaviour
+public class ProceduralMapGenerator : MonoBehaviour
 {
-    [Header("All map prefabs")] 
-    public GameObject[] mapPrefabs;   // Holds 6 map prefabs
+    [Header("Map Prefabs")]
+    public GameObject[] mapPrefabs;  // Drag your 6 map prefabs here
 
-    [Header("Number of maps to spawn")]
-    public int mapsToSpawn = 4;
+    [Header("Grid Settings")]
+    public int gridRows = 2;         // 2 rows
+    public int gridCols = 2;         // 2 columns
+    public float mapSize = 100f;     // Size of each map (adjust to your prefab’s size)
 
-    [Header("Offset between maps")]
-    public Vector3 mapOffset = new Vector3(0, 0, 100);  // distance between spawned chunks
-
-    private List<int> chosenIndexes = new List<int>();
-
-    void Start()
+    private void Start()
     {
         GenerateMap();
     }
 
     void GenerateMap()
     {
-        // Make sure we don’t pick the same chunk twice
-        List<int> availableIndexes = new List<int>();
-        for (int i = 0; i < mapPrefabs.Length; i++)
+        if (mapPrefabs.Length < gridRows * gridCols)
         {
-            availableIndexes.Add(i);
+            Debug.LogError("Not enough map prefabs to fill the grid!");
+            return;
         }
 
-        for (int i = 0; i < mapsToSpawn; i++)
+        // Create a list of available maps
+        List<GameObject> availableMaps = new List<GameObject>(mapPrefabs);
+
+        for (int row = 0; row < gridRows; row++)
         {
-            // Pick a random index from the available pool
-            int randomIndex = Random.Range(0, availableIndexes.Count);
-            int chosenIndex = availableIndexes[randomIndex];
+            for (int col = 0; col < gridCols; col++)
+            {
+                // Pick a random map from the list
+                int randomIndex = Random.Range(0, availableMaps.Count);
+                GameObject chosenMap = availableMaps[randomIndex];
 
-            // Instantiate the chunk at the correct position
-            Vector3 spawnPosition = i * mapOffset;
-            Instantiate(mapPrefabs[chosenIndex], spawnPosition, Quaternion.identity);
+                // Calculate spawn position based on row & column
+                Vector3 spawnPos = new Vector3(col * mapSize, 0, row * mapSize);
 
-            // Remove it from pool to avoid duplicates
-            availableIndexes.RemoveAt(randomIndex);
-            chosenIndexes.Add(chosenIndex);
+                // Optional random Y rotation for variety
+                Quaternion randomRot = Quaternion.Euler(0, Random.Range(0, 4) * 90, 0);
+
+                // Spawn map
+                Instantiate(chosenMap, spawnPos, randomRot, transform);
+
+                // Remove chosen map so it's not reused
+                availableMaps.RemoveAt(randomIndex);
+            }
         }
     }
 }
