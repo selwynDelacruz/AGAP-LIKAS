@@ -1455,6 +1455,33 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 530870745}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &539090517 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 812210473165631913, guid: 9d6612177fded9341a6f48da2f3973ae, type: 3}
+  m_PrefabInstance: {fileID: 214103837270561020}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &539090521
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 539090517}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 3da23cdf512599b42881988944f3918c, type: 2}
 --- !u!1 &542508511
 GameObject:
   m_ObjectHideFlags: 0
@@ -4113,7 +4140,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 812210473165631913, guid: 9d6612177fded9341a6f48da2f3973ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 539090521}
   m_SourcePrefab: {fileID: 100100000, guid: 9d6612177fded9341a6f48da2f3973ae, type: 3}
 --- !u!23 &282406605397821933
 MeshRenderer:
@@ -7761,6 +7791,11 @@ MonoBehaviour:
   BottomClamp: -30
   CameraAngleOverride: 0
   LockCameraPosition: 0
+  WaterTag: Water
+  GroundActionMap: PlayerGround
+  SwimActionMap: PlayerSwim
+  AutoSwitchOnWater: 1
+  SwimmingAnimatorBool: Swimming
 --- !u!114 &4344617518380657331
 MonoBehaviour:
   m_ObjectHideFlags: 0
