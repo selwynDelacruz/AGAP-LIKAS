@@ -24,10 +24,7 @@ public class SimulationResultSummary : MonoBehaviour
 
         // Correct Answers
         int correctAnswers = 0;
-        var quiz = FindObjectOfType<QuestionTriggerPopup>();
-        if (quiz != null)
-            correctAnswers = quiz.GetRightAnswerCount();
-
+        
         // Victims Saved
         int victimsSaved = 0;
         var rescue = FindObjectOfType<RescueBoatInteraction>();

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &6107844228471934603
+--- !u!1001 &5023868422110308092
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -14,11 +14,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       propertyPath: m_LocalRotation.w
@@ -74,20 +74,23 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6396000413419435302}
+      addedObject: {fileID: 742239774766313903}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6540629437132298407}
   m_SourcePrefab: {fileID: 100100000, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
---- !u!1 &6341633591439553498 stripped
+--- !u!1 &5294320457126960045 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ad89468624edc1d4ea19aa5d66643fcf, type: 3}
-  m_PrefabInstance: {fileID: 6107844228471934603}
+  m_PrefabInstance: {fileID: 5023868422110308092}
   m_PrefabAsset: {fileID: 0}
---- !u!54 &6396000413419435302
+--- !u!54 &742239774766313903
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6341633591439553498}
+  m_GameObject: {fileID: 5294320457126960045}
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
@@ -108,3 +111,26 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!136 &6540629437132298407
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5294320457126960045}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 1.9
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
