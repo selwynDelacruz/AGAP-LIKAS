@@ -282,7 +282,7 @@ MonoBehaviour:
   - {fileID: 8852445101687726784, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
   - {fileID: 5926536741195813975, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
   - {fileID: 2553980204337804249, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
-  mapSize: 180
+  mapSize: 121
 --- !u!4 &469083747
 Transform:
   m_ObjectHideFlags: 0
