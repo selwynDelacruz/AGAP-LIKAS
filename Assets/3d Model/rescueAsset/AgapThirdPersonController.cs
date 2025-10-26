@@ -76,16 +76,6 @@ namespace StarterAssets
         [Tooltip("For locking the camera position on all axis")]
         public bool LockCameraPosition = false;
 
-        [Header("Swimming")]
-        [Tooltip("Optional: assign a WaterManager to detect water surface height. If null it will be auto-found.")]
-        public WaterManager waterManager;
-        [Tooltip("Action map name used when on ground")]
-        public string groundActionMap = "PlayerGround";
-        [Tooltip("Action map name used when swimming")]
-        public string swimActionMap = "PlayerSwim";
-        [Tooltip("How deep below water surface to be considered swimming")]
-        public float swimDepthThreshold = 0.5f;
-
         // cinemachine
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
@@ -108,8 +98,6 @@ namespace StarterAssets
         private int _animIDJump;
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
-        private int _animIDSwim;
-        private int _animIDSwimSpeed;
 
 #if ENABLE_INPUT_SYSTEM
         private PlayerInput _playerInput;
@@ -122,7 +110,6 @@ namespace StarterAssets
         private const float _threshold = 0.01f;
 
         private bool _hasAnimator;
-        private bool _isSwimming;
 
         private bool IsCurrentDeviceMouse
         {
@@ -149,12 +136,14 @@ namespace StarterAssets
         private void Start()
         {
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-
+            
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<PlayerInputs>();
 #if ENABLE_INPUT_SYSTEM
             _playerInput = GetComponent<PlayerInput>();
+#else
+			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
 #endif
 
             AssignAnimationIDs();
@@ -162,16 +151,6 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
-
-            // auto-find WaterManager if not assigned
-            if (waterManager == null)
-            {
-#if UNITY_2023_1_OR_NEWER
-                waterManager = FindObjectOfType<WaterManager>(true);
-#else
-                waterManager = FindObjectOfType<WaterManager>();
-#endif
-            }
         }
 
         private void Update()
@@ -180,7 +159,6 @@ namespace StarterAssets
 
             JumpAndGravity();
             GroundedCheck();
-            UpdateSwimmingState();
             Move();
         }
 
@@ -196,10 +174,6 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
-
-            // swim animation params - add these to your Animator (bool "Swim", float "SwimSpeed")
-            _animIDSwim = Animator.StringToHash("Swim");
-            _animIDSwimSpeed = Animator.StringToHash("SwimSpeed");
         }
 
         private void GroundedCheck()
@@ -214,39 +188,6 @@ namespace StarterAssets
             if (_hasAnimator)
             {
                 _animator.SetBool(_animIDGrounded, Grounded);
-            }
-        }
-
-        private void UpdateSwimmingState()
-        {
-            bool prev = _isSwimming;
-            _isSwimming = false;
-
-            if (waterManager != null)
-            {
-                float waterY = waterManager.WaterHeightAtPosition(transform.position);
-                // swimming when character is below water surface beyond threshold
-                _isSwimming = transform.position.y < waterY - swimDepthThreshold;
-            }
-
-            // if swimming state changed, switch action map (Input System)
-#if ENABLE_INPUT_SYSTEM
-            if (_playerInput != null && prev != _isSwimming)
-            {
-                var targetMap = _isSwimming ? swimActionMap : groundActionMap;
-                if (!string.IsNullOrEmpty(targetMap))
-                    _playerInput.SwitchCurrentActionMap(targetMap);
-            }
-#endif
-
-            // update animator swim params
-            if (_hasAnimator)
-            {
-                _animator.SetBool(_animIDSwim, _isSwimming);
-
-                // swim speed: when swimming use input magnitude, otherwise zero
-                float swimSpeed = _isSwimming ? new Vector2(_input.move.x, _input.move.y).magnitude : 0f;
-                _animator.SetFloat(_animIDSwimSpeed, swimSpeed);
             }
         }
 
@@ -327,7 +268,7 @@ namespace StarterAssets
 
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
-            // move the player (character controller handles gravity already via _verticalVelocity)
+            // move the player
             _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
                              new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 
