@@ -35,6 +35,9 @@
         },
         {
             "m_Id": "a6711cc701e6421d8b1a048d1c4e89f6"
+        },
+        {
+            "m_Id": "a7d913a3ddb247e48c3910f988e1cb90"
         }
     ],
     "m_Keywords": [],
@@ -385,20 +388,6 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
-                    "m_Id": "3ec140d3333b4ead83bfd1c5ee6adee1"
-                },
-                "m_SlotId": 0
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "27acbb8db86f4882a4e536e3ac0ba211"
-                },
-                "m_SlotId": 0
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
                     "m_Id": "4039bbf5b4c54117a04423802dc9b246"
                 },
                 "m_SlotId": 0
@@ -506,20 +495,6 @@
                     "m_Id": "144091d2b63745bc9dbecb35a9f368a0"
                 },
                 "m_SlotId": 2
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "6c6ccf9a443f4dea9c9c47c54f9b68db"
-                },
-                "m_SlotId": 3
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "3ec140d3333b4ead83bfd1c5ee6adee1"
-                },
-                "m_SlotId": 1
             }
         },
         {
@@ -783,9 +758,9 @@
             },
             "m_InputSlot": {
                 "m_Node": {
-                    "m_Id": "3ec140d3333b4ead83bfd1c5ee6adee1"
+                    "m_Id": "27acbb8db86f4882a4e536e3ac0ba211"
                 },
-                "m_SlotId": 2
+                "m_SlotId": 0
             }
         },
         {
@@ -3298,6 +3273,9 @@
         },
         {
             "m_Id": "a6711cc701e6421d8b1a048d1c4e89f6"
+        },
+        {
+            "m_Id": "a7d913a3ddb247e48c3910f988e1cb90"
         }
     ]
 }
@@ -5031,6 +5009,46 @@
     "m_PerRendererData": false,
     "m_customAttributes": [],
     "m_Value": 1.0,
+    "m_FloatType": 0,
+    "m_RangeValues": {
+        "x": 0.0,
+        "y": 1.0
+    },
+    "m_SliderType": 0,
+    "m_SliderPower": 3.0,
+    "m_EnumType": 0,
+    "m_CSharpEnumString": "",
+    "m_EnumNames": [
+        "Default"
+    ],
+    "m_EnumValues": [
+        0
+    ]
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
+    "m_ObjectId": "a7d913a3ddb247e48c3910f988e1cb90",
+    "m_Guid": {
+        "m_GuidSerialized": "008489e6-29aa-4201-8455-19e1db920df3"
+    },
+    "m_Name": "depth Color",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "depth Color",
+    "m_DefaultReferenceName": "_depth_Color",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_PerRendererData": false,
+    "m_customAttributes": [],
+    "m_Value": 0.0,
     "m_FloatType": 0,
     "m_RangeValues": {
         "x": 0.0,

@@ -2907,7 +2907,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1327619677
 Transform:
   m_ObjectHideFlags: 0
@@ -2976,6 +2976,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: ec07a073fdc4f4b4bb5f9aa002eadb9d, type: 3}
       propertyPath: m_Name
       value: rescueChara w boat
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: ec07a073fdc4f4b4bb5f9aa002eadb9d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9099,7 +9103,7 @@ Animator:
   m_GameObject: {fileID: 2216083948492788477}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: cceb1085c75aacd409dab03c99f9fc60, type: 3}
-  m_Controller: {fileID: 9100000, guid: 40db3173a05ae3242b1c182a09b0a183, type: 2}
+  m_Controller: {fileID: 9100000, guid: 868e56f7893a61b47b3cbc50be38c6fd, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -11063,7 +11067,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &2258317370584583681
 GameObject:
   m_ObjectHideFlags: 0
