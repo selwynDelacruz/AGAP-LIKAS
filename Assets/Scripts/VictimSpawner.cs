@@ -44,13 +44,6 @@ public class VictimSpawner : MonoBehaviour
             // Spawn the victim at the chosen spawn point locally
             GameObject victim = Instantiate(prefab, spawnPoints[spawnPointIndex].position, spawnPoints[spawnPointIndex].rotation);
             victim.tag = "Victim";
-
-            // Assign the question index
-            VictimQuestion vq = victim.GetComponent<VictimQuestion>();
-            if (vq != null)
-            {
-                vq.questionIndex = i;
-            }
         }
     }
 }
