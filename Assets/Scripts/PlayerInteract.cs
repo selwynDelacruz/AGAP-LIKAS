@@ -5,16 +5,24 @@ public class PlayerInteract : MonoBehaviour
 {
     void Update()
     {
+        //if (Input.GetKeyDown(KeyCode.E))
+        //{
+        //    float interactRange = 2.0f;
+        //    Collider[] colliderArray = Physics.OverlapSphere(transform.position, interactRange);
+        //    foreach (Collider collider in colliderArray)
+        //    {
+        //        if (collider.gameObject.TryGetComponent(out NPCInteractable npcInteractable))
+        //        {
+        //            npcInteractable.Interact(transform);
+        //        }
+        //    }
+        //}
         if (Input.GetKeyDown(KeyCode.E))
         {
-            float interactRange = 2.0f;
-            Collider[] colliderArray = Physics.OverlapSphere(transform.position, interactRange);
-            foreach (Collider collider in colliderArray)
+            NPCInteractable npcInteractable = GetInteractableObject();
+            if (npcInteractable != null)
             {
-                if (collider.gameObject.TryGetComponent(out NPCInteractable npcInteractable))
-                {
-                    npcInteractable.Interact();
-                }
+                npcInteractable.Interact(transform);
             }
         }
     }
