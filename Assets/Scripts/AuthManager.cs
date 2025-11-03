@@ -560,7 +560,7 @@ public class AuthManager : MonoBehaviour
 			case "super_admin":
 				if (Login_SuperAdmin_Panel.activeSelf)
 				{
-					SetWarning_LoginInfoText(messsage, "red");
+					SetWarning_LoginInfoText(messsage, "yellow");
 				}
 				break;
 			}
