@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -15,12 +16,12 @@ public class MedkitManager : MonoBehaviour
     [Tooltip("Reference to the TextMeshProUGUI component that displays medkit count")]
     [SerializeField] private TextMeshProUGUI medkitCountText;
 
-    [Header("Interaction Settings")]
-    [SerializeField] private string interactText = "Press E to pick up Medkit";
-    [SerializeField] private string inventoryFullText = "Medkit inventory is full!";
-
     // Singleton for easy access
     public static MedkitManager Instance { get; private set; }
+
+    // Public properties
+    public int CurrentMedkits => currentMedkits;
+    public int MaxMedkits => maxMedkits;
 
     void Awake()
     {
@@ -29,41 +30,7 @@ public class MedkitManager : MonoBehaviour
 
     void Start()
     {
-        medkitCountText.text = "Medkit: " + currentMedkits + "/" + maxMedkits;
-    }
-
-    public void Interact(Transform interactorTransform)
-    {
-        bool success = AddMedkit(2);
-        
-        if (success)
-        {
-            Debug.Log("Picked up 2 medkit!");
-            gameObject.SetActive(false); // Disable the medkit pickup object
-        }
-        else
-        {
-            Debug.Log("Cannot pick up medkit - inventory full!");
-        }
-    }
-
-    public string GetInteractText()
-    {
-        if (currentMedkits >= maxMedkits)
-        {
-            return inventoryFullText;
-        }
-        return interactText;
-    }
-
-    public bool AddMedkit(int amount = 2)
-    {
-        if (currentMedkits >= maxMedkits)
-            return false;
-
-        currentMedkits += amount;
-        medkitCountText.text = "Medkit: " + currentMedkits + "/" + maxMedkits;
-        return true;
+        updateMedkit();
     }
 
     public bool UseMedkit()
@@ -72,7 +39,12 @@ public class MedkitManager : MonoBehaviour
             return false;
 
         currentMedkits--;
-        medkitCountText.text = "Medkit: " + currentMedkits + "/" + maxMedkits;
+        updateMedkit();
         return true;
+    }
+
+    void updateMedkit()
+    {
+        medkitCountText.text = "Medkit: " + currentMedkits + "/" + maxMedkits;
     }
 }
