@@ -19822,7 +19822,6 @@ GameObject:
   - component: {fileID: 7438408954265837029}
   - component: {fileID: 5590126946477192889}
   - component: {fileID: 8184669251969190725}
-  - component: {fileID: 8184669251969190724}
   m_Layer: 0
   m_Name: Pregnant Woman
   m_TagString: Victim
@@ -30421,19 +30420,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &8184669251969190724
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3188044041138867075}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: af47ef7b87dbcc74ab43ab0c430fe4c2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NPCInteractable
-  interactText: Rescue the pregnant
 --- !u!114 &8184669251969190725
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30446,9 +30432,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b869abb98737e54482f9c2d9c9e2a9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  interactText: Use Medkit to the pregnant
+  healInteractText: Hold E to use medkit on the pregnant
+  rescueInteractText: Hold E to rescue the pregnant
   updateText: {fileID: 1081026928}
-  enableNPCInteractionAfterInteraction: 1
 --- !u!4 &8189681346029034434
 Transform:
   m_ObjectHideFlags: 0

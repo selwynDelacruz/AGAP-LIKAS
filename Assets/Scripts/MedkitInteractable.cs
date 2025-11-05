@@ -1,40 +1,41 @@
 using UnityEngine;
 using TMPro;
-using System.Runtime.CompilerServices;
+using System.Collections;
 
 public class MedkitInteractable : MonoBehaviour, IInteractable
 {
     [Header("Interaction Settings")]
-    [SerializeField] private string interactText = "Use medkit to the victim";
+    [SerializeField] private string healInteractText = "Hold E to use medkit on victim";
+    [SerializeField] private string rescueInteractText = "Hold E to rescue the victim";
     [SerializeField] private TextMeshProUGUI updateText;
 
-    [Header("NPC Interaction")]
-    [SerializeField] private bool enableNPCInteractionAfterInteraction = true;
-    
-    private NPCInteractable npcInteractable;
-    private bool hasInteracted = false; // Flag to prevent multiple interactions
-
-    void Start()
-    {
-        // Get the NPCInteractable component if it exists on the same GameObject
-        npcInteractable = GetComponent<NPCInteractable>();
-        
-        // Disable NPCInteractable if it exists
-        if (npcInteractable != null)
-        {
-            //npcInteractable.enabled = false;
-        }
-    }
+    [Header("State Flags")]
+    private bool hasHealed = false;
+    private bool hasRescued = false;
+    private float messageDisplayTime = 3f;
 
     public void Interact(Transform interactorTransform)
     {
-        // Prevent multiple interactions
-        if (hasInteracted)
+        // STAGE 1: Apply Medkit
+        if (!hasHealed)
         {
-            Debug.Log("Already interacted with this object.");
+            ApplyMedkit();
             return;
         }
 
+        // STAGE 2: Rescue Victim (only after healing)
+        if (hasHealed && !hasRescued)
+        {
+            RescueVictim();
+            return;
+        }
+
+        // Already rescued
+        Debug.Log("Victim has already been rescued.");
+    }
+
+    private void ApplyMedkit()
+    {
         // Check if MedkitManager exists
         if (MedkitManager.Instance == null)
         {
@@ -45,50 +46,61 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         // Check if current medkits is 0
         if (MedkitManager.Instance.CurrentMedkits == 0)
         {
-            if (updateText != null)
-            {
-                updateText.text = "You don't have medkit!";
-            }
             Debug.Log("You don't have medkit!");
+            StartCoroutine(ShowTemporaryMessage("You don't have medkit!"));
             return;
         }
 
-        // Mark as interacted IMMEDIATELY to prevent double-interaction
-        hasInteracted = true;
-
-        // Use a medkit (decrement)
+        // Use a medkit
         bool success = MedkitManager.Instance.UseMedkit();
         
         if (success)
         {
-            Debug.Log("Used 1 medkit!");
+            hasHealed = true;
+            Debug.Log("Used 1 medkit! Victim is now healed.");
             
-            // Update the text to show success
-            if (updateText != null)
-            {
-                updateText.text = "Used medkit! Remaining: " + MedkitManager.Instance.CurrentMedkits;
-            }
+            // Show success message temporarily
+            string message = "Victim healed! Remaining medkits: " + MedkitManager.Instance.CurrentMedkits;
+            StartCoroutine(ShowTemporaryMessage(message));
             
-            // Enable NPCInteractable if it exists and if enabled in settings
-            if (npcInteractable != null && enableNPCInteractionAfterInteraction)
-            {
-                npcInteractable.enabled = true;
-                Debug.Log("NPCInteractable has been enabled.");
-            }
-            // Disable this script LAST
-            this.enabled = false;
-            Debug.Log("MedkitInteractable has been disabled.");
+            Debug.Log("Now you can rescue the victim!");
         }
-        else
+    }
+
+    private void RescueVictim()
+    {
+        hasRescued = true;
+        Debug.Log("Victim " + gameObject.name + " has been rescued!");
+        
+        // Hide immediately (no message)
+        gameObject.SetActive(false);
+    }
+
+    private IEnumerator ShowTemporaryMessage(string message)
+    {
+        if (updateText != null)
         {
-            // If UseMedkit failed, reset the flag
-            hasInteracted = false;
+            updateText.text = message;
+            yield return new WaitForSeconds(messageDisplayTime);
+            updateText.text = "";
         }
     }
 
     public string GetInteractText()
     {
-        return interactText;
+        // Show different text based on state
+        if (!hasHealed)
+        {
+            return healInteractText;
+        }
+        else if (hasHealed && !hasRescued)
+        {
+            return rescueInteractText;
+        }
+        else
+        {
+            return ""; // Already rescued, no interaction text
+        }
     }
 
     public Transform GetTransform()
