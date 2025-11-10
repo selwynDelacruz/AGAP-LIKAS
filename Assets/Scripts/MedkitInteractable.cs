@@ -1,18 +1,14 @@
 using UnityEngine;
-using TMPro;
-using System.Collections;
 
 public class MedkitInteractable : MonoBehaviour, IInteractable
 {
     [Header("Interaction Settings")]
     [SerializeField] private string healInteractText = "Hold E to use medkit on victim";
     [SerializeField] private string rescueInteractText = "Hold E to rescue the victim";
-    [SerializeField] private TextMeshProUGUI updateText;
 
     [Header("State Flags")]
     private bool hasHealed = false;
     private bool hasRescued = false;
-    private float messageDisplayTime = 3f;
 
     public void Interact(Transform interactorTransform)
     {
@@ -47,7 +43,6 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         if (MedkitManager.Instance.CurrentMedkits == 0)
         {
             Debug.Log("You don't have medkit!");
-            StartCoroutine(ShowTemporaryMessage("You don't have medkit!"));
             return;
         }
 
@@ -58,11 +53,7 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         {
             hasHealed = true;
             Debug.Log("Used 1 medkit! Victim is now healed.");
-            
-            // Show success message temporarily
-            string message = "Victim healed! Remaining medkits: " + MedkitManager.Instance.CurrentMedkits;
-            StartCoroutine(ShowTemporaryMessage(message));
-            
+            Debug.Log("Victim healed! Remaining medkits: " + MedkitManager.Instance.CurrentMedkits);
             Debug.Log("Now you can rescue the victim!");
         }
     }
@@ -71,19 +62,7 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
     {
         hasRescued = true;
         Debug.Log("Victim " + gameObject.name + " has been rescued!");
-        
-        // Hide immediately (no message)
         gameObject.SetActive(false);
-    }
-
-    private IEnumerator ShowTemporaryMessage(string message)
-    {
-        if (updateText != null)
-        {
-            updateText.text = message;
-            yield return new WaitForSeconds(messageDisplayTime);
-            updateText.text = "";
-        }
     }
 
     public string GetInteractText()

@@ -3,27 +3,70 @@ using UnityEngine;
 
 public class PlayerInteract : MonoBehaviour
 {
+    [Header("Hold Settings")]
+    [Tooltip("Time in seconds the key must be held to interact")]
+    public float holdDuration = 5.0f;
+
+    private float holdTimer = 0f;
+    private bool isHolding = false;
+    private IInteractable currentInteractable = null;
+
     void Update()
     {
-        //if (Input.GetKeyDown(KeyCode.E))
-        //{
-        //    float interactRange = 2.0f;
-        //    Collider[] colliderArray = Physics.OverlapSphere(transform.position, interactRange);
-        //    foreach (Collider collider in colliderArray)
-        //    {
-        //        if (collider.gameObject.TryGetComponent(out NPCInteractable npcInteractable))
-        //        {
-        //            npcInteractable.Interact(transform);
-        //        }
-        //    }
-        //}
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            IInteractable interactable = GetInteractableObject();
-            if (interactable != null)
+        if (Input.GetKey(KeyCode.E))
+        {   
+            if (!isHolding)
             {
-                interactable.Interact(transform);
+                // Start holding
+                isHolding = true;
+                currentInteractable = GetInteractableObject();
+                holdTimer = 0f;
+
+                // Check if interacting with MedkitInteractable and if player has no medkits
+                if (currentInteractable != null)
+                {
+                    // Check if the interactable is a MedkitInteractable
+                    MonoBehaviour interactableMono = currentInteractable as MonoBehaviour;
+                    if (interactableMono != null && interactableMono.GetComponent<MedkitInteractable>() != null)
+                    {
+                        // Only check medkit availability for MedkitInteractable objects
+                        if (MedkitManager.Instance.CurrentMedkits == 0)
+                        {
+                            // No medkits available, do not allow interaction
+                            Debug.Log("You don't have medkit!");
+                            MedkitManager.Instance.TriggerBlinkEffect();
+                            
+                            // Reset holding state
+                            isHolding = false;
+                            currentInteractable = null;
+                            return;
+                        }
+                    }
+                }
             }
+            else if (currentInteractable != null)
+            {
+                // Continue holding
+                holdTimer += Time.deltaTime;
+
+                if (holdTimer >= holdDuration)
+                {
+                    // Hold complete - trigger interaction
+                    currentInteractable.Interact(transform);
+
+                    // Reset to prevent continuous interaction
+                    isHolding = false;
+                    holdTimer = 0f;
+                    currentInteractable = null;
+                }
+            }
+        }
+        else if (Input.GetKeyUp(KeyCode.E))
+        {
+            // Key released - reset
+            isHolding = false;
+            holdTimer = 0f;
+            currentInteractable = null;
         }
     }
 
@@ -61,5 +104,21 @@ public class PlayerInteract : MonoBehaviour
             }
         }
         return closestNPCInteractable;
+    }
+
+    /// <summary>
+    /// Get the current hold progress (0 to 1)
+    /// </summary>
+    public float GetHoldProgress()
+    {
+        return holdDuration > 0 ? Mathf.Clamp01(holdTimer / holdDuration) : 0f;
+    }
+
+    /// <summary>
+    /// Check if currently holding the interact key
+    /// </summary>
+    public bool IsHolding()
+    {
+        return isHolding;
     }
 }
