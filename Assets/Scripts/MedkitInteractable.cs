@@ -3,8 +3,8 @@ using UnityEngine;
 public class MedkitInteractable : MonoBehaviour, IInteractable
 {
     [Header("Interaction Settings")]
-    [SerializeField] private string healInteractText = "Hold E to use medkit on victim";
-    [SerializeField] private string rescueInteractText = "Hold E to rescue the victim";
+    [SerializeField] private string healInteractText = "Use medkit on victim";
+    [SerializeField] private string rescueInteractText = "Rescue the victim";
 
     [Header("State Flags")]
     private bool hasHealed = false;
