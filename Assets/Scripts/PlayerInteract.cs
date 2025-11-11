@@ -3,9 +3,10 @@ using UnityEngine;
 
 public class PlayerInteract : MonoBehaviour
 {
-    [Header("Hold Settings")]
+    [Header("Player Interaction Settings")]
     [Tooltip("Time in seconds the key must be held to interact")]
     public float holdDuration = 5.0f;
+    public float interactRange = 2.0f;
 
     private float holdTimer = 0f;
     private bool isHolding = false;
@@ -73,7 +74,6 @@ public class PlayerInteract : MonoBehaviour
     public IInteractable GetInteractableObject()
     {
         List<IInteractable> interactableList = new List<IInteractable>();
-        float interactRange = 2.0f;
         Collider[] colliderArray = Physics.OverlapSphere(transform.position, interactRange);
         foreach (Collider collider in colliderArray)
         {

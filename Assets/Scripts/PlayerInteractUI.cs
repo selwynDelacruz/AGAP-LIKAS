@@ -6,23 +6,29 @@ public class PlayerInteractUI : MonoBehaviour
 {
     [SerializeField] private GameObject containerGO;
     [SerializeField] private PlayerInteract playerInteract;
+    [SerializeField] private PlayerInteract boatInteract;
     [SerializeField] private TextMeshProUGUI interactTextMeshProUGUI;
 
     [Header("Hold Progress Bar")]
     [SerializeField] private GameObject progressBarContainer;
     [SerializeField] private Image progressBarFill;
 
+    private PlayerInteract currentActiveInteract;
+
     private void Update()
     {
-        if (playerInteract.GetInteractableObject() != null)
+        // Determine which interact mode is active
+        currentActiveInteract = GetActivePlayerInteract();
+
+        if (currentActiveInteract != null && currentActiveInteract.GetInteractableObject() != null)
         {
-            Show(playerInteract.GetInteractableObject());
+            Show(currentActiveInteract.GetInteractableObject());
 
             // Show progress bar when holding
-            if (playerInteract.IsHolding())
+            if (currentActiveInteract.IsHolding())
             {
                 ShowProgressBar();
-                UpdateProgressBar(playerInteract.GetHoldProgress());
+                UpdateProgressBar(currentActiveInteract.GetHoldProgress());
             }
             else
             {
@@ -34,6 +40,27 @@ public class PlayerInteractUI : MonoBehaviour
             Hide();
             HideProgressBar();
         }
+    }
+
+    /// <summary>
+    /// Determines which PlayerInteract component is currently active based on enabled state
+    /// </summary>
+    /// <returns>The active PlayerInteract component, or null if none are active</returns>
+    private PlayerInteract GetActivePlayerInteract()
+    {
+        // Check boat mode first
+        if (boatInteract != null && boatInteract.enabled && boatInteract.gameObject.activeInHierarchy)
+        {
+            return boatInteract;
+        }
+
+        // Check player/swim mode
+        if (playerInteract != null && playerInteract.enabled && playerInteract.gameObject.activeInHierarchy)
+        {
+            return playerInteract;
+        }
+
+        return null;
     }
 
     private void Show(IInteractable interactable)

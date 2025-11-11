@@ -1,7 +1,14 @@
+using PlayerInputControl;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 [RequireComponent(typeof(Rigidbody))]
-public class BoatController : MonoBehaviour
+#if ENABLE_INPUT_SYSTEM
+[RequireComponent(typeof(PlayerInput))]
+#endif
+public class BoatController :  MonoBehaviour
 {
     [Header("References")]
     public Transform Motor;                      // visual motor location (force applied here for turning)
@@ -13,8 +20,49 @@ public class BoatController : MonoBehaviour
     public float MaxSpeed = 10f;                 // max horizontal speed (m/s)
     public float StopDeceleration = 2f;          // deceleration when no input (m/s^2)
 
-    Rigidbody rb;
-    Quaternion motorStartRot;
+    [Header("Cinemachine")]
+    [Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
+    public GameObject CinemachineCameraTarget;
+
+    [Tooltip("How far in degrees can you move the camera up")]
+    public float TopClamp = 70.0f;
+
+    [Tooltip("How far in degrees can you move the camera down")]
+    public float BottomClamp = -30.0f;
+
+    [Tooltip("Additional degrees to override the camera. Useful for fine tuning camera position when locked")]
+    public float CameraAngleOverride = 0.0f;
+
+    [Tooltip("For locking the camera position on all axis")]
+    public bool LockCameraPosition = false;
+
+    // Cinemachine
+    private float _cinemachineTargetYaw;
+    private float _cinemachineTargetPitch;
+
+    // Input
+    private PlayerInputs _input;
+#if ENABLE_INPUT_SYSTEM
+    private PlayerInput _playerInput;
+#endif
+
+    // Rigidbody and motor
+    private Rigidbody rb;
+    private Quaternion motorStartRot;
+
+    private const float _threshold = 0.01f;
+
+    private bool IsCurrentDeviceMouse
+    {
+        get
+        {
+#if ENABLE_INPUT_SYSTEM
+            return _playerInput != null && _playerInput.currentControlScheme == "KeyboardMouse";
+#else
+            return false;
+#endif
+        }
+    }
 
     void Start()
     {
@@ -37,6 +85,23 @@ public class BoatController : MonoBehaviour
             MotorParticles = Motor.GetComponentInChildren<ParticleSystem>();
 
         motorStartRot = Motor.localRotation;
+
+        // Initialize camera target yaw
+        if (CinemachineCameraTarget != null)
+        {
+            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+        }
+
+        // Get input component
+        _input = GetComponent<PlayerInputs>();
+        if (_input == null)
+        {
+            Debug.LogWarning("BoatController: PlayerInputs component not found. Camera rotation will not work.", this);
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        _playerInput = GetComponent<PlayerInput>();
+#endif
     }
 
     void FixedUpdate()
@@ -102,5 +167,41 @@ public class BoatController : MonoBehaviour
             if (wantOn && !MotorParticles.isPlaying) MotorParticles.Play();
             if (!wantOn && MotorParticles.isPlaying) MotorParticles.Stop();
         }
+    }
+
+    void LateUpdate()
+    {
+        CameraRotation();
+    }
+
+    private void CameraRotation()
+    {
+        // Skip if no input or camera target
+        if (_input == null || CinemachineCameraTarget == null) return;
+
+        // if there is an input and camera position is not fixed
+        if (_input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
+        {
+            // Don't multiply mouse input by Time.deltaTime;
+            float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
+
+            _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
+            _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
+        }
+
+        // clamp our rotations so our values are limited 360 degrees
+        _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
+        _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+
+        // Cinemachine will follow this target
+        CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
+            _cinemachineTargetYaw, 0.0f);
+    }
+
+    private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
+    {
+        if (lfAngle < -360f) lfAngle += 360f;
+        if (lfAngle > 360f) lfAngle -= 360f;
+        return Mathf.Clamp(lfAngle, lfMin, lfMax);
     }
 }
