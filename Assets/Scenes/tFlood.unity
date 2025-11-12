@@ -3464,7 +3464,7 @@ Transform:
   m_GameObject: {fileID: 655548997}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1.375, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4172,7 +4172,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &883489222
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5566,7 +5566,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.375
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -6089,7 +6089,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1327619677
 Transform:
   m_ObjectHideFlags: 0
@@ -6265,7 +6265,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.375
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: m_LocalPosition.z
@@ -9479,6 +9479,7 @@ GameObject:
   - component: {fileID: 8833261475959033200}
   - component: {fileID: 1897110885393536699}
   - component: {fileID: 3831029853900496355}
+  - component: {fileID: 8833261475959033202}
   m_Layer: 4
   m_Name: CustomFlood
   m_TagString: Water
@@ -9734,6 +9735,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 414081670356421638, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
+      propertyPath: ChestHeight
+      value: 1.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 414081670356421638, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
+      propertyPath: BodyHalfHeight
+      value: -0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 414081670356421638, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
+      propertyPath: WaterLayer.m_Bits
+      value: 16
+      objectReference: {fileID: 0}
     - target: {fileID: 788958105909676244, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -9777,6 +9790,10 @@ PrefabInstance:
     - target: {fileID: 5027490669404256391, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
       propertyPath: m_Name
       value: FloodPlayerChara
+      objectReference: {fileID: 0}
+    - target: {fileID: 5027490669404256391, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -11380,6 +11397,10 @@ PrefabInstance:
     - target: {fileID: 1928029423141221134, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
       propertyPath: m_Name
       value: FloodPlayerCharaBoat
+      objectReference: {fileID: 0}
+    - target: {fileID: 3218575451328583579, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
+      propertyPath: BottomClamp
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6791998079032466230, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -13572,6 +13593,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8833261475959033202
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 701764743872700757}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 50.000004, y: 0, z: 50}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8885796438302744124
 GameObject:
   m_ObjectHideFlags: 0
