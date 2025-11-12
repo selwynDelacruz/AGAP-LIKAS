@@ -277,11 +277,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralMapGenerator
   mapPrefabs:
   - {fileID: 4462197606401803339, guid: 0b8230113eb32bc4dbe9db105da94509, type: 3}
-  - {fileID: 7078787863701297740, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
-  - {fileID: 3410754394119471136, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
-  - {fileID: 8852445101687726784, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
-  - {fileID: 5926536741195813975, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
-  - {fileID: 2553980204337804249, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
+  - {fileID: 7865175283235484164, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
+  - {fileID: 7676447261683305752, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
+  - {fileID: 5068120908379869912, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
+  - {fileID: 7438006716574020142, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
+  - {fileID: 5602933391911720691, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
   mapSize: 121
 --- !u!4 &469083747
 Transform:

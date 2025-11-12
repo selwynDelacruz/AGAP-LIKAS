@@ -6,7 +6,7 @@ public class RubbleInteractable : MonoBehaviour, IInteractable
     public void Interact(Transform interactorTransform)
     {
         Debug.Log("Rubble " + gameObject.name + " has been interacted with.");
-        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 
     public string GetInteractText()

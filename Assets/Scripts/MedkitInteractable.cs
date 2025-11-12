@@ -16,13 +16,16 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         if (!hasHealed)
         {
             ApplyMedkit();
+            PointManager.Instance.AddPoints("Healed Victim", 10);
             return;
+            
         }
 
         // STAGE 2: Rescue Victim (only after healing)
         if (hasHealed && !hasRescued)
         {
             RescueVictim();
+            PointManager.Instance.AddPoints("Rescued Victim", 20);
             return;
         }
 
@@ -62,7 +65,7 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
     {
         hasRescued = true;
         Debug.Log("Victim " + gameObject.name + " has been rescued!");
-        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 
     public string GetInteractText()
