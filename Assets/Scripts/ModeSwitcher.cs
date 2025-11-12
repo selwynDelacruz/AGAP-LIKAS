@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using Unity.Cinemachine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -17,18 +18,57 @@ public class ModeSwitcher : MonoBehaviour
     [SerializeField] private string firstModeName = "First Mode";
     [SerializeField] private string secondModeName = "Second Mode";
     
+    [Header("Cinemachine")]
+    [SerializeField] private CinemachineTargetGroup targetGroup;
+    
     private GameObject currentActiveObject;
+    private GameObject firstInstance;
+    private GameObject secondInstance;
+
+    // Public properties to access the instances
+    public GameObject FirstInstance => firstInstance;
+    public GameObject SecondInstance => secondInstance;
+
+    private void Awake()
+    {
+        // Ensure to initialize both prefab objects as inactive
+        if (firstGameObject != null)
+        {
+            firstInstance = Instantiate(firstGameObject);
+            firstInstance.SetActive(false);
+            
+            // Add boat camera target to target group if it exists
+            Transform BoatCameraTarget = firstInstance.transform.Find("BoatCameraTarget");
+            if (BoatCameraTarget != null && targetGroup != null)
+            {
+                targetGroup.AddMember(BoatCameraTarget, 1f, 1f);
+            }
+        }
+        
+        if (secondGameObject != null)
+        {
+            secondInstance = Instantiate(secondGameObject);
+            secondInstance.SetActive(false);
+
+            // Add player camera target to target group if it exists
+            Transform PlayerCameraRoot = secondInstance.transform.Find("PlayerCameraRoot");
+            if (PlayerCameraRoot != null && targetGroup != null)
+            {
+                targetGroup.AddMember(PlayerCameraRoot, 1f, 1f);
+            }
+        }
+    }
     
     private void Start()
     {
         // Initialize - ensure first object is active
-        if (firstGameObject != null)
+        if (firstInstance != null)
         {
-            currentActiveObject = firstGameObject;
-            firstGameObject.SetActive(true);
-            if (secondGameObject != null)
+            currentActiveObject = firstInstance;
+            firstInstance.SetActive(true);
+            if (secondInstance != null)
             {
-                secondGameObject.SetActive(false);
+                secondInstance.SetActive(false);
             }
             UpdateModeText(firstModeName);
         }
@@ -51,7 +91,7 @@ public class ModeSwitcher : MonoBehaviour
     
     private void SwitchMode()
     {
-        if (firstGameObject == null || secondGameObject == null)
+        if (firstInstance == null || secondInstance == null)
         {
             Debug.LogWarning("GameObjects not assigned in ModeSwitcher!");
             return;
@@ -62,16 +102,16 @@ public class ModeSwitcher : MonoBehaviour
         string nextModeName;
         
         // Determine which object is currently active
-        if (currentActiveObject == firstGameObject)
+        if (currentActiveObject == firstInstance)
         {
-            previousObject = firstGameObject;
-            nextObject = secondGameObject;
+            previousObject = firstInstance;
+            nextObject = secondInstance;
             nextModeName = secondModeName;
         }
         else
         {
-            previousObject = secondGameObject;
-            nextObject = firstGameObject;
+            previousObject = secondInstance;
+            nextObject = firstInstance;
             nextModeName = firstModeName;
         }
         

@@ -7521,7 +7521,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   containerGO: {fileID: 434899550}
-  modeSwitcher: {fileID: 1428474630}
+  modeSwitcher: {fileID: 0}
   interactTextMeshProUGUI: {fileID: 598799705}
   progressBarContainer: {fileID: 1904715596}
   progressBarFill: {fileID: 1755722625}
