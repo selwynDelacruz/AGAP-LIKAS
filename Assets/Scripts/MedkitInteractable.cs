@@ -62,7 +62,7 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
     {
         hasRescued = true;
         Debug.Log("Victim " + gameObject.name + " has been rescued!");
-        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 
     public string GetInteractText()

@@ -7,7 +7,7 @@ public class NPCInteractable : MonoBehaviour, IInteractable
     public void Interact(Transform interactorTransform)
     {
         Debug.Log("NPC " + gameObject.name + " has been interacted with.");
-        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 
     public string GetInteractText()
