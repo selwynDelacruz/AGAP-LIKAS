@@ -276,7 +276,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralMapGenerator
   mapPrefabs:
-  - {fileID: 220554259602182485, guid: 0b8230113eb32bc4dbe9db105da94509, type: 3}
+  - {fileID: 4462197606401803339, guid: 0b8230113eb32bc4dbe9db105da94509, type: 3}
   - {fileID: 7078787863701297740, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
   - {fileID: 3410754394119471136, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
   - {fileID: 8852445101687726784, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
