@@ -20,6 +20,16 @@ public class BreakObject : MonoBehaviour
     [Tooltip("Delay before pieces start falling (seconds)")]
     public float collapseDelay = 0.1f;
 
+    [Header("Camera Shake")]
+    [Tooltip("Reference to the EarthquakeManager for camera shake")]
+    public EarthquakeManager earthquakeManager;
+
+    [Tooltip("Trigger camera shake when object breaks")]
+    public bool triggerCameraShake = true;
+
+    [Tooltip("Custom shake duration (overrides EarthquakeManager default if > 0)")]
+    public float customShakeDuration = 0f;
+
     private BoxCollider triggerCollider;
     private bool hasTriggered = false;
 
@@ -41,6 +51,18 @@ public class BreakObject : MonoBehaviour
         {
             Debug.LogError($"BreakObject on {gameObject.name}: No breakedObjectPrefab assigned!", this);
         }
+
+        // Try to find EarthquakeManager if not assigned
+        if (earthquakeManager == null && triggerCameraShake)
+        {
+            earthquakeManager = FindFirstObjectByType<EarthquakeManager>();
+            
+            if (earthquakeManager == null)
+            {
+                Debug.LogWarning($"BreakObject on {gameObject.name}: No EarthquakeManager found in scene. Camera shake will be disabled.");
+                triggerCameraShake = false;
+            }
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -48,6 +70,19 @@ public class BreakObject : MonoBehaviour
         if (other.CompareTag("Player") && !hasTriggered)
         {
             hasTriggered = true;
+            
+            // Trigger camera shake immediately when player enters
+            if (triggerCameraShake && earthquakeManager != null)
+            {
+                if (customShakeDuration > 0)
+                {
+                    earthquakeManager.TriggerEarthquake(customShakeDuration);
+                }
+                else
+                {
+                    earthquakeManager.TriggerEarthquake();
+                }
+            }
             
             if (collapseDelay > 0)
             {

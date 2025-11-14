@@ -5,38 +5,15 @@ using UnityEngine.UI;
 public class PlayerInteractUI : MonoBehaviour
 {
     [SerializeField] private GameObject containerGO;
-    [SerializeField] private ModeSwitcher modeSwitcher;
+    [SerializeField] private PlayerInteract playerInteract;
+    [SerializeField] private PlayerInteract boatInteract;
     [SerializeField] private TextMeshProUGUI interactTextMeshProUGUI;
 
     [Header("Hold Progress Bar")]
     [SerializeField] private GameObject progressBarContainer;
     [SerializeField] private Image progressBarFill;
 
-    private PlayerInteract playerInteract;
-    private PlayerInteract boatInteract;
     private PlayerInteract currentActiveInteract;
-
-    private void Start()
-    {
-        // Get PlayerInteract components from the instantiated prefabs
-        if (modeSwitcher != null)
-        {
-            if (modeSwitcher.FirstInstance != null)
-            {
-                boatInteract = modeSwitcher.FirstInstance.GetComponent<PlayerInteract>();
-            }
-            
-            if (modeSwitcher.SecondInstance != null)
-            {
-                playerInteract = modeSwitcher.SecondInstance.GetComponent<PlayerInteract>();
-            }
-        }
-        
-        if (playerInteract == null || boatInteract == null)
-        {
-            Debug.LogWarning("PlayerInteractUI: Could not find PlayerInteract components on instantiated prefabs!");
-        }
-    }
 
     private void Update()
     {
