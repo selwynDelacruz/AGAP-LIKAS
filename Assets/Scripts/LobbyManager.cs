@@ -28,7 +28,7 @@ public class LobbyManager : MonoBehaviour
     [SerializeField] private Button startButton;
 
     public static int SelectedTaskCount { get; private set; } = 1;
-    public static string SelectedDisaster { get; private set; } = "Flood";
+    public static string SelectedDisaster { get; private set; } = "TestKen";
     public static int SelectedDuration { get; private set; } = 300;
 
     void Start()
@@ -123,7 +123,7 @@ public class LobbyManager : MonoBehaviour
                 SelectedDisaster = "TestKen";
                 break;
             default:
-                SelectedDisaster = "Flood";
+                SelectedDisaster = "TestKen";
                 break;
         }
     }
@@ -144,15 +144,17 @@ public class LobbyManager : MonoBehaviour
         PlayerPrefs.SetInt("GameDuration", SelectedDuration);
         PlayerPrefs.Save();
 
-        // Load the appropriate scene based on the selected disaster
-        if (!string.IsNullOrEmpty(SelectedDisaster))
-        {
-            SceneManager.LoadScene(SelectedDisaster);
-        }
-        else
-        {
-            Debug.LogError("No disaster selected!");
-        }
+        //// Load the appropriate scene based on the selected disaster
+        //if (!string.IsNullOrEmpty(SelectedDisaster))
+        //{
+        //    SceneManager.LoadScene(SelectedDisaster);
+        //}
+        //else
+        //{
+        //    Debug.LogError("No disaster selected!");
+        //}
+        // Always load TestKen scene
+        SceneManager.LoadScene("TestKen");
     }
 
     // Public method to get current task count (can be called from other scripts)
