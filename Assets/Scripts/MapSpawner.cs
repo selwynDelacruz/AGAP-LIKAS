@@ -22,10 +22,10 @@ public class MapSpawner : MonoBehaviour
         }
 
         // STEP 3: Spawn them in a 2x2 grid
-        SpawnMap(selectedMaps[0], new Vector3(0, 0, 0));                     // bottom-left
-        SpawnMap(selectedMaps[1], new Vector3(0, 0, mapSize));               // top-left
-        SpawnMap(selectedMaps[2], new Vector3(mapSize, 0, 0));               // bottom-right
-        SpawnMap(selectedMaps[3], new Vector3(mapSize, 0, mapSize));         // top-right
+        SpawnMap(selectedMaps[0], new Vector3(0, 0, 0));                     // bottom-right
+        SpawnMap(selectedMaps[1], new Vector3(0, 0, mapSize));               // top-right
+        SpawnMap(selectedMaps[2], new Vector3(mapSize, 0, 0));               // bottom-left
+        SpawnMap(selectedMaps[3], new Vector3(mapSize, 0, mapSize));         // top-left
     }
 
     void SpawnMap(GameObject prefab, Vector3 position)
