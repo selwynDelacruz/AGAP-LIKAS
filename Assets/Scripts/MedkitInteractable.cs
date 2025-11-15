@@ -16,7 +16,7 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         if (!hasHealed)
         {
             ApplyMedkit();
-            PointManager.Instance.AddPoints("Healed Victim", 10);
+            //PointManager.Instance.AddPoints("Healed Victim", 10);
             return;
             
         }
@@ -25,7 +25,7 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         if (hasHealed && !hasRescued)
         {
             RescueVictim();
-            PointManager.Instance.AddPoints("Rescued Victim", 20);
+            //PointManager.Instance.AddPoints("Rescued Victim", 20);
             return;
         }
 
