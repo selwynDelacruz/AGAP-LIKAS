@@ -9,8 +9,8 @@ public class LobbyManager : MonoBehaviour
     [SerializeField] private Button minusButton;
     [SerializeField] private Button addButton;
     [SerializeField] private TMP_Text taskNumberText;
-    private int taskCount = 1;
-    private const int MIN_TASKS = 0;
+    private int taskCount = 5;
+    private const int MIN_TASKS = 5;
     private const int MAX_TASKS = 8;
 
     [Header("Main Disaster")]
@@ -27,14 +27,14 @@ public class LobbyManager : MonoBehaviour
     [Header("Start Button")]
     [SerializeField] private Button startButton;
 
-    public static int SelectedTaskCount { get; private set; } = 1;
+    public static int SelectedTaskCount { get; private set; } = 5;
     public static string SelectedDisaster { get; private set; } = "TestKen";
     public static int SelectedDuration { get; private set; } = 300;
 
     void Start()
     {
         // Initialize task count
-        taskCount = 1;
+        taskCount = 5;
         UpdateTaskCountDisplay();
 
         // Setup minus button
@@ -138,6 +138,13 @@ public class LobbyManager : MonoBehaviour
 
     private void OnStartButtonClicked()
     {
+        // Reset points before starting new game
+        if (PointManager.Instance != null)
+        {
+            PointManager.Instance.ResetPoints();
+            Debug.Log("Points reset for new simulation.");
+        }
+        
         // Store the selected disaster and duration for other scenes to access
         PlayerPrefs.SetInt("TaskCount", SelectedTaskCount);
         PlayerPrefs.SetString("DisasterType", SelectedDisaster);

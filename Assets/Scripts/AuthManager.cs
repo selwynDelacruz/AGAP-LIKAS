@@ -719,9 +719,6 @@ public class AuthManager : MonoBehaviour
 		{
 			isOnLoadingPanel = true;
 			Debug.LogWarning($"Failed to register task with {LoginTask.Exception}");
-			switch ((AuthError)(LoginTask.Exception.GetBaseException() as FirebaseException).ErrorCode)
-			{
-			}
 			yield break;
 		}
 		User = LoginTask.Result.User;

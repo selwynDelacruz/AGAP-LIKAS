@@ -6,6 +6,7 @@ public class RubbleInteractable : MonoBehaviour, IInteractable
     public void Interact(Transform interactorTransform)
     {
         Debug.Log("Rubble " + gameObject.name + " has been interacted with.");
+        PointManager.Instance.AddPoints("Cleared Rubble", 10); // Or whatever point value you want
         Destroy(gameObject);
     }
 

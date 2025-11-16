@@ -15,18 +15,29 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         // STAGE 1: Apply Medkit
         if (!hasHealed)
         {
-            ApplyMedkit();
-            PointManager.Instance.AddPoints("Healed Victim", 10);
-            hasHealed = true;
+            bool success = ApplyMedkit();
+
+            // Only proceed if medkit was successfully applied
+            if (success)
+            {
+                hasHealed = true;
+                if (PointManager.Instance != null)
+                {
+                    PointManager.Instance.AddPoints("Healed Victim", 10);
+                }
+                Debug.Log("Now you can rescue the victim!");
+            }
             return;
-            
         }
 
         // STAGE 2: Rescue Victim (only after healing)
         if (hasHealed && !hasRescued)
         {
             RescueVictim();
-            PointManager.Instance.AddPoints("Rescued Victim", 20);
+            if (PointManager.Instance != null)
+            {
+                PointManager.Instance.AddPoints("Rescued Victim", 20);
+            }
             return;
         }
 
@@ -34,13 +45,13 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         Debug.Log("Victim has already been rescued.");
     }
 
-    private void ApplyMedkit()
+    private bool ApplyMedkit()
     {
         // Check if GameManager exists
         if (GameManager.Instance == null)
         {
             Debug.LogError("GameManager.Instance not found!");
-            return;
+            return false;
         }
 
         // Check if current medkits is 0
@@ -48,7 +59,7 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         {
             Debug.Log("You don't have medkit!");
             GameManager.Instance.TriggerBlinkEffect();
-            return;
+            return false;
         }
 
         // Use a medkit
@@ -56,11 +67,12 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
         
         if (success)
         {
-            hasHealed = true;
             Debug.Log("Used 1 medkit! Victim is now healed.");
             Debug.Log("Victim healed! Remaining medkits: " + GameManager.Instance.CurrentMedkits);
-            Debug.Log("Now you can rescue the victim!");
+            return true;
         }
+
+        return false;
     }
 
     private void RescueVictim()

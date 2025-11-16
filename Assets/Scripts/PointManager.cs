@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PointManager : MonoBehaviour
-
 {
     public static PointManager Instance;
 
@@ -40,6 +39,13 @@ public class PointManager : MonoBehaviour
     public Dictionary<string, int> GetPointLog()
     {
         return pointLog;
+    }
+
+    public void ResetPoints()
+    {
+        totalPoints = 0;
+        pointLog.Clear();
+        Debug.Log("Points reset for new game.");
     }
 }
 
