@@ -36,28 +36,29 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
 
     private void ApplyMedkit()
     {
-        // Check if MedkitManager exists
-        if (MedkitManager.Instance == null)
+        // Check if GameManager exists
+        if (GameManager.Instance == null)
         {
-            Debug.LogError("MedkitManager.Instance not found!");
+            Debug.LogError("GameManager.Instance not found!");
             return;
         }
 
         // Check if current medkits is 0
-        if (MedkitManager.Instance.CurrentMedkits == 0)
+        if (GameManager.Instance.CurrentMedkits == 0)
         {
             Debug.Log("You don't have medkit!");
+            GameManager.Instance.TriggerBlinkEffect();
             return;
         }
 
         // Use a medkit
-        bool success = MedkitManager.Instance.UseMedkit();
+        bool success = GameManager.Instance.UseMedkit();
         
         if (success)
         {
             hasHealed = true;
             Debug.Log("Used 1 medkit! Victim is now healed.");
-            Debug.Log("Victim healed! Remaining medkits: " + MedkitManager.Instance.CurrentMedkits);
+            Debug.Log("Victim healed! Remaining medkits: " + GameManager.Instance.CurrentMedkits);
             Debug.Log("Now you can rescue the victim!");
         }
     }
@@ -66,6 +67,13 @@ public class MedkitInteractable : MonoBehaviour, IInteractable
     {
         hasRescued = true;
         Debug.Log("Victim " + gameObject.name + " has been rescued!");
+        
+        // Increment saved victims count in GameManager
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.IncrementSavedVictims();
+        }
+        
         Destroy(gameObject);
     }
 

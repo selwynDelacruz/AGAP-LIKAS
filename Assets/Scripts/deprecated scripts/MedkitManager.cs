@@ -188,41 +188,41 @@ public class MedkitManager : MonoBehaviour
 /// <summary>
 /// Helper component for safe zone trigger detection
 /// </summary>
-public class SafeZoneTrigger : MonoBehaviour
-{
-    public event Action OnPlayerEnterSafeZone;
+//public class SafeZoneTrigger : MonoBehaviour
+//{
+//    public event Action OnPlayerEnterSafeZone;
 
-    [Header("Safe Zone Settings")]
-    [Tooltip("Tag used to identify the player")]
-    [SerializeField] private string playerTag = "Player";
+//    [Header("Safe Zone Settings")]
+//    [Tooltip("Tag used to identify the player")]
+//    [SerializeField] private string playerTag = "Player";
 
-    [Tooltip("Cooldown time in seconds before player can replenish again")]
-    [SerializeField] private float replenishCooldown = 2f;
+//    [Tooltip("Cooldown time in seconds before player can replenish again")]
+//    [SerializeField] private float replenishCooldown = 2f;
 
-    private float lastReplenishTime = -999f;
+//    private float lastReplenishTime = -999f;
 
-    private void OnTriggerEnter(Collider other)
-    {
-        // Check if the colliding object is the player
-        if (other.CompareTag(playerTag))
-        {
-            // Check cooldown to prevent spam
-            if (Time.time - lastReplenishTime >= replenishCooldown)
-            {
-                lastReplenishTime = Time.time;
-                OnPlayerEnterSafeZone?.Invoke();
-                Debug.Log("[SafeZoneTrigger] Player entered safe zone");
-            }
-        }
-    }
+//    private void OnTriggerEnter(Collider other)
+//    {
+//        // Check if the colliding object is the player
+//        if (other.CompareTag(playerTag))
+//        {
+//            // Check cooldown to prevent spam
+//            if (Time.time - lastReplenishTime >= replenishCooldown)
+//            {
+//                lastReplenishTime = Time.time;
+//                OnPlayerEnterSafeZone?.Invoke();
+//                Debug.Log("[SafeZoneTrigger] Player entered safe zone");
+//            }
+//        }
+//    }
 
-    private void OnValidate()
-    {
-        // Ensure this GameObject has a trigger collider
-        Collider col = GetComponent<Collider>();
-        if (col != null && !col.isTrigger)
-        {
-            Debug.LogWarning("[SafeZoneTrigger] Collider on safe zone should be set as Trigger!");
-        }
-    }
-}
+//    private void OnValidate()
+//    {
+//        // Ensure this GameObject has a trigger collider
+//        Collider col = GetComponent<Collider>();
+//        if (col != null && !col.isTrigger)
+//        {
+//            Debug.LogWarning("[SafeZoneTrigger] Collider on safe zone should be set as Trigger!");
+//        }
+//    }
+//}
