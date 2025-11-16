@@ -1,0 +1,49 @@
+{
+  "mcpServers": {
+    "agap-likas-multiplayer": {
+      "command": "node",
+      "args": ["server.js"],
+      "env": {
+        "UNITY_PROJECT_PATH": "C:\\Users\\Non Admin\\Documents\\GitHub\\AGAP-LIKAS",
+        "NETCODE_SETUP_MODE": "automated"
+      }
+    }
+  },
+  "tools": {
+    "setup_lobby_scene": {
+      "description": "Automatically set up the multiplayer lobby scene with all required components",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "sceneName": {
+            "type": "string",
+            "description": "Name of the scene to set up (default: Lobby)"
+          },
+          "maxPlayers": {
+            "type": "number",
+            "description": "Maximum number of players (default: 4)"
+          }
+        }
+      }
+    },
+    "verify_netcode_setup": {
+      "description": "Verify that Unity Netcode for GameObjects is properly installed and configured",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    "create_network_prefab": {
+      "description": "Create a networked player prefab from an existing player GameObject",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "playerPrefabPath": {
+            "type": "string",
+            "description": "Path to the existing player prefab"
+          }
+        }
+      }
+    }
+  }
+}

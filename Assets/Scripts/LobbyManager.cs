@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Unity.Netcode;
 
 public class LobbyManager : MonoBehaviour
 {
@@ -26,6 +27,9 @@ public class LobbyManager : MonoBehaviour
 
     [Header("Start Button")]
     [SerializeField] private Button startButton;
+
+    [Header("Multiplayer Settings")]
+    [SerializeField] private bool isMultiplayer = true;
 
     public static int SelectedTaskCount { get; private set; } = 1;
     public static string SelectedDisaster { get; private set; } = "TestKen";
@@ -76,6 +80,12 @@ public class LobbyManager : MonoBehaviour
         {
             taskCount--;
             UpdateTaskCountDisplay();
+            
+            // Update network lobby if multiplayer and we're the host
+            if (isMultiplayer && NetworkLobbyManager.Instance != null && NetworkLobbyManager.Instance.IsServer)
+            {
+                NetworkLobbyManager.Instance.UpdateLobbySettings(taskCount, SelectedDuration, SelectedDisaster);
+            }
         }
     }
 
@@ -85,6 +95,12 @@ public class LobbyManager : MonoBehaviour
         {
             taskCount++;
             UpdateTaskCountDisplay();
+            
+            // Update network lobby if multiplayer and we're the host
+            if (isMultiplayer && NetworkLobbyManager.Instance != null && NetworkLobbyManager.Instance.IsServer)
+            {
+                NetworkLobbyManager.Instance.UpdateLobbySettings(taskCount, SelectedDuration, SelectedDisaster);
+            }
         }
     }
 
@@ -126,6 +142,12 @@ public class LobbyManager : MonoBehaviour
                 SelectedDisaster = "TestKen";
                 break;
         }
+        
+        // Update network lobby if multiplayer and we're the host
+        if (isMultiplayer && NetworkLobbyManager.Instance != null && NetworkLobbyManager.Instance.IsServer)
+        {
+            NetworkLobbyManager.Instance.UpdateLobbySettings(SelectedTaskCount, SelectedDuration, SelectedDisaster);
+        }
     }
 
     private void OnDurationChanged(int index)
@@ -133,6 +155,12 @@ public class LobbyManager : MonoBehaviour
         if (index >= 0 && index < durations.Length)
         {
             SelectedDuration = durations[index];
+            
+            // Update network lobby if multiplayer and we're the host
+            if (isMultiplayer && NetworkLobbyManager.Instance != null && NetworkLobbyManager.Instance.IsServer)
+            {
+                NetworkLobbyManager.Instance.UpdateLobbySettings(SelectedTaskCount, SelectedDuration, SelectedDisaster);
+            }
         }
     }
 
@@ -144,17 +172,28 @@ public class LobbyManager : MonoBehaviour
         PlayerPrefs.SetInt("GameDuration", SelectedDuration);
         PlayerPrefs.Save();
 
-        //// Load the appropriate scene based on the selected disaster
-        //if (!string.IsNullOrEmpty(SelectedDisaster))
-        //{
-        //    SceneManager.LoadScene(SelectedDisaster);
-        //}
-        //else
-        //{
-        //    Debug.LogError("No disaster selected!");
-        //}
-        // Always load TestKen scene
-        SceneManager.LoadScene("TestKen");
+        Debug.Log($"[LobbyManager] Starting game with settings - Tasks: {SelectedTaskCount}, Disaster: {SelectedDisaster}, Duration: {SelectedDuration}");
+
+        // If multiplayer is enabled and NetworkLobbyManager exists
+        if (isMultiplayer && NetworkLobbyManager.Instance != null)
+        {
+            // Only the host can start the game
+            if (NetworkLobbyManager.Instance.IsServer)
+            {
+                Debug.Log("[LobbyManager] Host starting multiplayer game");
+                NetworkLobbyManager.Instance.StartGame();
+            }
+            else
+            {
+                Debug.LogWarning("[LobbyManager] Only the host can start the game!");
+            }
+        }
+        else
+        {
+            // Single player mode - load scene directly
+            Debug.Log("[LobbyManager] Starting single-player game");
+            SceneManager.LoadScene("TestKen");
+        }
     }
 
     // Public method to get current task count (can be called from other scripts)
