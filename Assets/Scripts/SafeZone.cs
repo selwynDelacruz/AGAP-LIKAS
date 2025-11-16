@@ -7,7 +7,7 @@ public class SafeZone : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             Debug.Log("Player reached safe zone!");
-            GameManager.Instance.FinishGame();
+            //GameManager.Instance.FinishGame();
         }
     }
 }
