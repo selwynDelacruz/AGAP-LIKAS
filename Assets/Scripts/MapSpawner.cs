@@ -8,6 +8,9 @@ public class MapSpawner : MonoBehaviour
     [Header("Size of each map (adjust to your prefab size)")]
     public float mapSize = 121f;
 
+    [Header("Safe Zone Prefab")]
+    public GameObject safeZonePrefab;
+
     private GameObject[] selectedMaps = new GameObject[4];
 
     void Start()
@@ -22,15 +25,31 @@ public class MapSpawner : MonoBehaviour
         }
 
         // STEP 3: Spawn them in a 2x2 grid
-        SpawnMap(selectedMaps[0], new Vector3(0, 0, 0));                     // bottom-right
-        SpawnMap(selectedMaps[1], new Vector3(0, 0, mapSize));               // top-right
-        SpawnMap(selectedMaps[2], new Vector3(mapSize, 0, 0));               // bottom-left
-        SpawnMap(selectedMaps[3], new Vector3(mapSize, 0, mapSize));         // top-left
+        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(0, 0, 0));                     // bottom-right
+        GameObject chunk1 = SpawnMap(selectedMaps[1], new Vector3(0, 0, mapSize));               // top-right
+        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(mapSize, 0, 0));               // bottom-left
+        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(mapSize, 0, mapSize));         // top-left
+
+        // STEP 4: Place the safe zone inside the final chunk
+        PlaceSafeZone(chunk3);
     }
 
-    void SpawnMap(GameObject prefab, Vector3 position)
+    GameObject SpawnMap(GameObject prefab, Vector3 position)
     {
-        Instantiate(prefab, position, Quaternion.identity);
+        return Instantiate(prefab, position, Quaternion.identity);
+    }
+
+    void PlaceSafeZone(GameObject mapChunk)
+    {
+        // find the ExitPoint in the mapChunk
+        Transform exitPoint = mapChunk.transform.Find("ExitPoint");
+
+        if (exitPoint == null)
+        {
+            Debug.LogWarning("Chunk " + mapChunk.name + " does not have an ExitPoint! Add one in the prefab.");
+            return;
+        }
+            Instantiate(safeZonePrefab, exitPoint.position, exitPoint.rotation);
     }
 
     // Fisher-Yates shuffle algorithm
