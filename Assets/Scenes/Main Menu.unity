@@ -10152,6 +10152,7 @@ MonoBehaviour:
   Current_Age: 0
   Current_Score: 0
   Current_Username: 
+  RoomManagerGO: {fileID: 0}
   playerData: {fileID: 1243951670652001871, guid: 37e2a34b105ab4b4e946a7d8a3bd5c54, type: 3}
   UsersListContent: {fileID: 1884747496}
   ManageAccountPanel: {fileID: 572396656}
@@ -29953,7 +29954,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1872836583}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 627923918}
+        m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
+        m_MethodName: LoadSceneByName
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: LobbyAndGame
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1872836583
 MonoBehaviour:
   m_ObjectHideFlags: 0
