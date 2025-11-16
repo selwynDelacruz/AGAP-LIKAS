@@ -154,8 +154,6 @@ public class AuthManager : MonoBehaviour
 
 	public string Current_Username;
 
-	public GameObject RoomManagerGO;
-
 	public GameObject playerData;
 
 	public Transform UsersListContent;
@@ -279,8 +277,8 @@ public class AuthManager : MonoBehaviour
 
 	public void LogoutButton()
 	{
-		Object.DestroyImmediate(RoomManagerGO);
 		PlayerPrefs.DeleteAll();
+		Debug.Log("[PlayerPrefs] Cleared all data (LogoutButton)");
 		isOnLoadingPanel = true;
 		Invoke("DelayRefreshScene", 0.2f);
 	}
@@ -608,6 +606,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("LoginEmail", _email);
 				PlayerPrefs.SetString("LoginPassword", _password);
 				PlayerPrefs.Save();
+				Debug.Log("[PlayerPrefs] Saved instructor login credentials");
 				Instructor_confirmLoginText.text = "Logged In";
 				Login_InstructorButton.interactable = false;
 			}
@@ -618,6 +617,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("LoginEmail", _email);
 				PlayerPrefs.SetString("LoginPassword", _password);
 				PlayerPrefs.Save();
+				Debug.Log("[PlayerPrefs] Saved trainee login credentials");
 				Trainee_confirmLoginText.text = "Logged In";
 				Login_TraineeButton.interactable = false;
 			}
@@ -628,6 +628,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("LoginEmail", _email);
 				PlayerPrefs.SetString("LoginPassword", _password);
 				PlayerPrefs.Save();
+				Debug.Log("[PlayerPrefs] Saved super_admin login credentials");
 				SuperAdmin_confirmLoginText.text = "Logged In";
 				Login_SuperAdminButton.interactable = false;
 			}
@@ -1257,6 +1258,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.Save();
 				Debug.Log("instructor clicked");
 				Debug.Log("UserType: " + UserType);
+				Debug.Log("[PlayerPrefs] Set Type_Of_User = " + UserType);
 				break;
 			case "trainee":
 				Login_Trainee_Panel.SetActive(value: true);
@@ -1264,6 +1266,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.SetString("Type_Of_User", UserType);
 				Debug.Log("trainee clicked");
 				Debug.Log("UserType: " + UserType);
+				Debug.Log("[PlayerPrefs] Set Type_Of_User = " + UserType);
 				PlayerPrefs.Save();
 				break;
 			case "super_admin":
@@ -1273,6 +1276,7 @@ public class AuthManager : MonoBehaviour
 				PlayerPrefs.Save();
 				Debug.Log("superadmin clicked");
 				Debug.Log("UserType: " + UserType);
+				Debug.Log("[PlayerPrefs] Set Type_Of_User = " + UserType);
 				break;
 		}
 	}
@@ -1311,6 +1315,7 @@ public class AuthManager : MonoBehaviour
 				// Clear preferences and cached data
 				PlayerPrefs.DeleteAll();
 				PlayerPrefs.Save();
+				Debug.Log("[PlayerPrefs] Cleared all data (instructor logout)");
 				
 				// Reset UI state
 				Instructor_confirmLoginText.text = "";
@@ -1341,6 +1346,7 @@ public class AuthManager : MonoBehaviour
 				// Clear preferences and cached data
 				PlayerPrefs.DeleteAll();
 				PlayerPrefs.Save();
+				Debug.Log("[PlayerPrefs] Cleared all data (trainee logout)");
 				
 				// Reset UI state
 				Trainee_confirmLoginText.text = "";
@@ -1370,6 +1376,7 @@ public class AuthManager : MonoBehaviour
 				// Clear preferences and cached data
 				PlayerPrefs.DeleteAll();
 				PlayerPrefs.Save();
+				Debug.Log("[PlayerPrefs] Cleared all data (super_admin logout)");
 				
 				// Reset UI state
 				SuperAdmin_confirmLoginText.text = "";
@@ -1397,7 +1404,6 @@ public class AuthManager : MonoBehaviour
 
 	public void RefreshData()
 	{
-		Object.Destroy(RoomManager.Instance.gameObject);
 		SceneManager.LoadScene("Main Menu");
 	}
 
@@ -1524,6 +1530,7 @@ public class AuthManager : MonoBehaviour
 			{
 				PlayerPrefs.SetInt("ScoredGet", Current_Score);
 				PlayerPrefs.Save();
+				Debug.Log("[PlayerPrefs] Saved ScoredGet = " + Current_Score);
 			}
 		}
 	}
