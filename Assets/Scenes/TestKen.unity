@@ -1572,7 +1572,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &236504997
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2409,7 +2409,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &385449667
 Transform:
   m_ObjectHideFlags: 0
@@ -3409,7 +3409,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 86, y: -300}
+  m_AnchoredPosition: {x: 86, y: -190}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &617858298
@@ -6896,7 +6896,7 @@ GameObject:
   - component: {fileID: 1490957116}
   - component: {fileID: 1490957115}
   m_Layer: 5
-  m_Name: UIs
+  m_Name: UI and UI Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7022,8 +7022,8 @@ RectTransform:
   - {fileID: 3714603660015137373}
   - {fileID: 224433510}
   - {fileID: 1574152145}
-  - {fileID: 617858297}
   - {fileID: 236504997}
+  - {fileID: 617858297}
   - {fileID: 1630998753}
   - {fileID: 1081026927}
   m_Father: {fileID: 1490957118}
@@ -9469,7 +9469,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2133437565
 Transform:
   m_ObjectHideFlags: 0
@@ -13709,7 +13709,7 @@ Transform:
   m_GameObject: {fileID: 701764743872700757}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.18, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []

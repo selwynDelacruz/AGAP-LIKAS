@@ -48,12 +48,12 @@ Material:
     m_Floats:
     - _Depth_Fade: 0.3
     - _NormalMap_Tilting: 1
-    - _Normal_Strength: 0.5
+    - _Normal_Strength: 1
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Smoothness: 0.8
     - _WavesFrequency: 0.1
-    - _WavesHeight: 0.5
+    - _WavesHeight: 0
     - _WavesSpeed: 0.05
     - _Waves_Frequency: 0.1
     - _Waves_Speed: 0.2
@@ -61,8 +61,8 @@ Material:
     - _Color: {r: 0.372549, g: 0.22745094, b: 0.09803919, a: 1}
     - _Color_1: {r: 0.27450976, g: 0.6156863, b: 0.7647059, a: 0}
     - _Color_2: {r: 0.62352943, g: 0.51372534, b: 0.42352936, a: 0.69411767}
-    - _Deep_Color: {r: 0.75686276, g: 0.60784316, b: 0.48627448, a: 1}
-    - _Shallow_Color: {r: 0.37254903, g: 0.22745098, b: 0.09803922, a: 1}
+    - _Deep_Color: {r: 0.4188679, g: 0.35314563, b: 0.29953006, a: 1}
+    - _Shallow_Color: {r: 0.2905661, g: 0.18537489, b: 0.091555715, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &952696260782284535

@@ -173,7 +173,7 @@ public class GameManager : MonoBehaviour
         // For TestKen mode, enable both for testing
         if (floodGameObject != null)
         {
-            floodGameObject.SetActive(true);
+            floodGameObject.SetActive(false);
         }
 
         if (earthquakeGameObject != null)

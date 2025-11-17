@@ -151,17 +151,17 @@ public class LobbyManager : MonoBehaviour
         PlayerPrefs.SetInt("GameDuration", SelectedDuration);
         PlayerPrefs.Save();
 
-        //// Load the appropriate scene based on the selected disaster
-        //if (!string.IsNullOrEmpty(SelectedDisaster))
-        //{
-        //    SceneManager.LoadScene(SelectedDisaster);
-        //}
-        //else
-        //{
-        //    Debug.LogError("No disaster selected!");
-        //}
-        // Always load TestKen scene
-        SceneManager.LoadScene("TestKen");
+        // Load the appropriate scene based on the selected disaster
+        if (!string.IsNullOrEmpty(SelectedDisaster))
+        {
+            SceneManager.LoadScene(SelectedDisaster);
+        }
+        else
+        {
+            Debug.LogError("No disaster selected!");
+        }
+        //// Always load TestKen scene
+        //SceneManager.LoadScene("TestKen");
     }
 
     // Public method to get current task count (can be called from other scripts)
