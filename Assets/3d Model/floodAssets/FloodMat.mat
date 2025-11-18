@@ -53,7 +53,7 @@ Material:
     - _QueueOffset: 0
     - _Smoothness: 0.8
     - _WavesFrequency: 0.1
-    - _WavesHeight: 0
+    - _WavesHeight: 0.2
     - _WavesSpeed: 0.05
     - _Waves_Frequency: 0.1
     - _Waves_Speed: 0.2
