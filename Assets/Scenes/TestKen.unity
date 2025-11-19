@@ -2026,17 +2026,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6791998079032466230, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
   m_PrefabInstance: {fileID: 4197034537285203986}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &302145180 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8322215183900888167, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
-  m_PrefabInstance: {fileID: 4197034537285203986}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a4e32eca968fb645aabaa69168074b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteract
 --- !u!1 &306719599
 GameObject:
   m_ObjectHideFlags: 0
@@ -8303,11 +8292,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   containerGO: {fileID: 434899550}
-  playerInteract: {fileID: 0}
-  boatInteract: {fileID: 302145180}
   interactTextMeshProUGUI: {fileID: 598799705}
   progressBarContainer: {fileID: 1904715596}
   progressBarFill: {fileID: 1755722625}
+  playerTag: Player
 --- !u!1 &1650149538
 GameObject:
   m_ObjectHideFlags: 0
@@ -9228,8 +9216,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   mapPrefabs:
   - {fileID: 4462197606401803339, guid: 0b8230113eb32bc4dbe9db105da94509, type: 3}
-  - {fileID: 7865175283235484164, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
-  - {fileID: 7676447261683305752, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
+  - {fileID: 512991908626529049, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
+  - {fileID: 7854780497150139500, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
   - {fileID: 5068120908379869912, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
   - {fileID: 3316110838181707970, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
   - {fileID: 5602933391911720691, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
