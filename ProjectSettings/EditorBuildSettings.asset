@@ -5,25 +5,26 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Main Menu.unity
     guid: 8360c15c4749acd489935bd05a23c249
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Lobby.unity
     guid: 31bc48d7f8c2b47479d617ce5633e19c
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Flood.unity
     guid: e074c826a5a611045aa2206713bedbb1
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Earthquake.unity
     guid: 3e63cf95c76319b4797985c4d1c864ef
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Result.unity
     guid: 0de6fe9b210a76a4885fa73f4785451b
   - enabled: 1
     path: Assets/Scenes/TestKen.unity
     guid: 738ecf1fb12a7634d8777de8b9ddf398
   m_configObjects:
+    com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: 9e7be553448fa2546aea5752021cbcf7, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

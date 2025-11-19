@@ -1,4 +1,6 @@
 ﻿using PlayerInputControl;
+using Unity.Cinemachine;
+using Unity.Netcode;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -13,7 +15,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM
     [RequireComponent(typeof(PlayerInput))]
 #endif
-    public class AgapThirdPersonController : MonoBehaviour
+    public class AgapThirdPersonController : NetworkBehaviour
     {
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
@@ -106,6 +108,7 @@ namespace StarterAssets
         private CharacterController _controller;
         private PlayerInputs _input;
         private GameObject _mainCamera;
+        private CinemachineVirtualCamera _vcam;
 
         private const float _threshold = 0.01f;
 
@@ -130,21 +133,27 @@ namespace StarterAssets
             if (_mainCamera == null)
             {
                 _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+                if (_mainCamera == null && Camera.main != null)
+                    _mainCamera = Camera.main.gameObject;
+            }
+
+            // cache the scene virtual camera if present
+            if (_vcam == null)
+            {
+                _vcam = Object.FindAnyObjectByType<CinemachineVirtualCamera>();
             }
         }
 
         private void Start()
         {
-            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            if (CinemachineCameraTarget != null)
+                _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            else
+                _cinemachineTargetYaw = transform.rotation.eulerAngles.y;
             
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<PlayerInputs>();
-#if ENABLE_INPUT_SYSTEM
-            _playerInput = GetComponent<PlayerInput>();
-#else
-			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
-#endif
 
             AssignAnimationIDs();
 
@@ -153,8 +162,55 @@ namespace StarterAssets
             _fallTimeoutDelta = FallTimeout;
         }
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            // Only set up local input and camera follow for the local owner
+            if (IsClient && IsOwner)
+            {
+#if ENABLE_INPUT_SYSTEM
+                _playerInput = GetComponent<PlayerInput>();
+                if (_playerInput != null)
+                    _playerInput.enabled = true;
+#endif
+                // If no Cinemachine target is assigned in the prefab, create one at approx head height
+                if (CinemachineCameraTarget == null)
+                {
+                    CinemachineCameraTarget = new GameObject("CinemachineCameraTarget");
+                    CinemachineCameraTarget.transform.SetParent(transform);
+                    // place at head height; adjust if your rig differs
+                    CinemachineCameraTarget.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+                    CinemachineCameraTarget.transform.localRotation = Quaternion.identity;
+                }
+
+                // Prefer virtual camera if present
+                if (_vcam != null && CinemachineCameraTarget != null)
+                {
+                    _vcam.Follow = CinemachineCameraTarget.transform;
+                    _vcam.LookAt = CinemachineCameraTarget.transform;
+                }
+
+                // Ensure we have a main camera reference
+                if (_mainCamera == null && Camera.main != null)
+                    _mainCamera = Camera.main.gameObject;
+            }
+            else
+            {
+                // Disable PlayerInput component on non-owning instances to avoid accidental input processing
+#if ENABLE_INPUT_SYSTEM
+                var pi = GetComponent<PlayerInput>();
+                if (pi != null)
+                    pi.enabled = false;
+#endif
+            }
+        }
+
         private void Update()
         {
+            // Only process movement and jump logic for the owner
+            if (!IsOwner) return;
+
             _hasAnimator = TryGetComponent(out _animator);
 
             JumpAndGravity();
@@ -164,6 +220,8 @@ namespace StarterAssets
 
         private void LateUpdate()
         {
+            // Only the owner should rotate the camera target
+            if (!IsOwner) return;
             CameraRotation();
         }
 
@@ -193,6 +251,8 @@ namespace StarterAssets
 
         private void CameraRotation()
         {
+            if (CinemachineCameraTarget == null || _input == null) return;
+
             // if there is an input and camera position is not fixed
             if (_input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
             {
@@ -207,13 +267,15 @@ namespace StarterAssets
             _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
             _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
 
-            // Cinemachine will follow this target
+            // Cinemachine target follows this rotation; Cinemachine Virtual Camera should Follow/LookAt this target
             CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
                 _cinemachineTargetYaw, 0.0f);
         }
 
         private void Move()
         {
+            if (_input == null || _controller == null) return;
+
             // set target speed based on move speed, sprint speed and if sprint is pressed
             float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
 
@@ -254,7 +316,7 @@ namespace StarterAssets
 
             // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is a move input rotate player when the player is moving
-            if (_input.move != Vector2.zero)
+            if (_input.move != Vector2.zero && _mainCamera != null)
             {
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
@@ -301,7 +363,7 @@ namespace StarterAssets
                 }
 
                 // Jump
-                if (_input.jump && _jumpTimeoutDelta <= 0.0f)
+                if (_input != null && _input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
@@ -339,7 +401,7 @@ namespace StarterAssets
                 }
 
                 // if we are not grounded, do not jump
-                _input.jump = false;
+                if (_input != null) _input.jump = false;
             }
 
             // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)

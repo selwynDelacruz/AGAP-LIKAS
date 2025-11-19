@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using Unity.Netcode;
 
 public class GameManager : MonoBehaviour
 {
@@ -74,6 +75,23 @@ public class GameManager : MonoBehaviour
     private bool isTimerRunning = false;
     #endregion
 
+    #region Role-Based UI Management
+    [Header("Role-Based UI Panels")]
+    [Tooltip("UI Panel for Instructor/Host - Only visible to the host")]
+    [SerializeField] private GameObject instructorUIPanel;
+
+    [Tooltip("UI Panel for Trainee/Client - Only visible to clients")]
+    [SerializeField] private GameObject traineeUIPanel;
+
+    [Header("Role Settings")]
+    [Tooltip("Enable debug logging for role-based UI")]
+    [SerializeField] private bool debugRoleUI = true;
+
+    private string currentUserRole = "";
+    private bool isHost = false;
+    private bool hasInitializedRole = false;
+    #endregion
+
     void Awake()
     {
         // Singleton setup
@@ -90,6 +108,9 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // Initialize Role Detection (must be first)
+        InitializeRoleDetection();
+
         // Initialize Disaster Scene Management
         InitializeDisasterScene();
 
@@ -101,7 +122,202 @@ public class GameManager : MonoBehaviour
 
         // Initialize Duration Management
         InitializeDurationSystem();
+
+        // Initialize Role-Based UI (must be after role detection)
+        InitializeRoleBasedUI();
     }
+
+    void Update()
+    {
+        // Check for network status changes
+        CheckNetworkStatusChange();
+    }
+
+    #region Role Detection and UI Management
+    /// <summary>
+    /// Checks if network status has changed and re-initializes role detection
+    /// </summary>
+    private void CheckNetworkStatusChange()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        bool currentIsHost = NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+        
+        // If network status changed, re-detect role
+        if (currentIsHost != isHost)
+        {
+            if (debugRoleUI)
+            {
+                Debug.Log($"[GameManager] Network status changed! Was host: {isHost}, Now host: {currentIsHost}");
+            }
+            
+            InitializeRoleDetection();
+            InitializeRoleBasedUI();
+        }
+    }
+
+    /// <summary>
+    /// Detects the current user's role from PlayerPrefs and network status
+    /// </summary>
+    private void InitializeRoleDetection()
+    {
+        // Get user type from PlayerPrefs (set during login)
+        currentUserRole = PlayerPrefs.GetString("Type_Of_User", "");
+
+        // Check if we're using networking
+        if (NetworkManager.Singleton != null)
+        {
+            isHost = NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+
+            // If no login role set, infer from network status
+            if (string.IsNullOrEmpty(currentUserRole))
+            {
+                currentUserRole = isHost ? "instructor" : "trainee";
+                Debug.LogWarning($"[GameManager] No login role found. Inferring from network: {currentUserRole}");
+            }
+
+            if (debugRoleUI)
+            {
+                Debug.Log($"[GameManager] Role Detection - UserType: {currentUserRole}, IsHost: {isHost}, IsClient: {NetworkManager.Singleton.IsClient}");
+            }
+        }
+        else
+        {
+            // No networking active - need default
+            if (string.IsNullOrEmpty(currentUserRole))
+            {
+                currentUserRole = "trainee"; // Default fallback
+                Debug.LogWarning("[GameManager] No NetworkManager and no login. Defaulting to 'trainee'");
+            }
+            
+            isHost = (currentUserRole == "instructor");
+        }
+
+        hasInitializedRole = true;
+    }
+
+    /// <summary>
+    /// Initializes role-based UI visibility
+    /// </summary>
+    private void InitializeRoleBasedUI()
+    {
+        // Don't initialize UI until role is detected
+        if (!hasInitializedRole)
+        {
+            Debug.LogWarning("[GameManager] Attempting to initialize UI before role detection!");
+            return;
+        }
+
+        // Determine which UI to show based on role
+        bool showInstructorUI = ShouldShowInstructorUI();
+        bool showTraineeUI = ShouldShowTraineeUI();
+
+        // Apply UI visibility
+        if (instructorUIPanel != null)
+        {
+            instructorUIPanel.SetActive(showInstructorUI);
+            if (debugRoleUI)
+            {
+                Debug.Log($"[GameManager] Instructor UI Panel: {(showInstructorUI ? "ENABLED" : "DISABLED")}");
+            }
+        }
+        else if (showInstructorUI)
+        {
+            Debug.LogWarning("[GameManager] Instructor UI Panel not assigned in inspector!");
+        }
+
+        if (traineeUIPanel != null)
+        {
+            traineeUIPanel.SetActive(showTraineeUI);
+            if (debugRoleUI)
+            {
+                Debug.Log($"[GameManager] Trainee UI Panel: {(showTraineeUI ? "ENABLED" : "DISABLED")}");
+            }
+        }
+        else if (showTraineeUI)
+        {
+            Debug.LogWarning("[GameManager] Trainee UI Panel not assigned in inspector!");
+        }
+    }
+
+    /// <summary>
+    /// Determines if Instructor UI should be shown
+    /// </summary>
+    private bool ShouldShowInstructorUI()
+    {
+        // Show Instructor UI if:
+        // 1. User logged in as instructor, AND
+        // 2. User is the host/server
+        return currentUserRole == "instructor" && isHost;
+    }
+
+    /// <summary>
+    /// Determines if Trainee UI should be shown
+    /// </summary>
+    private bool ShouldShowTraineeUI()
+    {
+        // Show Trainee UI if:
+        // 1. User logged in as trainee, OR
+        // 2. User is a client (not host)
+        return currentUserRole == "trainee" || !isHost;
+    }
+
+    /// <summary>
+    /// Public method to check if current user is instructor
+    /// </summary>
+    public bool IsInstructor()
+    {
+        return currentUserRole == "instructor" && isHost;
+    }
+
+    /// <summary>
+    /// Public method to check if current user is trainee
+    /// </summary>
+    public bool IsTrainee()
+    {
+        return currentUserRole == "trainee" || !isHost;
+    }
+
+    /// <summary>
+    /// Public method to get current user role
+    /// </summary>
+    public string GetCurrentUserRole()
+    {
+        return currentUserRole;
+    }
+
+    /// <summary>
+    /// Manually toggle UI visibility (useful for testing or special cases)
+    /// </summary>
+    public void ToggleRoleUI(bool showInstructor, bool showTrainee)
+    {
+        if (instructorUIPanel != null)
+        {
+            instructorUIPanel.SetActive(showInstructor);
+        }
+
+        if (traineeUIPanel != null)
+        {
+            traineeUIPanel.SetActive(showTrainee);
+        }
+
+        if (debugRoleUI)
+        {
+            Debug.Log($"[GameManager] Manual UI Toggle - Instructor: {showInstructor}, Trainee: {showTrainee}");
+        }
+    }
+
+    /// <summary>
+    /// Public method to manually refresh role detection and UI
+    /// Call this after network status changes
+    /// </summary>
+    public void RefreshRoleAndUI()
+    {
+        InitializeRoleDetection();
+        InitializeRoleBasedUI();
+    }
+    #endregion
 
     #region Disaster Scene Management
     private void InitializeDisasterScene()

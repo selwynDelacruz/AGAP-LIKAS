@@ -8,6 +8,7 @@ public class NetworkUI : MonoBehaviour
 
     [SerializeField] private Button instructorBTN; //HostBTN
     [SerializeField] private Button traineeBTN; //ClientBTN
+    [SerializeField] private Button serverBTN; //ServerBTN
 
     private void Awake()
     {
@@ -18,6 +19,10 @@ public class NetworkUI : MonoBehaviour
         traineeBTN.onClick.AddListener(() =>
         {
             NetworkManager.Singleton.StartClient();
+        });
+        serverBTN.onClick.AddListener(() =>
+        {
+            NetworkManager.Singleton.StartServer();
         });
     }
 }
