@@ -9218,8 +9218,8 @@ MonoBehaviour:
   - {fileID: 4462197606401803339, guid: 0b8230113eb32bc4dbe9db105da94509, type: 3}
   - {fileID: 512991908626529049, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
   - {fileID: 7854780497150139500, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
-  - {fileID: 5068120908379869912, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
-  - {fileID: 3316110838181707970, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
+  - {fileID: 556577105438087586, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
+  - {fileID: 2711019091956099180, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
   - {fileID: 5602933391911720691, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
   mapSize: 121
   safeZonePrefab: {fileID: 0}
