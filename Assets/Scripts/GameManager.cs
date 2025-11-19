@@ -268,7 +268,26 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public bool IsInstructor()
     {
-        return currentUserRole == "instructor" && isHost;
+        // If user is host, they are instructor (regardless of login)
+        // This handles the case where user clicks "Host" without logging in
+        if (isHost)
+        {
+            if (debugRoleUI)
+            {
+                Debug.Log($"[GameManager.IsInstructor] Returning TRUE - isHost: {isHost}, currentUserRole: '{currentUserRole}'");
+            }
+            return true;
+        }
+        
+        // Otherwise, check if they logged in as instructor
+        bool result = currentUserRole == "instructor";
+        
+        if (debugRoleUI)
+        {
+            Debug.Log($"[GameManager.IsInstructor] Returning {result} - isHost: {isHost}, currentUserRole: '{currentUserRole}'");
+        }
+        
+        return result;
     }
 
     /// <summary>
