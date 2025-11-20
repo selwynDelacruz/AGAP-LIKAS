@@ -5076,16 +5076,24 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 121
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 121
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.883003
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.9999981
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 37.46123
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5101,7 +5109,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7550bbdc789930448a6c40e33aed354f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -5729,6 +5737,8 @@ MonoBehaviour:
   instructorBTN: {fileID: 1934075177}
   traineeBTN: {fileID: 2005945383}
   serverBTN: {fileID: 1518917661}
+  hostIPAddress: 172.16.86.189
+  port: 7777
 --- !u!4 &1135862931
 Transform:
   m_ObjectHideFlags: 0
@@ -9449,12 +9459,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralMapGenerator
   ShowTopMostFoldoutHeaderGroup: 1
   mapPrefabs:
-  - {fileID: 2328556212297464444, guid: 0b8230113eb32bc4dbe9db105da94509, type: 3}
-  - {fileID: 512991908626529049, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
-  - {fileID: 7854780497150139500, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
-  - {fileID: 556577105438087586, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
-  - {fileID: 2711019091956099180, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
-  - {fileID: 947775282663168352, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
+  - {fileID: 2786589427296750539, guid: 0b8230113eb32bc4dbe9db105da94509, type: 3}
+  - {fileID: 3722928631791830230, guid: 31dce21d453edc94d83ffead783a4f3b, type: 3}
+  - {fileID: 1000232943032203032, guid: 9660ed077c9c6c24a9132bc1505bf5dc, type: 3}
+  - {fileID: 5887815304342978291, guid: 18b298d5ecd3916499a3196574e505fb, type: 3}
+  - {fileID: 4349709575457703742, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
+  - {fileID: 1604539269390335423, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
   mapSize: 121
   safeZonePrefab: {fileID: 0}
   debugMode: 1
