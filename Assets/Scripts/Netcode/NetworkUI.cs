@@ -10,7 +10,7 @@ public class NetworkUI : MonoBehaviour
     [SerializeField] private Button serverBTN;       // ServerBTN
 
     [Header("Hardcoded Host IP (Instructor PC / Hotspot IP)")]
-    public string hostIPAddress = "172.16.86.189";   // <-- change this to your hotspot/PC IP
+    public string hostIPAddress = "172.16.86.182";   // <-- change this to your hotspot/PC IP
     public ushort port = 7777;
 
     private void Awake()

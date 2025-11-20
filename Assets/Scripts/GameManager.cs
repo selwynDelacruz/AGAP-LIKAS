@@ -168,7 +168,15 @@ public class GameManager : MonoBehaviour
         // Check if we're using networking
         if (NetworkManager.Singleton != null)
         {
-            isHost = NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+            // In Unity Netcode for GameObjects:
+            // - Host = IsHost: true, IsServer: true, IsClient: true (host is BOTH server and client)
+            // - Dedicated Server = IsHost: false, IsServer: true, IsClient: false
+            // - Client = IsHost: false, IsServer: false, IsClient: true
+            
+            // Determine if this instance is the host/server
+            bool isServer = NetworkManager.Singleton.IsServer;
+            bool isClient = NetworkManager.Singleton.IsClient;
+            isHost = NetworkManager.Singleton.IsHost || isServer;
 
             // If no login role set, infer from network status
             if (string.IsNullOrEmpty(currentUserRole))
@@ -179,7 +187,8 @@ public class GameManager : MonoBehaviour
 
             if (debugRoleUI)
             {
-                Debug.Log($"[GameManager] Role Detection - UserType: {currentUserRole}, IsHost: {isHost}, IsClient: {NetworkManager.Singleton.IsClient}");
+                string networkRole = isHost ? "HOST (Server + Client)" : (isClient ? "CLIENT" : "UNKNOWN");
+                Debug.Log($"[GameManager] Role Detection - UserType: '{currentUserRole}', NetworkRole: {networkRole}, IsHost: {NetworkManager.Singleton.IsHost}, IsServer: {isServer}, IsClient: {isClient}");
             }
         }
         else
@@ -192,6 +201,11 @@ public class GameManager : MonoBehaviour
             }
             
             isHost = (currentUserRole == "instructor");
+            
+            if (debugRoleUI)
+            {
+                Debug.Log($"[GameManager] Role Detection (No Network) - UserType: '{currentUserRole}', Treated as Host: {isHost}");
+            }
         }
 
         hasInitializedRole = true;
@@ -268,26 +282,35 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public bool IsInstructor()
     {
-        // If user is host, they are instructor (regardless of login)
-        // This handles the case where user clicks "Host" without logging in
-        if (isHost)
+        // In networked games:
+        // - Host is ALWAYS instructor (even if they're also a client)
+        // - This is because in Unity Netcode, Host = Server + Client
+        
+        if (NetworkManager.Singleton != null)
         {
+            // If networked, check if this instance is the host/server
+            bool networkedIsHost = NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer;
+            
             if (debugRoleUI)
             {
-                Debug.Log($"[GameManager.IsInstructor] Returning TRUE - isHost: {isHost}, currentUserRole: '{currentUserRole}'");
+                Debug.Log($"[GameManager.IsInstructor] Networked Check - IsHost: {networkedIsHost}, LoginRole: '{currentUserRole}', Result: {networkedIsHost}");
             }
-            return true;
+            
+            // In networked mode, host/server is ALWAYS instructor regardless of login
+            return networkedIsHost;
         }
-        
-        // Otherwise, check if they logged in as instructor
-        bool result = currentUserRole == "instructor";
-        
-        if (debugRoleUI)
+        else
         {
-            Debug.Log($"[GameManager.IsInstructor] Returning {result} - isHost: {isHost}, currentUserRole: '{currentUserRole}'");
+            // Non-networked mode: check login role
+            bool result = currentUserRole == "instructor";
+            
+            if (debugRoleUI)
+            {
+                Debug.Log($"[GameManager.IsInstructor] Non-Networked Check - LoginRole: '{currentUserRole}', Result: {result}");
+            }
+            
+            return result;
         }
-        
-        return result;
     }
 
     /// <summary>
