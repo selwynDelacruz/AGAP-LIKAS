@@ -5737,7 +5737,7 @@ MonoBehaviour:
   instructorBTN: {fileID: 1934075177}
   traineeBTN: {fileID: 2005945383}
   serverBTN: {fileID: 1518917661}
-  hostIPAddress: 172.16.86.189
+  hostIPAddress: 172.16.86.113
   port: 7777
 --- !u!4 &1135862931
 Transform:
@@ -6307,7 +6307,7 @@ MonoBehaviour:
   m_MaxConnectAttempts: 60
   m_DisconnectTimeoutMS: 30000
   ConnectionData:
-    Address: 172.16.86.182
+    Address: 172.16.86.113
     Port: 7777
     ServerListenAddress: 127.0.0.1
   DebugSimulator:

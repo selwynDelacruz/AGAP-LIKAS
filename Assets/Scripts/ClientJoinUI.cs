@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
-using UnityEngine.SceneManagement;
 using TMPro;
 
 public class ClientJoinUI : MonoBehaviour
@@ -24,7 +23,7 @@ public class ClientJoinUI : MonoBehaviour
 
         if (string.IsNullOrEmpty(ip))
         {
-            Debug.LogWarning("No IP entered!");
+            Debug.LogWarning("[ClientJoinUI] No IP entered!");
             return;
         }
 
@@ -37,13 +36,17 @@ public class ClientJoinUI : MonoBehaviour
 
         if (success)
         {
-            Debug.Log("Attempting to connect to host at: " + ip);
-            // Load your game scene
-            SceneManager.LoadScene("TestKen");
+            Debug.Log($"[ClientJoinUI] Attempting to connect to host at: {ip}:{port}");
+            
+            // ? DON'T LOAD SCENE HERE!
+            // The client will automatically follow when the host loads a scene
+            // The host is responsible for loading scenes via NetworkSceneManager
+            
+            Debug.Log("[ClientJoinUI] Client started. Waiting for host to load scene...");
         }
         else
         {
-            Debug.LogError("Client failed to start.");
+            Debug.LogError("[ClientJoinUI] Client failed to start.");
         }
     }
 }
