@@ -60,10 +60,10 @@ public class MapSpawner : NetworkBehaviour
         }
 
         // STEP 3: Spawn them in a 2x2 grid
-        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(0, 0, 0));                     // bottom-right
-        GameObject chunk1 = SpawnMap(selectedMaps[1], new Vector3(0, 0, mapSize));               // top-right
-        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(mapSize, 0, 0));               // bottom-left
-        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(mapSize, 0, mapSize));         // top-left
+        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, 0, 55));                         // bottom-left
+        GameObject chunk1 = SpawnMap(selectedMaps[3], new Vector3(55, 0, 55 + mapSize));                // top-left
+        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, 0, 55));               // bottom-right
+        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, 0, 55 + mapSize));     // top-right
 
         // STEP 4: Place the safe zone inside the final chunk
         if (chunk3 != null)
