@@ -106,26 +106,34 @@ public class GameManager : MonoBehaviour
     #region Disaster Scene Management
     private void InitializeDisasterScene()
     {
-        // Get the selected disaster from PlayerPrefs
-        string selectedDisaster = PlayerPrefs.GetString("DisasterType", "Flood");
+        // Get disaster mode from GameConfig (set by LobbyManager dropdown)
+        int disasterIndex = 1; // Default to Earthquake
 
-        // Enable/Disable GameObjects based on selection
-        switch (selectedDisaster)
+        if (GameConfig.Instance != null)
         {
-            case "Flood":
+            disasterIndex = GameConfig.Instance.DisasterModeIndex;
+            Debug.Log($"[GameManager] Loading disaster mode: {GameConfig.Instance.GetDisasterModeName()} (index: {disasterIndex})");
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] GameConfig not found! Using default Earthquake mode");
+        }
+
+        // Enable disaster mode based on selection
+        switch (disasterIndex)
+        {
+            case 0: // Flood selected
                 EnableFloodMode();
                 break;
-            case "Earthquake":
+            case 1: // Earthquake selected
                 EnableEarthquakeMode();
                 break;
-            case "TestKen":
-                // For TestKen, you can choose to enable both or handle differently
-                // Currently enabling both for testing purposes
+            case 2: // TestKen selected (both modes)
                 EnableBothModes();
                 break;
             default:
-                Debug.LogWarning($"Unknown disaster type: {selectedDisaster}. Defaulting to Flood.");
-                EnableFloodMode();
+                Debug.LogWarning($"[GameManager] Unknown disaster index: {disasterIndex}. Defaulting to Earthquake mode");
+                EnableEarthquakeMode();
                 break;
         }
     }
@@ -135,17 +143,17 @@ public class GameManager : MonoBehaviour
         if (floodGameObject != null)
         {
             floodGameObject.SetActive(true);
-            Debug.Log("Flood Game enabled");
+            Debug.Log("[GameManager] Flood mode enabled");
         }
         else
         {
-            Debug.LogError("Flood Game GameObject is not assigned!");
+            Debug.LogError("[GameManager] Flood Game GameObject is not assigned!");
         }
 
         if (earthquakeGameObject != null)
         {
             earthquakeGameObject.SetActive(false);
-            Debug.Log("Earthquake Game disabled");
+            Debug.Log("[GameManager] Earthquake mode disabled");
         }
     }
 
@@ -154,34 +162,43 @@ public class GameManager : MonoBehaviour
         if (earthquakeGameObject != null)
         {
             earthquakeGameObject.SetActive(true);
-            Debug.Log("Earthquake Game enabled");
+            Debug.Log("[GameManager] Earthquake mode enabled");
         }
         else
         {
-            Debug.LogError("Earthquake Game GameObject is not assigned!");
+            Debug.LogError("[GameManager] Earthquake Game GameObject is not assigned!");
         }
 
         if (floodGameObject != null)
         {
             floodGameObject.SetActive(false);
-            Debug.Log("Flood Game disabled");
+            Debug.Log("[GameManager] Flood mode disabled");
         }
     }
 
     private void EnableBothModes()
     {
-        // For TestKen mode, enable both for testing
         if (floodGameObject != null)
         {
-            floodGameObject.SetActive(false);
+            floodGameObject.SetActive(true);
+            Debug.Log("[GameManager] Flood mode enabled");
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] Flood Game GameObject is not assigned!");
         }
 
         if (earthquakeGameObject != null)
         {
             earthquakeGameObject.SetActive(true);
+            Debug.Log("[GameManager] Earthquake mode enabled");
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] Earthquake Game GameObject is not assigned!");
         }
 
-        Debug.Log("TestKen mode: Both disaster GameObjects enabled");
+        Debug.Log("[GameManager] TestKen mode: Both disaster types enabled");
     }
     #endregion
 
@@ -196,13 +213,21 @@ public class GameManager : MonoBehaviour
 
         if (victimSpawner != null)
         {
-            // Get total victims from PlayerPrefs (set by LobbyManager)
-            totalVictims = PlayerPrefs.GetInt("TaskCount", 0);
-            Debug.Log($"[GameManager] Total victims to rescue: {totalVictims}");
+            // Get total victims from GameConfig (set by LobbyManager)
+            if (GameConfig.Instance != null)
+            {
+                totalVictims = GameConfig.Instance.TaskCount;
+                Debug.Log($"[GameManager] Total victims to rescue: {totalVictims}");
+            }
+            else
+            {
+                Debug.LogWarning("[GameManager] GameConfig not found! Using default victim count");
+                totalVictims = 5;
+            }
         }
         else
         {
-            Debug.LogWarning("[GameManager] VictimSpawner not found! Victim tracking will not work properly.");
+            Debug.LogWarning("[GameManager] VictimSpawner not found! Victim tracking will not work properly");
         }
     }
 
@@ -397,11 +422,19 @@ public class GameManager : MonoBehaviour
     #region Duration Management
     private void InitializeDurationSystem()
     {
-        // Get the duration from PlayerPrefs (set by LobbyManager)
-        totalDurationInSeconds = PlayerPrefs.GetInt("GameDuration", 300); // Default to 5 minutes if not set
-        remainingTimeInSeconds = totalDurationInSeconds;
+        // Get duration from GameConfig (set by LobbyManager)
+        if (GameConfig.Instance != null)
+        {
+            totalDurationInSeconds = GameConfig.Instance.GameDurationInSeconds;
+            Debug.Log($"[GameManager] Loaded duration from GameConfig: {totalDurationInSeconds}s ({totalDurationInSeconds / 60} minutes)");
+        }
+        else
+        {
+            totalDurationInSeconds = 300; // Default to 5 minutes
+            Debug.LogWarning("[GameManager] GameConfig not found! Using default duration: 300s");
+        }
 
-        Debug.Log($"[GameManager] Loaded duration: {totalDurationInSeconds} seconds ({totalDurationInSeconds / 60} minutes)");
+        remainingTimeInSeconds = totalDurationInSeconds;
 
         // Update all UI texts with initial time
         UpdateAllTimerDisplays();

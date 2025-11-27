@@ -27,12 +27,14 @@ public class LobbyManager : MonoBehaviour
     [Header("Start Button")]
     [SerializeField] private Button startButton;
 
-    public static int SelectedTaskCount { get; private set; } = 5;
-    public static string SelectedDisaster { get; private set; } = "TestKen";
-    public static int SelectedDuration { get; private set; } = 300;
+    private int selectedDisasterIndex = 1; // Default to Earthquake
+    private int selectedDuration = 300;
 
     void Start()
     {
+        // Ensure GameConfig exists
+        EnsureGameConfigExists();
+
         // Initialize task count
         taskCount = 5;
         UpdateTaskCountDisplay();
@@ -70,6 +72,16 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
+    private void EnsureGameConfigExists()
+    {
+        if (GameConfig.Instance == null)
+        {
+            GameObject configObject = new GameObject("GameConfig");
+            configObject.AddComponent<GameConfig>();
+            Debug.Log("[LobbyManager] GameConfig instance created");
+        }
+    }
+
     private void DecreaseTaskCount()
     {
         if (taskCount > MIN_TASKS)
@@ -94,11 +106,13 @@ public class LobbyManager : MonoBehaviour
         {
             taskNumberText.text = taskCount.ToString();
         }
-        SelectedTaskCount = taskCount;
     }
 
     private void OnDisasterChanged(int index)
     {
+        selectedDisasterIndex = index;
+
+        // Update UI sprite based on selection
         switch (index)
         {
             case 0: // Flood
@@ -106,24 +120,25 @@ public class LobbyManager : MonoBehaviour
                 {
                     disasterImage.sprite = floodSprite;
                 }
-                SelectedDisaster = "Flood";
+                Debug.Log("[LobbyManager] Flood mode selected (will load TestKen scene with Flood mode)");
                 break;
             case 1: // Earthquake
                 if (disasterImage != null)
                 {
                     disasterImage.sprite = earthquakeSprite;
                 }
-                SelectedDisaster = "Earthquake";
+                Debug.Log("[LobbyManager] Earthquake mode selected (will load TestKen scene with Earthquake mode)");
                 break;
-            case 2: // testing ground ni kenneth
+            case 2: // TestKen (both modes)
                 if (disasterImage != null)
                 {
                     disasterImage.sprite = TestSprite;
                 }
-                SelectedDisaster = "TestKen";
+                Debug.Log("[LobbyManager] TestKen mode selected");
                 break;
             default:
-                SelectedDisaster = "TestKen";
+                selectedDisasterIndex = 1;
+                Debug.LogWarning("[LobbyManager] Unknown disaster index, defaulting to Earthquake");
                 break;
         }
     }
@@ -132,7 +147,7 @@ public class LobbyManager : MonoBehaviour
     {
         if (index >= 0 && index < durations.Length)
         {
-            SelectedDuration = durations[index];
+            selectedDuration = durations[index];
         }
     }
 
@@ -142,25 +157,26 @@ public class LobbyManager : MonoBehaviour
         if (PointManager.Instance != null)
         {
             PointManager.Instance.ResetPoints();
-            Debug.Log("Points reset for new simulation.");
+            Debug.Log("[LobbyManager] Points reset for new simulation");
         }
-        
-        // Store the selected disaster and duration for other scenes to access
-        PlayerPrefs.SetInt("TaskCount", SelectedTaskCount);
-        PlayerPrefs.SetString("DisasterType", SelectedDisaster);
-        PlayerPrefs.SetInt("GameDuration", SelectedDuration);
-        PlayerPrefs.Save();
 
-        // Load the selected disaster scene
-        Debug.Log($"[LobbyManager] Loading scene: {SelectedDisaster}");
-        if (!string.IsNullOrEmpty(SelectedDisaster))
+        // Store settings in GameConfig (persists across scenes via DontDestroyOnLoad)
+        if (GameConfig.Instance != null)
         {
-            SceneManager.LoadScene(SelectedDisaster);
+            GameConfig.Instance.TaskCount = taskCount;
+            GameConfig.Instance.DisasterModeIndex = selectedDisasterIndex;
+            GameConfig.Instance.GameDurationInSeconds = selectedDuration;
+
+            Debug.Log($"[LobbyManager] Game configured - Tasks: {taskCount}, Mode: {GameConfig.Instance.GetDisasterModeName()}, Duration: {selectedDuration}s");
         }
         else
         {
-            Debug.LogError("No disaster selected!");
+            Debug.LogError("[LobbyManager] GameConfig instance not found!");
         }
+
+        // Always load TestKen scene
+        Debug.Log("[LobbyManager] Loading TestKen scene");
+        SceneManager.LoadScene("TestKen");
     }
 
     // Public method to get current task count (can be called from other scripts)

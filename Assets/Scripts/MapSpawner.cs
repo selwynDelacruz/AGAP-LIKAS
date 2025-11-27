@@ -11,11 +11,16 @@ public class MapSpawner : MonoBehaviour
     [Header("Safe Zone Prefab")]
     public GameObject safeZonePrefab;
 
+    [Header("Y Position Adjustment")]
+    [Tooltip("Y position offset for Flood disaster mode")]
+    [SerializeField] private float floodYAdjustment = -3f;
+
     [Header("Settings")]
     [Tooltip("Enable detailed logging for debugging")]
     public bool debugMode = true;
 
     private GameObject[] selectedMaps = new GameObject[4];
+    private float yOffset = 0f; // Current Y offset to use
 
     private void Start()
     {
@@ -24,7 +29,54 @@ public class MapSpawner : MonoBehaviour
             Debug.Log("[MapSpawner] Starting map spawn process");
         }
 
+        // Determine Y offset based on selected disaster mode
+        DetermineYOffset();
+
         SpawnMaps();
+    }
+
+    private void DetermineYOffset()
+    {
+        // Get disaster mode from GameConfig (set by LobbyManager)
+        int disasterModeIndex = 1; // Default to Earthquake
+
+        if (GameConfig.Instance != null)
+        {
+            disasterModeIndex = GameConfig.Instance.DisasterModeIndex;
+        }
+        else
+        {
+            Debug.LogWarning("[MapSpawner] GameConfig not found! Using default Earthquake mode");
+        }
+
+        switch (disasterModeIndex)
+        {
+            case 0: // Flood mode
+                yOffset = floodYAdjustment;
+                if (debugMode)
+                {
+                    Debug.Log($"[MapSpawner] Flood mode detected - applying Y offset: {yOffset}");
+                }
+                break;
+            case 1: // Earthquake mode
+                yOffset = 0f;
+                if (debugMode)
+                {
+                    Debug.Log("[MapSpawner] Earthquake mode detected - no Y offset");
+                }
+                break;
+            case 2: // Both modes (TestKen)
+                yOffset = 0f;
+                if (debugMode)
+                {
+                    Debug.Log("[MapSpawner] TestKen mode detected - no Y offset");
+                }
+                break;
+            default:
+                yOffset = 0f;
+                Debug.LogWarning($"[MapSpawner] Unknown disaster mode index: {disasterModeIndex}, using default Y offset: 0");
+                break;
+        }
     }
 
     private void SpawnMaps()
@@ -45,11 +97,11 @@ public class MapSpawner : MonoBehaviour
             selectedMaps[i] = mapPrefabs[i];
         }
 
-        // STEP 3: Spawn them in a 2x2 grid
-        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, 0, 55));                         // bottom-left
-        GameObject chunk1 = SpawnMap(selectedMaps[3], new Vector3(55    , 0, 55 + mapSize));                // top-left
-        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, 0, 55));               // bottom-right
-        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, 0, 55 + mapSize));     // top-right
+        // STEP 3: Spawn them in a 2x2 grid with Y offset
+        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, yOffset, 55));                              // bottom-left
+        GameObject chunk1 = SpawnMap(selectedMaps[3], new Vector3(55, yOffset, 55 + mapSize));                    // top-left
+        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, yOffset, 55));                    // bottom-right
+        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, yOffset, 55 + mapSize));          // top-right
 
         // STEP 4: Place the safe zone inside the final chunk
         if (chunk3 != null)
