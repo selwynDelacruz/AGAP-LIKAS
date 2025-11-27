@@ -1,7 +1,6 @@
 using UnityEngine;
-using Unity.Netcode;
 
-public class MapSpawner : NetworkBehaviour
+public class MapSpawner : MonoBehaviour
 {
     [Header("Assign your map PREFABS here")]
     public GameObject[] mapPrefabs;   // All 6 of your map prefabs
@@ -12,30 +11,17 @@ public class MapSpawner : NetworkBehaviour
     [Header("Safe Zone Prefab")]
     public GameObject safeZonePrefab;
 
-    [Header("Network Settings")]
+    [Header("Settings")]
     [Tooltip("Enable detailed logging for debugging")]
     public bool debugMode = true;
 
     private GameObject[] selectedMaps = new GameObject[4];
 
-    public override void OnNetworkSpawn()
+    private void Start()
     {
-        base.OnNetworkSpawn();
-
-        // ONLY THE HOST/SERVER SPAWNS THE MAPS
-        // Clients will receive the spawned objects automatically via Netcode
-        if (!IsServer)
-        {
-            if (debugMode)
-            {
-                Debug.Log("[MapSpawner] Client - waiting for server to spawn maps");
-            }
-            return;
-        }
-
         if (debugMode)
         {
-            Debug.Log("[MapSpawner] Server - starting map spawn process");
+            Debug.Log("[MapSpawner] Starting map spawn process");
         }
 
         SpawnMaps();
@@ -61,7 +47,7 @@ public class MapSpawner : NetworkBehaviour
 
         // STEP 3: Spawn them in a 2x2 grid
         GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, 0, 55));                         // bottom-left
-        GameObject chunk1 = SpawnMap(selectedMaps[3], new Vector3(55, 0, 55 + mapSize));                // top-left
+        GameObject chunk1 = SpawnMap(selectedMaps[3], new Vector3(55    , 0, 55 + mapSize));                // top-left
         GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, 0, 55));               // bottom-right
         GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, 0, 55 + mapSize));     // top-right
 
@@ -85,25 +71,12 @@ public class MapSpawner : NetworkBehaviour
             return null;
         }
 
-        // Instantiate the map locally first
+        // Instantiate the map
         GameObject map = Instantiate(prefab, position, Quaternion.identity);
-        
-        // Get NetworkObject component
-        NetworkObject networkObject = map.GetComponent<NetworkObject>();
-        
-        if (networkObject == null)
-        {
-            Debug.LogWarning($"[MapSpawner] Map prefab '{prefab.name}' is missing NetworkObject component! Adding one...");
-            networkObject = map.AddComponent<NetworkObject>();
-        }
-
-        // Spawn on the network
-        // true = destroy with scene (maps are cleaned up when scene changes)
-        networkObject.Spawn(true);
         
         if (debugMode)
         {
-            Debug.Log($"[MapSpawner] Spawned networked map: {prefab.name} at position {position}");
+            Debug.Log($"[MapSpawner] Spawned map: {prefab.name} at position {position}");
         }
 
         return map;
@@ -130,21 +103,9 @@ public class MapSpawner : NetworkBehaviour
         // Instantiate safe zone
         GameObject safeZone = Instantiate(safeZonePrefab, exitPoint.position, exitPoint.rotation);
         
-        // Get NetworkObject component
-        NetworkObject networkObject = safeZone.GetComponent<NetworkObject>();
-        
-        if (networkObject == null)
-        {
-            Debug.LogWarning("[MapSpawner] SafeZone prefab is missing NetworkObject component! Adding one...");
-            networkObject = safeZone.AddComponent<NetworkObject>();
-        }
-
-        // Spawn safe zone on network
-        networkObject.Spawn(true);
-        
         if (debugMode)
         {
-            Debug.Log($"[MapSpawner] Spawned networked safe zone at {exitPoint.position}");
+            Debug.Log($"[MapSpawner] Spawned safe zone at {exitPoint.position}");
         }
     }
 

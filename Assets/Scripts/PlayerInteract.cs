@@ -23,24 +23,38 @@ public class PlayerInteract : MonoBehaviour
                 currentInteractable = GetInteractableObject();
                 holdTimer = 0f;
 
-                // Check if interacting with MedkitInteractable and if player has no medkits
+                // Check if interacting with MedkitInteractable and validate medkit availability
                 if (currentInteractable != null)
                 {
                     // Check if the interactable is a MedkitInteractable
                     MonoBehaviour interactableMono = currentInteractable as MonoBehaviour;
-                    if (interactableMono != null && interactableMono.GetComponent<MedkitInteractable>() != null)
+                    if (interactableMono != null)
                     {
-                        // Only check medkit availability for MedkitInteractable objects
-                        if (MedkitManager.Instance.CurrentMedkits == 0)
+                        MedkitInteractable medkitInteractable = interactableMono.GetComponent<MedkitInteractable>();
+                        
+                        if (medkitInteractable != null)
                         {
-                            // No medkits available, do not allow interaction
-                            Debug.Log("You don't have medkit!");
-                            MedkitManager.Instance.TriggerBlinkEffect();
+                            // Check the interaction text to determine the current stage
+                            string interactText = medkitInteractable.GetInteractText();
                             
-                            // Reset holding state
-                            isHolding = false;
-                            currentInteractable = null;
-                            return;
+                            // If the text indicates we need to use a medkit (Stage 1)
+                            if (interactText.Contains("medkit") || interactText.Contains("Use"))
+                            {
+                                // Check if player has medkits
+                                if (GameManager.Instance != null && GameManager.Instance.CurrentMedkits == 0)
+                                {
+                                    // No medkits available, do not allow interaction
+                                    Debug.Log("You don't have medkit!");
+                                    GameManager.Instance.TriggerBlinkEffect();
+                                    
+                                    // Reset holding state
+                                    isHolding = false;
+                                    currentInteractable = null;
+                                    return;
+                                }
+                            }
+                            // If the text indicates rescue (Stage 2), no medkit check needed
+                            // Player can proceed with the rescue
                         }
                     }
                 }

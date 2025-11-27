@@ -1,7 +1,6 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Unity.Netcode;
 
 public class PlayerInteractUI : MonoBehaviour
 {
@@ -111,49 +110,19 @@ public class PlayerInteractUI : MonoBehaviour
     /// </summary>
     private GameObject FindLocalPlayer()
     {
-        // Method 1: Try to find by tag
+        // Find by tag
         GameObject player = GameObject.FindGameObjectWithTag(playerTag);
         
         if (player != null)
         {
-            // Check if this is the local player in networked game
-            NetworkObject networkObject = player.GetComponent<NetworkObject>();
-            if (networkObject != null)
-            {
-                if (networkObject.IsOwner)
-                {
-                    return player;
-                }
-                // Not the local player, keep searching
-                player = null;
-            }
-            else
-            {
-                // No networking, this is the player
-                return player;
-            }
+            return player;
         }
 
-        // Method 2: Find all players and check for local ownership
-        GameObject[] players = GameObject.FindGameObjectsWithTag(playerTag);
-        foreach (GameObject p in players)
-        {
-            NetworkObject networkObject = p.GetComponent<NetworkObject>();
-            if (networkObject != null && networkObject.IsOwner)
-            {
-                return p;
-            }
-        }
-
-        // Method 3: Look for any PlayerInteract component owned by local player
+        // Fallback: Look for any PlayerInteract component
         PlayerInteract[] allInteracts = Object.FindObjectsByType<PlayerInteract>(FindObjectsSortMode.None);
-        foreach (var interact in allInteracts)
+        if (allInteracts.Length > 0)
         {
-            NetworkObject networkObject = interact.GetComponentInParent<NetworkObject>();
-            if (networkObject != null && networkObject.IsOwner)
-            {
-                return interact.gameObject;
-            }
+            return allInteracts[0].gameObject;
         }
 
         return null;

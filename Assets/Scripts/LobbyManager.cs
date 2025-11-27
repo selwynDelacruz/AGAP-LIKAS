@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-using Unity.Netcode;
 
 public class LobbyManager : MonoBehaviour
 {
@@ -152,33 +151,15 @@ public class LobbyManager : MonoBehaviour
         PlayerPrefs.SetInt("GameDuration", SelectedDuration);
         PlayerPrefs.Save();
 
-        // IMPORTANT: Check if network is already started
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        // Load the selected disaster scene
+        Debug.Log($"[LobbyManager] Loading scene: {SelectedDisaster}");
+        if (!string.IsNullOrEmpty(SelectedDisaster))
         {
-            // Network is active - must use networked scene loading
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
-            {
-                Debug.Log($"[LobbyManager] Loading scene via NetworkSceneManager (Host): {SelectedDisaster}");
-                NetworkManager.Singleton.SceneManager.LoadScene(SelectedDisaster, LoadSceneMode.Single);
-            }
-            else
-            {
-                Debug.LogWarning("[LobbyManager] Client cannot load scenes. Waiting for host to load the scene...");
-                // Clients will automatically follow when host loads the scene
-            }
+            SceneManager.LoadScene(SelectedDisaster);
         }
         else
         {
-            // No network active - use regular scene loading
-            Debug.Log($"[LobbyManager] Loading scene via regular SceneManager (No Network): {SelectedDisaster}");
-            if (!string.IsNullOrEmpty(SelectedDisaster))
-            {
-                SceneManager.LoadScene(SelectedDisaster);
-            }
-            else
-            {
-                Debug.LogError("No disaster selected!");
-            }
+            Debug.LogError("No disaster selected!");
         }
     }
 
