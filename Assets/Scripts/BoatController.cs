@@ -138,7 +138,10 @@ public class BoatController : MonoBehaviour
         else if (_input is MonoBehaviour inputBehaviour)
         {
             inputBehaviour.enabled = true;
-            Debug.Log("[BoatController] PlayerInputs enabled");
+            // **FIX: Force enable cursor input for look**
+            _input.cursorInputForLook = true;
+            _input.cursorLocked = true;
+            Debug.Log("[BoatController] PlayerInputs enabled with cursorInputForLook=true");
         }
 
         isInitialized = true;
@@ -159,6 +162,9 @@ public class BoatController : MonoBehaviour
         if (_input != null && _input is MonoBehaviour inputBehaviour)
         {
             inputBehaviour.enabled = true;
+            // **FIX: Re-enable cursor input for look when reactivating**
+            _input.cursorInputForLook = true;
+            _input.cursorLocked = true;
         }
     }
 

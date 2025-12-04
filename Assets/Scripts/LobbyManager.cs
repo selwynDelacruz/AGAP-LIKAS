@@ -27,8 +27,16 @@ public class LobbyManager : MonoBehaviour
     [Header("Start Button")]
     [SerializeField] private Button startButton;
 
+    [Header("Username Input Fields")]
+    [SerializeField] private TMP_InputField InstructorInputField;
+    [SerializeField] private TMP_InputField trainee1InputField;
+    [SerializeField] private TMP_InputField trainee2InputField;
+
     private int selectedDisasterIndex = 1; // Default to Earthquake
     private int selectedDuration = 300;
+
+    // Track trainees that have joined
+    private int traineeCount = 0;
 
     void Start()
     {
@@ -69,6 +77,69 @@ public class LobbyManager : MonoBehaviour
         if (startButton != null)
         {
             startButton.onClick.AddListener(OnStartButtonClicked);
+        }
+
+        // Populate username based on logged-in role
+        PopulateUsernameFields();
+    }
+
+    private void PopulateUsernameFields()
+    {
+        // Get the user type from PlayerPrefs
+        string userType = PlayerPrefs.GetString("Type_Of_User", "");
+        
+        // Get username from AuthManager if available
+        string username = "";
+        if (AuthManager.Instance != null)
+        {
+            username = AuthManager.Instance.Current_Username;
+        }
+
+        // If username is empty, try to get from PlayerPrefs as fallback
+        if (string.IsNullOrEmpty(username))
+        {
+            username = PlayerPrefs.GetString("Current_Username", "");
+        }
+
+        Debug.Log($"[LobbyManager] User Type: {userType}, Username: {username}");
+
+        // Populate the appropriate input field based on user type
+        switch (userType)
+        {
+            case "instructor":
+                if (InstructorInputField != null)
+                {
+                    InstructorInputField.text = username;
+                    InstructorInputField.interactable = false; // Make it read-only
+                    Debug.Log($"[LobbyManager] Populated Instructor field with: {username}");
+                }
+                break;
+
+            case "trainee":
+                // Assign to next available trainee slot
+                if (trainee1InputField != null && string.IsNullOrEmpty(trainee1InputField.text))
+                {
+                    trainee1InputField.text = username;
+                    trainee1InputField.interactable = false;
+                    traineeCount = 1;
+                    Debug.Log($"[LobbyManager] Populated Trainee1 field with: {username}");
+                }
+                else if (trainee2InputField != null && string.IsNullOrEmpty(trainee2InputField.text))
+                {
+                    trainee2InputField.text = username;
+                    trainee2InputField.interactable = false;
+                    traineeCount = 2;
+                    Debug.Log($"[LobbyManager] Populated Trainee2 field with: {username}");
+                }
+                else
+                {
+                    Debug.LogWarning("[LobbyManager] All trainee slots are full!");
+                }
+                break;
+
+            default:
+                Debug.LogWarning($"[LobbyManager] Unknown user type: {userType}");
+                break;
         }
     }
 

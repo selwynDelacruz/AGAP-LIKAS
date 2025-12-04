@@ -486,6 +486,9 @@ MonoBehaviour:
   TestSprite: {fileID: 21300000, guid: 4f4e2d4a0734be1429cce7fac25c8d24, type: 3}
   durationDropdown: {fileID: 22599336}
   startButton: {fileID: 821209742}
+  InstructorInputField: {fileID: 1282353596}
+  trainee1InputField: {fileID: 109621781}
+  trainee2InputField: {fileID: 1668618085}
 --- !u!1 &83129928
 GameObject:
   m_ObjectHideFlags: 0
@@ -750,7 +753,7 @@ MonoBehaviour:
   m_Text: 
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
-  m_ReadOnly: 0
+  m_ReadOnly: 1
   m_RichText: 1
   m_GlobalFontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_OnFocusSelectAll: 1
@@ -4978,7 +4981,7 @@ MonoBehaviour:
   m_Text: 
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
-  m_ReadOnly: 0
+  m_ReadOnly: 1
   m_RichText: 1
   m_GlobalFontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_OnFocusSelectAll: 1
@@ -5947,7 +5950,7 @@ MonoBehaviour:
   m_Text: 
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
-  m_ReadOnly: 0
+  m_ReadOnly: 1
   m_RichText: 1
   m_GlobalFontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_OnFocusSelectAll: 1

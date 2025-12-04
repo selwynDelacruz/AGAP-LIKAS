@@ -678,10 +678,10 @@ public class AuthManager : MonoBehaviour
 				CancelInvoke("RepeatSettingUpLoadingAfterLogin");
 				isOnLoadingPanel = false;
 			}
-			else
+				
 			{
 				CancelInvoke("RepeatSettingUpLoadingAfterLogin");
-				isOnLoadingPanel = false;
+			 isOnLoadingPanel = false;
 			}
 			break;
 		case "super_admin":
@@ -1509,6 +1509,12 @@ public class AuthManager : MonoBehaviour
 			Current_Age = int.Parse(result.Child("User_Age").Value.ToString());
 			Current_Score = int.Parse(result.Child("User_Score").Value.ToString());
 			AdminNameText.text = Current_Name;
+			
+			// Store username in PlayerPrefs so it persists across scenes
+			PlayerPrefs.SetString("Current_Username", Current_Username);
+			PlayerPrefs.Save();
+			Debug.Log($"[AuthManager] Saved username to PlayerPrefs: {Current_Username}");
+			
 			// Launcher.Instance.CallForSetupNickName();
 			// Launcher.Instance.StopMethodRepeating();
 			if (PlayerPrefs.GetString("SetNewScoreLeaderboard") == "true")

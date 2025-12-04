@@ -22,10 +22,17 @@ public class VictimSpawner : MonoBehaviour
 
     private void Start()
     {
-        // Get task count from PlayerPrefs (set by LobbyManager)
-        taskCount = PlayerPrefs.GetInt("TaskCount", 1);
-        
-        Debug.Log($"[VictimSpawner] Retrieved task count: {taskCount}");
+        // Get task count from GameConfig (centralized configuration)
+        if (GameConfig.Instance != null)
+        {
+            taskCount = GameConfig.Instance.TaskCount;
+            Debug.Log($"[VictimSpawner] Retrieved task count from GameConfig: {taskCount}");
+        }
+        else
+        {
+            Debug.LogError("[VictimSpawner] GameConfig instance not found! Using default task count of 5.");
+            taskCount = 5;
+        }
 
         // Validate configuration
         if (!ValidateConfiguration())
@@ -73,7 +80,7 @@ public class VictimSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Spawns victims based on the task count from LobbyManager
+    /// Spawns victims based on the task count from GameConfig
     /// </summary>
     public void SpawnVictims()
     {
