@@ -4228,6 +4228,7 @@ MonoBehaviour:
   instructorUIPanel: {fileID: 515469221}
   traineeUIPanel: {fileID: 1520015731}
   debugRoleUI: 1
+  autoAddDisconnectHandler: 1
 --- !u!4 &731375520
 Transform:
   m_ObjectHideFlags: 0
@@ -5500,7 +5501,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1104068893
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9337,6 +9338,7 @@ MonoBehaviour:
   mapSize: 122
   safeZonePrefab: {fileID: 0}
   debugMode: 1
+  spawnDelay: 0.5
 --- !u!4 &1895269471
 Transform:
   m_ObjectHideFlags: 0

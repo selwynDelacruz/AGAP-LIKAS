@@ -92,6 +92,15 @@ public class GameManager : MonoBehaviour
     private bool hasInitializedRole = false;
     #endregion
 
+    #region Network Disconnect Handling
+    [Header("Disconnect Handling")]
+    [Tooltip("Auto-add HostDisconnectHandler if missing")]
+    [SerializeField] private bool autoAddDisconnectHandler = true;
+
+    // Temporarily commented out until Unity compiles HostDisconnectHandler
+    // private HostDisconnectHandler disconnectHandler;
+    #endregion
+
     void Awake()
     {
         // Singleton setup
@@ -110,6 +119,9 @@ public class GameManager : MonoBehaviour
     {
         // Initialize Role Detection (must be first)
         InitializeRoleDetection();
+
+        // Initialize Disconnect Handler
+        InitializeDisconnectHandler();
 
         // Initialize Disaster Scene Management
         InitializeDisasterScene();
@@ -132,6 +144,55 @@ public class GameManager : MonoBehaviour
         // Check for network status changes
         CheckNetworkStatusChange();
     }
+
+    #region Network Disconnect Handling
+    /// <summary>
+    /// Initializes the host disconnect handler using reflection to avoid compile-time dependency
+    /// </summary>
+    private void InitializeDisconnectHandler()
+    {
+        if (!autoAddDisconnectHandler)
+            return;
+
+        // Check if NetworkManager exists
+        if (NetworkManager.Singleton == null)
+        {
+            if (debugRoleUI)
+            {
+                Debug.LogWarning("[GameManager] NetworkManager not found. Skipping disconnect handler setup.");
+            }
+            return;
+        }
+
+        // Use reflection to find/add HostDisconnectHandler without compile-time dependency
+        var handlerType = System.Type.GetType("HostDisconnectHandler");
+        if (handlerType == null)
+        {
+            if (debugRoleUI)
+            {
+                Debug.LogWarning("[GameManager] HostDisconnectHandler type not found. It may not be compiled yet.");
+            }
+            return;
+        }
+
+        // Try to find existing handler
+        var existingHandler = NetworkManager.Singleton.GetComponent(handlerType);
+
+        if (existingHandler == null)
+        {
+            // Add new handler
+            NetworkManager.Singleton.gameObject.AddComponent(handlerType);
+            if (debugRoleUI)
+            {
+                Debug.Log("[GameManager] Added HostDisconnectHandler to NetworkManager");
+            }
+        }
+        else if (debugRoleUI)
+        {
+            Debug.Log("[GameManager] HostDisconnectHandler already exists on NetworkManager");
+        }
+    }
+    #endregion
 
     #region Role Detection and UI Management
     /// <summary>
