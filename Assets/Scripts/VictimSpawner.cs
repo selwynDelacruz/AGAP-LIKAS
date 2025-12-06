@@ -1,12 +1,10 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class VictimSpawner : MonoBehaviour
 {
     [Header("Spawn Settings")]
-    [Tooltip("Array of spawn point transforms where victims can be spawned")]
-    public Transform[] spawnPoints;
-    
     [Tooltip("Array of victim prefabs to randomly spawn")]
     public GameObject[] victimPrefabs;
     
@@ -17,10 +15,26 @@ public class VictimSpawner : MonoBehaviour
     [Tooltip("Prevent spawning multiple victims at the same spawn point")]
     [SerializeField] private bool preventDuplicateSpawnPoints = true;
 
+    [Header("Spawn Point Names")]
+    [Tooltip("Name of the spawn point container for Earthquake disaster")]
+    [SerializeField] private string earthquakeSpawnPointName = "EarthquakeVictim";
+    
+    [Tooltip("Name of the spawn point container for Flood disaster")]
+    [SerializeField] private string floodSpawnPointName = "FloodVictim";
+
+    [Header("Timing")]
+    [Tooltip("Delay in seconds before spawning victims (allows MapSpawner to complete)")]
+    [SerializeField] private float spawnDelay = 0.1f;
+
+    [Header("Debug")]
+    [Tooltip("Enable detailed logging for debugging")]
+    [SerializeField] private bool debugMode = true;
+
     private List<GameObject> spawnedVictims = new List<GameObject>();
     private int taskCount = 0;
+    private Transform[] spawnPoints;
 
-    private void Start()
+    private void Awake()
     {
         // Get task count from GameConfig (centralized configuration)
         if (GameConfig.Instance != null)
@@ -33,17 +47,119 @@ public class VictimSpawner : MonoBehaviour
             Debug.LogError("[VictimSpawner] GameConfig instance not found! Using default task count of 5.");
             taskCount = 5;
         }
+    }
+
+    private void Start()
+    {
+        // Spawn victims with a slight delay to ensure MapSpawner completes first
+        if (spawnOnStart)
+        {
+            StartCoroutine(DelayedSpawnVictims());
+        }
+    }
+
+    /// <summary>
+    /// Coroutine to spawn victims after a delay, ensuring maps are spawned first
+    /// </summary>
+    private IEnumerator DelayedSpawnVictims()
+    {
+        if (debugMode)
+        {
+            Debug.Log($"[VictimSpawner] Waiting {spawnDelay} seconds for maps to spawn...");
+        }
+
+        yield return new WaitForSeconds(spawnDelay);
+
+        // Find spawn points based on disaster mode
+        FindSpawnPointsBasedOnDisaster();
 
         // Validate configuration
         if (!ValidateConfiguration())
         {
-            return;
+            yield break;
         }
 
-        // Spawn victims if enabled
-        if (spawnOnStart)
+        // Spawn victims
+        SpawnVictims();
+    }
+
+    /// <summary>
+    /// Finds spawn points in the scene based on the selected disaster mode
+    /// </summary>
+    private void FindSpawnPointsBasedOnDisaster()
+    {
+        int disasterModeIndex = 1; // Default to Earthquake
+
+        if (GameConfig.Instance != null)
         {
-            SpawnVictims();
+            disasterModeIndex = GameConfig.Instance.DisasterModeIndex;
+        }
+        else
+        {
+            Debug.LogWarning("[VictimSpawner] GameConfig not found! Using default Earthquake mode");
+        }
+
+        string spawnPointContainerName = "";
+
+        switch (disasterModeIndex)
+        {
+            case 0: // Flood mode
+                spawnPointContainerName = floodSpawnPointName;
+                if (debugMode)
+                {
+                    Debug.Log($"[VictimSpawner] Flood mode detected - searching for '{spawnPointContainerName}' container");
+                }
+                break;
+            case 1: // Earthquake mode
+                spawnPointContainerName = earthquakeSpawnPointName;
+                if (debugMode)
+                {
+                    Debug.Log($"[VictimSpawner] Earthquake mode detected - searching for '{spawnPointContainerName}' container");
+                }
+                break;
+            case 2: // Both modes (TestKen)
+                spawnPointContainerName = earthquakeSpawnPointName; // Default to earthquake for TestKen
+                if (debugMode)
+                {
+                    Debug.Log($"[VictimSpawner] TestKen mode detected - using '{spawnPointContainerName}' container");
+                }
+                break;
+            default:
+                spawnPointContainerName = earthquakeSpawnPointName;
+                Debug.LogWarning($"[VictimSpawner] Unknown disaster mode index: {disasterModeIndex}, defaulting to Earthquake");
+                break;
+        }
+
+        // Find the spawn point container in the scene
+        List<Transform> foundSpawnPoints = new List<Transform>();
+        GameObject[] allObjects = Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+
+        foreach (GameObject obj in allObjects)
+        {
+            if (obj.name == spawnPointContainerName)
+            {
+                if (debugMode)
+                {
+                    Debug.Log($"[VictimSpawner] Found spawn container: {obj.name}");
+                }
+
+                // Get all direct children as spawn points
+                foreach (Transform child in obj.transform)
+                {
+                    foundSpawnPoints.Add(child);
+                    if (debugMode)
+                    {
+                        Debug.Log($"[VictimSpawner] Found spawn point: {child.name}");
+                    }
+                }
+            }
+        }
+
+        spawnPoints = foundSpawnPoints.ToArray();
+
+        if (debugMode)
+        {
+            Debug.Log($"[VictimSpawner] Total spawn points found: {spawnPoints.Length}");
         }
     }
 
@@ -54,7 +170,7 @@ public class VictimSpawner : MonoBehaviour
     {
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
-            Debug.LogError("[VictimSpawner] No spawn points assigned! Please assign spawn points in the inspector.");
+            Debug.LogError("[VictimSpawner] No spawn points found in the scene! Make sure map prefabs have spawn point children.");
             return false;
         }
 
@@ -229,7 +345,19 @@ public class VictimSpawner : MonoBehaviour
     {
         taskCount = newTaskCount;
         Debug.Log($"[VictimSpawner] Task count manually set to {taskCount}");
+        
+        // Refresh spawn points and respawn
+        FindSpawnPointsBasedOnDisaster();
         SpawnVictims();
+    }
+
+    /// <summary>
+    /// Public method to refresh spawn points (useful if maps are spawned after VictimSpawner starts)
+    /// </summary>
+    public void RefreshSpawnPoints()
+    {
+        FindSpawnPointsBasedOnDisaster();
+        Debug.Log($"[VictimSpawner] Spawn points refreshed. Found {spawnPoints.Length} spawn points.");
     }
 
     // Visualize spawn points in the Scene view
