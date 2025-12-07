@@ -4,7 +4,7 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using Unity.Netcode;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     // Singleton for easy access
     public static GameManager Instance { get; private set; }
@@ -24,11 +24,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] private VictimSpawner victimSpawner;
 
     private int totalVictims = 0;
-    private int savedVictims = 0;
+    
+    // Networked saved victims count - synced across all clients
+    private NetworkVariable<int> savedVictimsNetworked = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
 
     // Public properties for victim tracking
     public int TotalVictims => totalVictims;
-    public int SavedVictims => savedVictims;
+    public int SavedVictims => savedVictimsNetworked.Value;
     #endregion
 
     #region Medkit Management
@@ -96,9 +102,6 @@ public class GameManager : MonoBehaviour
     [Header("Disconnect Handling")]
     [Tooltip("Auto-add HostDisconnectHandler if missing")]
     [SerializeField] private bool autoAddDisconnectHandler = true;
-
-    // Temporarily commented out until Unity compiles HostDisconnectHandler
-    // private HostDisconnectHandler disconnectHandler;
     #endregion
 
     void Awake()
@@ -137,6 +140,38 @@ public class GameManager : MonoBehaviour
 
         // Initialize Role-Based UI (must be after role detection)
         InitializeRoleBasedUI();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        
+        // Subscribe to saved victims changes for UI updates
+        savedVictimsNetworked.OnValueChanged += OnSavedVictimsChanged;
+        
+        if (debugRoleUI)
+        {
+            Debug.Log($"[GameManager] OnNetworkSpawn - IsServer: {IsServer}, IsClient: {IsClient}");
+        }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        
+        // Unsubscribe from events
+        savedVictimsNetworked.OnValueChanged -= OnSavedVictimsChanged;
+    }
+
+    private void OnSavedVictimsChanged(int previousValue, int newValue)
+    {
+        Debug.Log($"[GameManager] Saved victims updated: {previousValue} -> {newValue}/{totalVictims}");
+        
+        // Check if all victims are saved
+        if (AreAllVictimsSaved())
+        {
+            Debug.Log("[GameManager] All victims saved!");
+        }
     }
 
     void Update()
@@ -510,7 +545,7 @@ public class GameManager : MonoBehaviour
         // Auto-find VictimSpawner if not assigned
         if (victimSpawner == null)
         {
-            victimSpawner = Object.FindAnyObjectByType<VictimSpawner>();
+            victimSpawner = FindAnyObjectByType<VictimSpawner>();
         }
 
         if (victimSpawner != null)
@@ -526,17 +561,19 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Increments the saved victims count
+    /// Increments the saved victims count (Server only - called by NPCInteractable)
     /// </summary>
     public void IncrementSavedVictims()
     {
-        savedVictims++;
-        Debug.Log($"[GameManager] Saved victims: {savedVictims}/{totalVictims}");
-
-        // Check if all victims are saved
-        if (AreAllVictimsSaved())
+        if (IsServer)
         {
-            Debug.Log("[GameManager] All victims saved!");
+            savedVictimsNetworked.Value++;
+            Debug.Log($"[GameManager] Server: Saved victims: {savedVictimsNetworked.Value}/{totalVictims}");
+        }
+        else
+        {
+            // Client should not call this directly - NPCInteractable handles via RPC
+            Debug.LogWarning("[GameManager] IncrementSavedVictims called on client - this should be server-only!");
         }
     }
 
@@ -545,7 +582,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public bool AreAllVictimsSaved()
     {
-        return savedVictims >= totalVictims && totalVictims > 0;
+        return savedVictimsNetworked.Value >= totalVictims && totalVictims > 0;
     }
 
     /// <summary>
@@ -553,7 +590,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public int GetRescuedVictimCount()
     {
-        return savedVictims;
+        return savedVictimsNetworked.Value;
     }
     #endregion
 

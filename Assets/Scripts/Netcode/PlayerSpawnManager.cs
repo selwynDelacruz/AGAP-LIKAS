@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -24,7 +25,17 @@ namespace Lobby
         [SerializeField] private Vector3 hostStartPosition = new Vector3(0, 0, 0);
         [SerializeField] private Vector3 clientStartOffset = new Vector3(2, 0, 0); // Offset per client
 
+        [Header("Map Spawn Waiting")]
+        [Tooltip("Wait for MapSpawner to finish before spawning players")]
+        [SerializeField] private bool waitForMaps = true;
+        
+        [Tooltip("Maximum time to wait for maps before spawning anyway (seconds)")]
+        [SerializeField] private float maxWaitTime = 5f;
+
         [SerializeField] private bool showDebugLogs = true;
+
+        private bool pendingSpawn = false;
+        private string pendingSceneName = "";
 
         private void Awake()
         {
@@ -53,7 +64,11 @@ namespace Lobby
                 // Subscribe once server starts so SceneManager is available
                 nm.OnServerStarted += SubscribeSceneEventsSafely;
             }
+
+            // Subscribe to MapSpawner event
+            MapSpawner.OnMapsSpawned += OnMapsSpawned;
         }
+
         private void SubscribeSceneEventsSafely()
         {
             var nm = NetworkManager.Singleton;
@@ -68,6 +83,7 @@ namespace Lobby
                 nm.OnServerStarted -= SubscribeSceneEventsSafely;
             }
         }
+
         private void OnDisable()
         {
             var nm = NetworkManager.Singleton;
@@ -78,6 +94,9 @@ namespace Lobby
                 nm.SceneManager.OnLoadEventCompleted -= OnLoadEventCompleted;
             }
             nm.OnServerStarted -= SubscribeSceneEventsSafely;
+
+            // Unsubscribe from MapSpawner event
+            MapSpawner.OnMapsSpawned -= OnMapsSpawned;
         }
 
         private bool IsGameplayScene(string sceneName)
@@ -85,12 +104,56 @@ namespace Lobby
             return gameplaySceneNames.Contains(sceneName);
         }
 
+        private void OnMapsSpawned()
+        {
+            if (!NetworkManager.Singleton.IsServer) return;
+            
+            if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Maps spawned event received. Spawning players now.");
+            
+            if (pendingSpawn)
+            {
+                pendingSpawn = false;
+                SpawnAllPlayersIfNeeded();
+            }
+        }
+
         private void OnLoadEventCompleted(string sceneName, LoadSceneMode loadMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
         {
             if (!NetworkManager.Singleton.IsServer) return; // Only server/host spawns
             if (!IsGameplayScene(sceneName)) return; // Only spawn in gameplay scenes
-            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Scene '{sceneName}' loaded. Spawning missing players.");
+            
+            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Scene '{sceneName}' loaded.");
+
+            if (waitForMaps && !MapSpawner.MapsReady)
+            {
+                if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Waiting for maps to spawn before spawning players...");
+                pendingSpawn = true;
+                pendingSceneName = sceneName;
+                
+                // Start a coroutine to timeout if maps take too long
+                StartCoroutine(WaitForMapsTimeout());
+                return;
+            }
+
+            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Spawning players immediately (maps ready or not waiting).");
             SpawnAllPlayersIfNeeded();
+        }
+
+        private IEnumerator WaitForMapsTimeout()
+        {
+            float elapsed = 0f;
+            while (pendingSpawn && elapsed < maxWaitTime)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (pendingSpawn)
+            {
+                Debug.LogWarning($"[PlayerSpawnManager] Timed out waiting for maps after {maxWaitTime}s. Spawning players anyway.");
+                pendingSpawn = false;
+                SpawnAllPlayersIfNeeded();
+            }
         }
 
         private void OnClientConnected(ulong clientId)
@@ -99,6 +162,15 @@ namespace Lobby
             if (!NetworkManager.Singleton.IsServer) return;
             string activeScene = SceneManager.GetActiveScene().name;
             if (!IsGameplayScene(activeScene)) return;
+            
+            // If we're still waiting for maps, don't spawn yet - they'll be spawned when maps are ready
+            if (waitForMaps && !MapSpawner.MapsReady)
+            {
+                if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Client {clientId} connected but maps not ready. Will spawn when maps are ready.");
+                pendingSpawn = true;
+                return;
+            }
+            
             if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Client {clientId} connected in gameplay scene '{activeScene}'. Spawning if needed.");
             SpawnPlayerIfNeeded(clientId);
         }

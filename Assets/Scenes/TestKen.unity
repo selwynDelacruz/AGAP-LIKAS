@@ -3641,15 +3641,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9958c44a9e884342bccc28d6db08b03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VictimSpawner
-  spawnPoints:
-  - {fileID: 1363824140}
-  - {fileID: 905012690}
-  - {fileID: 1650149539}
-  - {fileID: 402391549}
-  - {fileID: 978047623}
-  - {fileID: 614366309}
-  - {fileID: 790321465}
-  - {fileID: 1621730942}
+  ShowTopMostFoldoutHeaderGroup: 1
   victimPrefabs:
   - {fileID: 875262489506159344, guid: 958761a19fbea8840abc9bc8b6b2c72f, type: 3}
   - {fileID: 3317362641602436364, guid: 29fc32e79f5bc284ca2bd607f053e701, type: 3}
@@ -3659,6 +3651,10 @@ MonoBehaviour:
   - {fileID: 6709689119768051145, guid: fafb22cc38dbaea45b322bda31903528, type: 3}
   spawnOnStart: 1
   preventDuplicateSpawnPoints: 1
+  earthquakeSpawnPointName: EarthquakeVictim
+  floodSpawnPointName: FloodVictim
+  spawnDelay: 1.5
+  debugMode: 1
 --- !u!4 &642664001
 Transform:
   m_ObjectHideFlags: 0
@@ -4188,8 +4184,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 731375520}
-  - component: {fileID: 731375519}
   - component: {fileID: 731375521}
+  - component: {fileID: 731375519}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -4209,6 +4205,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15b86882f1dd7764d938f843ead9c939, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  ShowTopMostFoldoutHeaderGroup: 1
   floodGameObject: {fileID: 1351823004}
   earthquakeGameObject: {fileID: 416521951}
   victimSpawner: {fileID: 642664000}

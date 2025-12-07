@@ -2450,6 +2450,7 @@ GameObject:
   - component: {fileID: 8849239961865121771}
   - component: {fileID: 8913083907813706447}
   - component: {fileID: 4483602175318987383}
+  - component: {fileID: 5412725864666693282}
   - component: {fileID: 2908522971320675085}
   m_Layer: 0
   m_Name: VictimOldMan
@@ -2555,6 +2556,31 @@ CapsuleCollider:
   m_Height: 1.9
   m_Direction: 1
   m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &5412725864666693282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4209160598891873896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 2099059246
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &2908522971320675085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2567,6 +2593,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af47ef7b87dbcc74ab43ab0c430fe4c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCInteractable
+  ShowTopMostFoldoutHeaderGroup: 1
   interactText: Rescue the old man
 --- !u!1 &4213324991230160968
 GameObject:
