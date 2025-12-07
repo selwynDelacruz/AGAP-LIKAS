@@ -1,8 +1,7 @@
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -75,17 +74,6 @@ public class GameManager : MonoBehaviour
     private bool isTimerRunning = false;
     #endregion
 
-    #region Spectator Management
-    [Header("Spectator Settings")]
-    [Tooltip("Reference to the SpectatorController")]
-    private SpectatorController spectatorController;
-
-    [Tooltip("Reference to the PlayerControlManager")]
-    private PlayerControlManager playerControlManager;
-
-    private bool isInstructorMode = false;
-    #endregion
-
     void Awake()
     {
         // Singleton setup
@@ -102,9 +90,6 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Initialize User Type Check
-        InitializeUserType();
-
         // Initialize Disaster Scene Management
         InitializeDisasterScene();
 
@@ -116,62 +101,7 @@ public class GameManager : MonoBehaviour
 
         // Initialize Duration Management
         InitializeDurationSystem();
-
-        // Initialize Spectator Mode if instructor
-        InitializeSpectatorMode();
     }
-
-    #region User Type Management
-    private void InitializeUserType()
-    {
-        string userType = PlayerPrefs.GetString("Type_Of_User", "");
-        isInstructorMode = (userType == "instructor");
-        
-        Debug.Log($"[GameManager] User Type: {userType}, Instructor Mode: {isInstructorMode}");
-    }
-
-    /// <summary>
-    /// Check if current user is instructor
-    /// </summary>
-    public bool IsInstructor()
-    {
-        return isInstructorMode;
-    }
-    #endregion
-
-    #region Spectator Mode Management
-    private void InitializeSpectatorMode()
-    {
-        // Get references to spectator components
-        spectatorController = FindAnyObjectByType<SpectatorController>();
-        playerControlManager = FindAnyObjectByType<PlayerControlManager>();
-
-        if (isInstructorMode)
-        {
-            Debug.Log("[GameManager] Instructor mode - Spectator controls active");
-            
-            // Add SpectatorController if not present
-            if (spectatorController == null)
-            {
-                GameObject spectatorObj = new GameObject("SpectatorController");
-                spectatorController = spectatorObj.AddComponent<SpectatorController>();
-                Debug.Log("[GameManager] SpectatorController created");
-            }
-
-            // Add PlayerControlManager if not present
-            if (playerControlManager == null)
-            {
-                GameObject controlManagerObj = new GameObject("PlayerControlManager");
-                playerControlManager = controlManagerObj.AddComponent<PlayerControlManager>();
-                Debug.Log("[GameManager] PlayerControlManager created");
-            }
-        }
-        else
-        {
-            Debug.Log("[GameManager] Trainee mode - Normal player controls active");
-        }
-    }
-    #endregion
 
     #region Disaster Scene Management
     private void InitializeDisasterScene()
