@@ -1922,7 +1922,7 @@ MonoBehaviour:
   preventDuplicateSpawnPoints: 1
   earthquakeSpawnPointName: EarthquakeVictim
   floodSpawnPointName: FloodVictim
-  spawnDelay: 0.1
+  spawnDelay: 1.5
   debugMode: 1
 --- !u!4 &642664001
 Transform:

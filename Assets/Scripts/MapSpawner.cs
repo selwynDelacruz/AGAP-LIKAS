@@ -21,6 +21,16 @@ public class MapSpawner : NetworkBehaviour
     [Tooltip("Delay in seconds before spawning maps (helps ensure clients are ready)")]
     public float spawnDelay = 0.5f;
 
+    /// <summary>
+    /// Event fired when maps have finished spawning. Other systems can subscribe to this.
+    /// </summary>
+    public static event System.Action OnMapsSpawned;
+
+    /// <summary>
+    /// Returns true if maps have been spawned this session.
+    /// </summary>
+    public static bool MapsReady { get; private set; }
+
     // Synced random seed so all clients shuffle identically
     private NetworkVariable<int> randomSeed = new NetworkVariable<int>(
         0,
@@ -161,6 +171,11 @@ public class MapSpawner : NetworkBehaviour
             Debug.Log("[MapSpawner] Server: Map spawning complete!");
             Debug.Log($"[MapSpawner] Server: Total spawned NetworkObjects: {NetworkManager.Singleton.SpawnManager.SpawnedObjectsList.Count}");
         }
+
+        // Mark maps as ready and notify listeners
+        MapsReady = true;
+        OnMapsSpawned?.Invoke();
+        if (debugMode) Debug.Log("[MapSpawner] OnMapsSpawned event fired.");
     }
 
     GameObject SpawnMap(GameObject prefab, Vector3 position)
@@ -284,5 +299,8 @@ public class MapSpawner : NetworkBehaviour
         {
             randomSeed.OnValueChanged -= OnRandomSeedChanged;
         }
+        
+        // Reset static state when MapSpawner is destroyed (scene change)
+        MapsReady = false;
     }
 }
