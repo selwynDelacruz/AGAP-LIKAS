@@ -11,6 +11,10 @@ public class MapSpawner : NetworkBehaviour
     [Header("Size of each map (adjust to your prefab size)")]
     public float mapSize = 121f;
 
+    [Header("Y Position Adjustment")]
+    [Tooltip("Y position offset for Flood disaster mode")]
+    [SerializeField] private float floodYAdjustment = -3f;
+
     [Header("Safe Zone Prefab")]
     public GameObject safeZonePrefab;
 
@@ -40,6 +44,7 @@ public class MapSpawner : NetworkBehaviour
 
     private GameObject[] selectedMaps = new GameObject[4];
     private bool hasSpawned = false;
+    private float yOffset = 0f; // Current Y offset to use based on disaster type
 
     private string[] gameplayScenes = { "TestKen", "Flood", "Earthquake" };
 
@@ -54,6 +59,9 @@ public class MapSpawner : NetworkBehaviour
             if (debugMode) Debug.Log($"[MapSpawner] Scene '{currentScene}' is not a gameplay scene. Skipping map spawn.");
             return;
         }
+
+        // Determine Y offset based on disaster type
+        DetermineYOffset();
 
         if (IsServer)
         {
@@ -78,6 +86,44 @@ public class MapSpawner : NetworkBehaviour
             
             // Subscribe to NetworkVariable change to detect when server spawns
             randomSeed.OnValueChanged += OnRandomSeedChanged;
+        }
+    }
+
+    /// <summary>
+    /// Determines the Y offset based on the selected disaster type from PlayerPrefs
+    /// </summary>
+    private void DetermineYOffset()
+    {
+        // Get disaster type from PlayerPrefs (set by LobbyRoomManager)
+        string disasterType = PlayerPrefs.GetString("DisasterType", "Earthquake");
+
+        switch (disasterType)
+        {
+            case "Flood":
+                yOffset = floodYAdjustment;
+                if (debugMode)
+                {
+                    Debug.Log($"[MapSpawner] Flood mode detected - applying Y offset: {yOffset}");
+                }
+                break;
+            case "Earthquake":
+                yOffset = 0f;
+                if (debugMode)
+                {
+                    Debug.Log("[MapSpawner] Earthquake mode detected - no Y offset");
+                }
+                break;
+            case "TestKen":
+                yOffset = 0f;
+                if (debugMode)
+                {
+                    Debug.Log("[MapSpawner] TestKen mode detected - no Y offset");
+                }
+                break;
+            default:
+                yOffset = 0f;
+                Debug.LogWarning($"[MapSpawner] Unknown disaster type: {disasterType}, using default Y offset: 0");
+                break;
         }
     }
 
@@ -154,11 +200,11 @@ public class MapSpawner : NetworkBehaviour
             Debug.Log($"[MapSpawner] Selected maps (seed {randomSeed.Value}): {selectedMaps[0].name}, {selectedMaps[1].name}, {selectedMaps[2].name}, {selectedMaps[3].name}");
         }
 
-        // STEP 3: Spawn them in a 2x2 grid (only server does this)
-        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, 0, 55));                         // bottom-left
-        GameObject chunk1 = SpawnMap(selectedMaps[1], new Vector3(55, 0, 55 + mapSize));                // top-left
-        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, 0, 55));               // bottom-right
-        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, 0, 55 + mapSize));     // top-right
+        // STEP 3: Spawn them in a 2x2 grid with Y offset (only server does this)
+        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, yOffset, 55));                              // bottom-left
+        GameObject chunk1 = SpawnMap(selectedMaps[1], new Vector3(55, yOffset, 55 + mapSize));                    // top-left
+        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, yOffset, 55));                    // bottom-right
+        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, yOffset, 55 + mapSize));          // top-right
 
         // STEP 4: Place the safe zone inside the final chunk
         if (chunk3 != null)
