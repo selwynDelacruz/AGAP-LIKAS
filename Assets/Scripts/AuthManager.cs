@@ -713,17 +713,24 @@ public class AuthManager : MonoBehaviour
 
 	private IEnumerator Login_ManageAccount(string _email, string _password)
 	{
+		Debug.Log($"[AuthManager] Login_ManageAccount - Attempting: {_email}");
+		isOnLoadingPanel = true;
+		
 		Task<AuthResult> LoginTask = auth.SignInWithEmailAndPasswordAsync(_email, _password);
 		yield return new WaitUntil(() => LoginTask.IsCompleted);
+		
 		if (LoginTask.Exception != null)
 		{
-			isOnLoadingPanel = true;
-			Debug.LogWarning($"Failed to register task with {LoginTask.Exception}");
+			Debug.LogError($"[AuthManager] Login_ManageAccount FAILED: {LoginTask.Exception}");
+			isOnLoadingPanel = false;
+			ManageAccountPanel.SetActive(false);
+			MenuPanel_SuperAdmin.SetActive(true);
 			yield break;
 		}
+		
 		User = LoginTask.Result.User;
-		Debug.LogFormat("User signed in successfully: {0} ({1})", User.DisplayName, User.Email);
-		yield return new WaitForSeconds(3f);
+		Debug.Log($"[AuthManager] Login_ManageAccount SUCCESS: {User.DisplayName}");
+		yield return new WaitForSeconds(0.5f);
 		isOnLoadingPanel = false;
 	}
 
@@ -1509,6 +1516,13 @@ public class AuthManager : MonoBehaviour
 			Current_Age = int.Parse(result.Child("User_Age").Value.ToString());
 			Current_Score = int.Parse(result.Child("User_Score").Value.ToString());
 			AdminNameText.text = Current_Name;
+
+			// Save username to PlayerPrefs for LobbyRoomManager to display
+			PlayerPrefs.SetString("Current_Username", Current_Username);
+			PlayerPrefs.SetString("Current_Name", Current_Name);
+			PlayerPrefs.Save();
+			Debug.Log($"[AuthManager] Saved to PlayerPrefs - Username: {Current_Username}, Name: {Current_Name}");
+
 			// Launcher.Instance.CallForSetupNickName();
 			// Launcher.Instance.StopMethodRepeating();
 			if (PlayerPrefs.GetString("SetNewScoreLeaderboard") == "true")
@@ -1903,21 +1917,25 @@ public class AuthManager : MonoBehaviour
 		}
 	}
 
-	public void ManageAccountButton(string _userType, TextMeshProUGUI _name, TextMeshProUGUI _age, TextMeshProUGUI _gender, TextMeshProUGUI _username, TextMeshProUGUI _password)
+	public void ManageAccountButton(string _userType, string _name, string _age, string _gender, string _username, string _password)
 	{
-		ManageAccountPanel.SetActive(value: true);
-		Debug.Log("manageaccountpanel: active");
-		ManageAccount_InputFields[0].text = _name.text;
-		ManageAccount_InputFields[1].text = _age.text;
-		ManageAccount_InputFields[2].text = _gender.text;
-		ManageAccount_InputFields[3].text = _username.text;
-		ManageAccount_InputFields[4].text = _password.text;
-		AccountToManage_Name = _name.text;
-		AccountToManage_Age = _age.text;
-		AccountToManage_Gender = _gender.text;
-		AccountToManage_Username = _username.text;
-		AccountToManage_Password = _password.text;
+		Debug.Log($"[AuthManager] ManageAccountButton - User: {_username}, Type: {_userType}");
+		
+		ManageAccountPanel.SetActive(true);
+		
+		ManageAccount_InputFields[0].text = _name;
+		ManageAccount_InputFields[1].text = _age;
+		ManageAccount_InputFields[2].text = _gender;
+		ManageAccount_InputFields[3].text = _username;
+		ManageAccount_InputFields[4].text = _password;
+		
+		AccountToManage_Name = _name;
+		AccountToManage_Age = _age;
+		AccountToManage_Gender = _gender;
+		AccountToManage_Username = _username;
+		AccountToManage_Password = _password;
 		AccountToManage_Usertype = _userType;
+		
 		auth.SignOut();
 		StartCoroutine(Login_ManageAccount(AccountToManage_Username + "@gmail.com", AccountToManage_Password));
 	}

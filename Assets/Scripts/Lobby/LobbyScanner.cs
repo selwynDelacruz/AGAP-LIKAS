@@ -12,7 +12,7 @@ namespace Lobby
     public class LobbyScanner : MonoBehaviour
     {
         private const int LISTEN_PORT = 7778;
-        private const int SCAN_TIMEOUT = 5000; // 5 seconds
+        private const int SCAN_TIMEOUT = 10000; // Increased to 10 seconds
 
         private UdpClient udpClient;
         private Thread scanThread;
@@ -29,9 +29,6 @@ namespace Lobby
         /// <summary>
         /// Start scanning for a specific lobby code
         /// </summary>
-        /// <param name="lobbyCode">Lobby code to search for</param>
-        /// <param name="onLobbyFound">Callback when lobby is found (IP, Port)</param>
-        /// <param name="onScanTimeout">Callback when scan times out</param>
         public void StartScanning(string lobbyCode, System.Action<string, int> onLobbyFound, System.Action onScanTimeout)
         {
             if (isScanning)
@@ -48,8 +45,11 @@ namespace Lobby
 
             try
             {
-                udpClient = new UdpClient(LISTEN_PORT);
-                udpClient.Client.ReceiveTimeout = SCAN_TIMEOUT;
+                // Try to create UDP client with port reuse
+                udpClient = new UdpClient();
+                udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, LISTEN_PORT));
+                udpClient.Client.ReceiveTimeout = 2000; // 2 second receive timeout per attempt
                 isScanning = true;
 
                 scanThread = new Thread(ScanLoop) { IsBackground = true };
@@ -58,11 +58,20 @@ namespace Lobby
                 if (showDebugLogs)
                     Debug.Log($"[LobbyScanner] Started scanning for lobby: {targetLobbyCode} on port {LISTEN_PORT}");
             }
+            catch (SocketException se)
+            {
+                Debug.LogError($"[LobbyScanner] Socket error (port {LISTEN_PORT} may be in use): {se.Message}");
+                Debug.LogWarning("[LobbyScanner] TIP: Try using Direct Connect with the host's IP address instead.");
+                
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    onScanTimeout?.Invoke();
+                });
+            }
             catch (System.Exception e)
             {
                 Debug.LogError($"[LobbyScanner] Failed to start scanning: {e.Message}");
                 
-                // Ensure main thread dispatcher exists
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
                     onScanTimeout?.Invoke();
@@ -84,18 +93,25 @@ namespace Lobby
 
             if (udpClient != null)
             {
-                udpClient.Close();
+                try
+                {
+                    udpClient.Close();
+                }
+                catch { }
                 udpClient = null;
             }
 
             if (showDebugLogs)
-                Debug.Log("[LobbyScanner] Stopped scanning");
+                Debug.Log($"[LobbyScanner] Stopped scanning. Total packets received: {packetsReceived}");
         }
 
         private void ScanLoop()
         {
             IPEndPoint remoteEndpoint = new IPEndPoint(IPAddress.Any, 0);
             System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            if (showDebugLogs)
+                Debug.Log($"[LobbyScanner] Scan loop started. Looking for: {targetLobbyCode}");
 
             while (isScanning && stopwatch.ElapsedMilliseconds < SCAN_TIMEOUT)
             {
@@ -105,22 +121,31 @@ namespace Lobby
                     packetsReceived++;
                     string message = Encoding.UTF8.GetString(data);
 
-                    if (showDebugLogs && packetsReceived <= 10)
-                        Debug.Log($"[LobbyScanner] Packet {packetsReceived} from {remoteEndpoint.Address}: {message}");
+                    if (showDebugLogs)
+                        Debug.Log($"[LobbyScanner] Received packet #{packetsReceived} from {remoteEndpoint.Address}: {message}");
 
                     // Parse message: "LOBBYCODE|IP|PORT"
                     string[] parts = message.Split('|');
                     if (parts.Length == 3)
                     {
-                        string receivedCode = parts[0];
+                        string receivedCode = parts[0].ToUpper();
                         string ip = parts[1];
-                        int port = int.Parse(parts[2]);
+                        
+                        if (!int.TryParse(parts[2], out int port))
+                        {
+                            Debug.LogWarning($"[LobbyScanner] Invalid port in packet: {parts[2]}");
+                            continue;
+                        }
+
+                        if (showDebugLogs)
+                            Debug.Log($"[LobbyScanner] Parsed lobby - Code: {receivedCode}, IP: {ip}, Port: {port}");
 
                         // Check if this is the lobby we're looking for
                         if (receivedCode == targetLobbyCode)
                         {
-                            if (showDebugLogs)
-                                Debug.Log($"[LobbyScanner] Found target lobby {receivedCode} at {ip}:{port}");
+                            Debug.Log($"[LobbyScanner] ? FOUND target lobby {receivedCode} at {ip}:{port}");
+                            
+                            isScanning = false;
                             
                             // Notify on main thread
                             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -128,26 +153,31 @@ namespace Lobby
                                 onLobbyFound?.Invoke(ip, port);
                             });
 
-                            StopScanning();
                             return;
                         }
-                        else if (showDebugLogs && packetsReceived <= 10)
+                        else
                         {
-                            Debug.Log($"[LobbyScanner] Ignored lobby code {receivedCode} (looking for {targetLobbyCode})");
+                            if (showDebugLogs)
+                                Debug.Log($"[LobbyScanner] Lobby code mismatch: received '{receivedCode}' but looking for '{targetLobbyCode}'");
                         }
                     }
-                    else if (showDebugLogs && packetsReceived <= 10)
+                    else
                     {
-                        Debug.Log($"[LobbyScanner] Malformed packet: {message}");
+                        if (showDebugLogs)
+                            Debug.LogWarning($"[LobbyScanner] Malformed packet (expected 3 parts, got {parts.Length}): {message}");
                     }
                 }
-                catch (SocketException)
+                catch (SocketException se)
                 {
-                    // Timeout on receive - this is expected
+                    // Timeout on receive - this is expected, continue scanning
+                    if (se.SocketErrorCode != SocketError.TimedOut && showDebugLogs)
+                    {
+                        Debug.LogWarning($"[LobbyScanner] Socket exception: {se.SocketErrorCode}");
+                    }
                 }
                 catch (System.Exception e)
                 {
-                    if (isScanning)
+                    if (isScanning && showDebugLogs)
                     {
                         Debug.LogError($"[LobbyScanner] Scan error: {e.Message}");
                     }
@@ -155,15 +185,14 @@ namespace Lobby
             }
 
             // Scan timed out
-            if (showDebugLogs)
-                Debug.LogWarning($"[LobbyScanner] Scan timed out after {SCAN_TIMEOUT}ms. Packets received: {packetsReceived}");
+            Debug.LogWarning($"[LobbyScanner] ? Scan timed out after {SCAN_TIMEOUT/1000}s. Packets received: {packetsReceived}");
+            Debug.LogWarning("[LobbyScanner] Possible causes: 1) Firewall blocking UDP port 7778, 2) Different network/subnet, 3) Host not broadcasting");
+            Debug.LogWarning("[LobbyScanner] TIP: Use Direct Connect with host's IP address (e.g., 192.168.1.x)");
             
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 onScanTimeout?.Invoke();
             });
-
-            StopScanning();
         }
 
         private void OnDestroy()
