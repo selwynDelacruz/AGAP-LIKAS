@@ -279,7 +279,6 @@ public class AuthManager : MonoBehaviour
 
 	public void LogoutButton()
 	{
-		Object.DestroyImmediate(RoomManagerGO);
 		PlayerPrefs.DeleteAll();
 		isOnLoadingPanel = true;
 		Invoke("DelayRefreshScene", 0.2f);
@@ -1341,7 +1340,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				Trainee_confirmLoginText.text = "";
-				Login_TraineeButton.interactable = true;
+				Login_TraineeButton.interactable = false;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1370,7 +1369,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				SuperAdmin_confirmLoginText.text = "";
-				Login_SuperAdminButton.interactable = true;
+				Login_SuperAdminButton.interactable = false;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1394,8 +1393,7 @@ public class AuthManager : MonoBehaviour
 
 	public void RefreshData()
 	{
-		Object.Destroy(RoomManager.Instance.gameObject);
-		SceneManager.LoadScene("Main Menu");
+		SceneManager.LoadScene("MainMenu");
 	}
 
 	private IEnumerator RegisterSuccessShowPanel()
@@ -1882,7 +1880,7 @@ public class AuthManager : MonoBehaviour
 		}
 		DataSnapshot result = DBTask.Result;
 		LeaderboardPanel.SetActive(value: true);
-		int num = 0;
+		int rank = 0;
 		foreach (Transform item in Leaderboardcontent)
 		{
 			Object.Destroy(item.gameObject);
@@ -1893,18 +1891,22 @@ public class AuthManager : MonoBehaviour
 		}
 		foreach (DataSnapshot item2 in result.Children.Reverse())
 		{
-			num++;
-			if (PlayerPrefs.GetString("isFromMainGame") == "true")
+			rank++;
+			string playerName = item2.Child("User_Name").Value.ToString();
+			int score = int.Parse(item2.Child("User_Score").Value.ToString());
+			
+			// Instead of using LeaderboardElement, create a simple text display
+			// You'll need to create a new prefab or modify this to display leaderboard data
+			GameObject leaderboardItem = Instantiate(PlayerdataLeaderboard, Leaderboardcontent);
+			
+			// You'll need to implement your own way to display rank, name, and score
+			// For example, using TextMeshPro components directly:
+			TextMeshProUGUI[] texts = leaderboardItem.GetComponentsInChildren<TextMeshProUGUI>();
+			if (texts.Length >= 3)
 			{
-				string playerName = item2.Child("User_Name").Value.ToString();
-				int score_ = int.Parse(item2.Child("User_Score").Value.ToString());
-				Object.Instantiate(PlayerdataLeaderboard, Leaderboardcontent).GetComponent<LeaderboardElement>().SetData(num, playerName, score_);
-			}
-			else
-			{
-				string playerName2 = item2.Child("User_Name").Value.ToString();
-				int score_2 = int.Parse(item2.Child("User_Score").Value.ToString());
-				Object.Instantiate(PlayerdataLeaderboard, Leaderboardcontent).GetComponent<LeaderboardElement>().SetData(num, playerName2, score_2);
+				texts[0].text = rank.ToString();
+				texts[1].text = playerName;
+				texts[2].text = score.ToString();
 			}
 		}
 	}

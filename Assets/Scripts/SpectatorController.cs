@@ -33,6 +33,7 @@ public class SpectatorController : MonoBehaviour
     private float cinemachineTargetYaw;
     private float cinemachineTargetPitch;
     private bool isRightClickHeld = false;
+    private Vector2 lockedCursorPosition;
 
 #if ENABLE_INPUT_SYSTEM
     private PlayerInput playerInput;
@@ -144,6 +145,13 @@ public class SpectatorController : MonoBehaviour
 
         // Apply camera rotation
         CameraRotation();
+        
+        // Keep cursor locked at the original position while right-click is held
+        if (isRightClickHeld)
+        {
+            Cursor.lockState = CursorLockMode.Confined;
+            Mouse.current.WarpCursorPosition(lockedCursorPosition);
+        }
     }
 
     private void HandleSpectatorCamera()
@@ -152,10 +160,18 @@ public class SpectatorController : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             isRightClickHeld = true;
+            // Store the cursor position when right-click starts
+            lockedCursorPosition = Input.mousePosition;
+            Cursor.visible = true;
+            Debug.Log($"[SpectatorController] Cursor locked at position: {lockedCursorPosition}");
         }
         else if (Input.GetMouseButtonUp(1))
         {
             isRightClickHeld = false;
+            // Release cursor lock
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            Debug.Log("[SpectatorController] Cursor unlocked");
         }
 
         // Only rotate camera when right-click is held
@@ -203,7 +219,12 @@ public class SpectatorController : MonoBehaviour
 
     private void OnDisable()
     {
-        // Clean up when disabled
+        // Clean up when disabled - ensure cursor is unlocked
         isRightClickHeld = false;
+        if (isInstructor)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 }
