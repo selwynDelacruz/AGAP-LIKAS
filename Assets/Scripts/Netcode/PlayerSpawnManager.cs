@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -11,6 +11,7 @@ namespace Lobby
     /// Spawns player prefabs only when a gameplay scene (e.g. TestKen) loads.
     /// Attach this to the persistent NetworkManager object.
     /// Supports different player prefabs based on disaster mode (Flood = Boat, Earthquake = Walking)
+    /// Also spawns instructor spectator for instructor users (instructors do NOT get player prefabs).
     /// </summary>
     public class PlayerSpawnManager : MonoBehaviour
     {
@@ -20,6 +21,10 @@ namespace Lobby
         
         [Tooltip("Player prefab for boat mode (Flood)")]
         [SerializeField] private GameObject boatPlayerPrefab;
+
+        [Header("Instructor Spectator")]
+        [Tooltip("Instructor spectator prefab (non-networked, local only)")]
+        [SerializeField] private GameObject instructorSpectatorPrefab;
 
         [Header("Gameplay Scenes That Require Spawning")]
         [SerializeField] private string[] gameplaySceneNames = {"Flood","Earthquake","TestKen"};
@@ -43,9 +48,13 @@ namespace Lobby
 
         private bool pendingSpawn = false;
         private string pendingSceneName = "";
+        private GameObject _instructorSpectatorInstance;
 
         // Current disaster type cached for spawn position calculations
         private string currentDisasterType = "Earthquake";
+
+        // Cache to track which clients are instructors (clientId -> isInstructor)
+        private Dictionary<ulong, bool> _clientInstructorStatus = new Dictionary<ulong, bool>();
 
         private void Awake()
         {
@@ -57,6 +66,11 @@ namespace Lobby
             if (boatPlayerPrefab == null)
             {
                 Debug.LogWarning("[PlayerSpawnManager] Boat player prefab not assigned.");
+            }
+
+            if (instructorSpectatorPrefab == null)
+            {
+                Debug.LogWarning("[PlayerSpawnManager] Instructor spectator prefab not assigned. Will attempt to load from Resources.");
             }
         }
 
@@ -114,6 +128,19 @@ namespace Lobby
             MapSpawner.OnMapsSpawned -= OnMapsSpawned;
         }
 
+        private void OnDestroy()
+        {
+            // Clean up instructor spectator instance
+            if (_instructorSpectatorInstance != null)
+            {
+                Destroy(_instructorSpectatorInstance);
+                _instructorSpectatorInstance = null;
+            }
+
+            // Clear instructor status cache
+            _clientInstructorStatus.Clear();
+        }
+
         private bool IsGameplayScene(string sceneName)
         {
             return gameplaySceneNames.Contains(sceneName);
@@ -143,6 +170,28 @@ namespace Lobby
             currentDisasterType = PlayerPrefs.GetString("DisasterType", "Earthquake");
             if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Disaster type: {currentDisasterType}");
 
+            // Determine if local user (host) is an instructor
+            string localUserType = PlayerPrefs.GetString("Type_Of_User", "");
+            bool isLocalInstructor = localUserType == "instructor";
+            
+            // Cache the instructor status for the local client (host)
+            if (NetworkManager.Singleton.IsHost)
+            {
+                ulong hostClientId = NetworkManager.Singleton.LocalClientId;
+                _clientInstructorStatus[hostClientId] = isLocalInstructor;
+                
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[PlayerSpawnManager] Host client {hostClientId} is instructor: {isLocalInstructor}");
+                }
+            }
+
+            // Spawn instructor spectator if local user is instructor (only on host/server)
+            if (isLocalInstructor)
+            {
+                SpawnInstructorSpectatorIfNeeded();
+            }
+
             if (waitForMaps && !MapSpawner.MapsReady)
             {
                 if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Waiting for maps to spawn before spawning players...");
@@ -156,6 +205,52 @@ namespace Lobby
 
             if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Spawning players immediately (maps ready or not waiting).");
             SpawnAllPlayersIfNeeded();
+        }
+
+        /// <summary>
+        /// Spawns the instructor spectator prefab if the current user is an instructor.
+        /// This is a local (non-networked) object for camera control only.
+        /// </summary>
+        private void SpawnInstructorSpectatorIfNeeded()
+        {
+            // Check if user is instructor
+            string userType = PlayerPrefs.GetString("Type_Of_User", "");
+            if (userType != "instructor")
+            {
+                if (showDebugLogs) Debug.Log("[PlayerSpawnManager] User is not an instructor. Skipping spectator spawn.");
+                return;
+            }
+
+            // Check if already spawned
+            if (_instructorSpectatorInstance != null)
+            {
+                if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Instructor spectator already spawned. Skipping.");
+                return;
+            }
+
+            GameObject spectatorPrefab = instructorSpectatorPrefab;
+
+            // Try loading from Resources if not assigned
+            if (spectatorPrefab == null)
+            {
+                if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Attempting to load InstructorSpectator from Resources...");
+                spectatorPrefab = Resources.Load<GameObject>("InstructorSpectator");
+            }
+
+            if (spectatorPrefab == null)
+            {
+                Debug.LogError("[PlayerSpawnManager] Cannot spawn instructor spectator: Prefab not assigned and not found in Resources/InstructorSpectator.prefab");
+                return;
+            }
+
+            // Instantiate the spectator (local only, not networked)
+            _instructorSpectatorInstance = Instantiate(spectatorPrefab, Vector3.zero, Quaternion.identity);
+            _instructorSpectatorInstance.name = "InstructorSpectator";
+
+            if (showDebugLogs) 
+            {
+                Debug.Log("[PlayerSpawnManager] ✓ Spawned Instructor Spectator successfully!");
+            }
         }
 
         private IEnumerator WaitForMapsTimeout()
@@ -202,6 +297,35 @@ namespace Lobby
             }
         }
 
+        /// <summary>
+        /// Checks if a specific client is an instructor.
+        /// For the host/server, this checks PlayerPrefs.
+        /// For other clients, this would need to be communicated via RPC (not implemented here).
+        /// </summary>
+        private bool IsClientInstructor(ulong clientId)
+        {
+            // Check cached status first
+            if (_clientInstructorStatus.TryGetValue(clientId, out bool isInstructor))
+            {
+                return isInstructor;
+            }
+
+            // Only the host/server can check their own PlayerPrefs
+            // For remote clients, we assume they are trainees unless told otherwise
+            if (clientId == NetworkManager.Singleton.LocalClientId)
+            {
+                string userType = PlayerPrefs.GetString("Type_Of_User", "");
+                isInstructor = (userType == "instructor");
+                _clientInstructorStatus[clientId] = isInstructor;
+                return isInstructor;
+            }
+
+            // Default: assume trainee for remote clients
+            // NOTE: If you need to support remote instructors, you'd need to implement
+            // an RPC system where clients send their user type to the server
+            return false;
+        }
+
         private void SpawnPlayerIfNeeded(ulong clientId)
         {
             var nm = NetworkManager.Singleton;
@@ -219,6 +343,22 @@ namespace Lobby
             {
                 if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] PlayerObject already exists for client {clientId}. Skipping.");
                 return;
+            }
+
+            // ===== CRITICAL: Check if this client is an instructor =====
+            if (IsClientInstructor(clientId))
+            {
+                if (showDebugLogs) 
+                {
+                    Debug.Log($"[PlayerSpawnManager] Client {clientId} is an INSTRUCTOR. Skipping player prefab spawn (spectator only).");
+                }
+                return; // DON'T spawn a player prefab for instructors
+            }
+
+            // Only spawn player prefabs for trainees
+            if (showDebugLogs)
+            {
+                Debug.Log($"[PlayerSpawnManager] Client {clientId} is a TRAINEE. Spawning player prefab...");
             }
 
             // Determine which prefab to use based on DisasterType
@@ -242,7 +382,7 @@ namespace Lobby
                 return;
             }
             netObj.SpawnAsPlayerObject(clientId);
-            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Spawned {selectedPrefab.name} for client {clientId} at {spawnPos}.");
+            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Spawned {selectedPrefab.name} for TRAINEE client {clientId} at {spawnPos}.");
         }
 
         /// <summary>

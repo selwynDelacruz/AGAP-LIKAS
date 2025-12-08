@@ -1356,7 +1356,7 @@ Transform:
   m_GameObject: {fileID: 3241015846787105063}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 15, z: 0}
+  m_LocalPosition: {x: 0, y: 30, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2501,7 +2501,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2715880296
+  GlobalObjectIdHash: 1355582393
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -2571,8 +2571,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a4e32eca968fb645aabaa69168074b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteract
+  ShowTopMostFoldoutHeaderGroup: 1
   holdDuration: 5
   interactRange: 2
+  showDebugLogs: 0
 --- !u!114 &3978461948899385097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2691,7 +2693,7 @@ GameObject:
   - component: {fileID: 2169834472123940674}
   - component: {fileID: 2098734689939088469}
   - component: {fileID: 5735586183300215200}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: PlayerLoc
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2714,7 +2716,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 10}
+  m_AnchoredPosition: {x: 0, y: 25}
   m_SizeDelta: {x: 2, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2098734689939088469

@@ -1797,12 +1797,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Lobby.PlayerSpawnManager
   walkingPlayerPrefab: {fileID: 5506887279690856165, guid: 66df84143e4d88f4098c9830e1b77d0b, type: 3}
   boatPlayerPrefab: {fileID: 1096962822472106403, guid: b9573272d3cb22d4e909fd4b6128efa4, type: 3}
+  instructorSpectatorPrefab: {fileID: 4626234432449852292, guid: 9c1986c04dda051459d3e56298ced44c, type: 3}
   gameplaySceneNames:
   - Flood
   - Earthquake
   - TestKen
   hostStartPosition: {x: 0, y: 0, z: 0}
   clientStartOffset: {x: 2, y: 0, z: 0}
+  floodYOffset: 1
   waitForMaps: 1
   maxWaitTime: 5
   showDebugLogs: 1
