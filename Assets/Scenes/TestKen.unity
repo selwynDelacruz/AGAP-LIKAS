@@ -8411,6 +8411,7 @@ MonoBehaviour:
   progressBarContainer: {fileID: 1904715596}
   progressBarFill: {fileID: 1755722625}
   playerTag: Player
+  showDebugLogs: 1
 --- !u!1 &1650149538
 GameObject:
   m_ObjectHideFlags: 0
