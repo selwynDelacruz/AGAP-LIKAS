@@ -5378,11 +5378,41 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5027490669404256391, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1814103330}
   m_SourcePrefab: {fileID: 100100000, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
 --- !u!4 &1814103328 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 788958105909676244, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
+  m_PrefabInstance: {fileID: 1814103327}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1814103329 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5027490669404256391, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
+  m_PrefabInstance: {fileID: 1814103327}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1814103330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1814103329}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 075b00902d7300d4490840769e778294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpectatorController
+  SpectatorCameraSensitivity: 1
+  CameraRotationSmoothTime: 0.12
+  CinemachineCameraTarget: {fileID: 1814103331}
+  TopClamp: 70
+  BottomClamp: -30
+--- !u!1 &1814103331 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6105770168336094514, guid: 45f09ab5057b22245991b871e48ca4ea, type: 3}
   m_PrefabInstance: {fileID: 1814103327}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1895269469
@@ -6261,11 +6291,41 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2989661929405862929, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4197034537285203989}
   m_SourcePrefab: {fileID: 100100000, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
 --- !u!4 &4197034537285203987 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2128829204421339146, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
+  m_PrefabInstance: {fileID: 4197034537285203986}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &4197034537285203988 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2989661929405862929, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
+  m_PrefabInstance: {fileID: 4197034537285203986}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4197034537285203989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4197034537285203988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 075b00902d7300d4490840769e778294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpectatorController
+  SpectatorCameraSensitivity: 1
+  CameraRotationSmoothTime: 0.12
+  CinemachineCameraTarget: {fileID: 4197034537285203990}
+  TopClamp: 70
+  BottomClamp: -30
+--- !u!1 &4197034537285203990 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4356170388856624908, guid: e73283e73a7a0864bb76a836f5e250f7, type: 3}
   m_PrefabInstance: {fileID: 4197034537285203986}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &5148107578089731390
