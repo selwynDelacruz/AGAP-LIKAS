@@ -10,13 +10,16 @@ namespace Lobby
     /// <summary>
     /// Spawns player prefabs only when a gameplay scene (e.g. TestKen) loads.
     /// Attach this to the persistent NetworkManager object.
-    /// Ensure Player Prefab in NetworkManager config is NOT set (to avoid auto lobby spawn).
-    /// Assign the playerPrefab in inspector (must have NetworkObject component).
+    /// Supports different player prefabs based on disaster mode (Flood = Boat, Earthquake = Walking)
     /// </summary>
     public class PlayerSpawnManager : MonoBehaviour
     {
-        [Header("Player Prefab (Must have NetworkObject)")] 
-        [SerializeField] private GameObject playerPrefab;
+        [Header("Player Prefabs (Must have NetworkObject)")] 
+        [Tooltip("Player prefab for walking mode (Earthquake)")]
+        [SerializeField] private GameObject walkingPlayerPrefab;
+        
+        [Tooltip("Player prefab for boat mode (Flood)")]
+        [SerializeField] private GameObject boatPlayerPrefab;
 
         [Header("Gameplay Scenes That Require Spawning")]
         [SerializeField] private string[] gameplaySceneNames = {"Flood","Earthquake","TestKen"};
@@ -24,6 +27,10 @@ namespace Lobby
         [Header("Spawn Settings")]
         [SerializeField] private Vector3 hostStartPosition = new Vector3(0, 0, 0);
         [SerializeField] private Vector3 clientStartOffset = new Vector3(2, 0, 0); // Offset per client
+
+        [Header("Flood Mode Spawn Adjustment")]
+        [Tooltip("Y offset for boat spawning in Flood mode (should match MapSpawner's floodYAdjustment)")]
+        [SerializeField] private float floodYOffset = 1f;
 
         [Header("Map Spawn Waiting")]
         [Tooltip("Wait for MapSpawner to finish before spawning players")]
@@ -37,11 +44,19 @@ namespace Lobby
         private bool pendingSpawn = false;
         private string pendingSceneName = "";
 
+        // Current disaster type cached for spawn position calculations
+        private string currentDisasterType = "Earthquake";
+
         private void Awake()
         {
-            if (playerPrefab == null)
+            if (walkingPlayerPrefab == null)
             {
-                Debug.LogWarning("[PlayerSpawnManager] Player prefab not assigned.");
+                Debug.LogWarning("[PlayerSpawnManager] Walking player prefab not assigned.");
+            }
+            
+            if (boatPlayerPrefab == null)
+            {
+                Debug.LogWarning("[PlayerSpawnManager] Boat player prefab not assigned.");
             }
         }
 
@@ -124,6 +139,10 @@ namespace Lobby
             
             if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Scene '{sceneName}' loaded.");
 
+            // Cache the disaster type for spawn position calculations
+            currentDisasterType = PlayerPrefs.GetString("DisasterType", "Earthquake");
+            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Disaster type: {currentDisasterType}");
+
             if (waitForMaps && !MapSpawner.MapsReady)
             {
                 if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Waiting for maps to spawn before spawning players...");
@@ -201,13 +220,20 @@ namespace Lobby
                 if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] PlayerObject already exists for client {clientId}. Skipping.");
                 return;
             }
-            if (playerPrefab == null)
+
+            // Determine which prefab to use based on DisasterType
+            GameObject selectedPrefab = GetPlayerPrefabForDisasterMode();
+            
+            if (selectedPrefab == null)
             {
-                Debug.LogError("[PlayerSpawnManager] Cannot spawn player, prefab not assigned.");
+                Debug.LogError("[PlayerSpawnManager] Cannot spawn player, no valid prefab for current disaster mode.");
                 return;
             }
+            
             Vector3 spawnPos = GetSpawnPosition(clientId);
-            var instance = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
+            Quaternion spawnRot = GetSpawnRotation();
+            
+            var instance = Instantiate(selectedPrefab, spawnPos, spawnRot);
             var netObj = instance.GetComponent<NetworkObject>();
             if (netObj == null)
             {
@@ -216,22 +242,85 @@ namespace Lobby
                 return;
             }
             netObj.SpawnAsPlayerObject(clientId);
-            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Spawned player for client {clientId} at {spawnPos}.");
+            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Spawned {selectedPrefab.name} for client {clientId} at {spawnPos}.");
+        }
+
+        /// <summary>
+        /// Determines which player prefab to use based on the disaster mode from PlayerPrefs
+        /// </summary>
+        private GameObject GetPlayerPrefabForDisasterMode()
+        {
+            string disasterType = PlayerPrefs.GetString("DisasterType", "Earthquake");
+            currentDisasterType = disasterType; // Cache for spawn position
+
+            GameObject selectedPrefab = null;
+            
+            switch (disasterType)
+            {
+                case "Flood":
+                    selectedPrefab = boatPlayerPrefab;
+                    if (showDebugLogs)
+                    {
+                        Debug.Log("[PlayerSpawnManager] Flood mode detected - using Boat player prefab");
+                    }
+                    break;
+                    
+                case "Earthquake":
+                case "TestKen":
+                    selectedPrefab = walkingPlayerPrefab;
+                    if (showDebugLogs)
+                    {
+                        Debug.Log($"[PlayerSpawnManager] {disasterType} mode detected - using Walking player prefab");
+                    }
+                    break;
+                    
+                default:
+                    Debug.LogWarning($"[PlayerSpawnManager] Unknown disaster type: {disasterType}. Defaulting to walking player.");
+                    selectedPrefab = walkingPlayerPrefab;
+                    break;
+            }
+
+            return selectedPrefab;
         }
 
         private Vector3 GetSpawnPosition(ulong clientId)
         {
-            // Host gets hostStartPosition; other clients offset sequentially.
+            Vector3 basePosition = hostStartPosition;
+            
+            // Adjust Y position for Flood mode (boats need to spawn at water level)
+            if (currentDisasterType == "Flood")
+            {
+                basePosition.y = floodYOffset;
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[PlayerSpawnManager] Flood mode: Adjusted spawn Y to {floodYOffset}");
+                }
+            }
+
+            // Host gets basePosition; other clients offset sequentially.
             if (clientId == NetworkManager.Singleton.LocalClientId && NetworkManager.Singleton.IsHost)
             {
-                return hostStartPosition;
+                return basePosition;
             }
+            
             // Order clients deterministically by clientId for offsets.
             var orderedIds = NetworkManager.Singleton.ConnectedClients.Keys.OrderBy(id => id).ToList();
             int index = orderedIds.IndexOf(clientId);
-            // First index (host) at hostStartPosition, others offset.
-            if (index <= 0) return hostStartPosition;
-            return hostStartPosition + (clientStartOffset * index);
+            
+            // First index (host) at basePosition, others offset.
+            if (index <= 0) return basePosition;
+            
+            return basePosition + (clientStartOffset * index);
+        }
+
+        /// <summary>
+        /// Gets the spawn rotation - boats may need a specific rotation to be stable
+        /// </summary>
+        private Quaternion GetSpawnRotation()
+        {
+            // For boats, spawn with no rotation to ensure stability
+            // You can adjust this if boats need a specific initial facing direction
+            return Quaternion.identity;
         }
     }
 }

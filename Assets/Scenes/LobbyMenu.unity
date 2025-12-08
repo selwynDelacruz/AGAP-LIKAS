@@ -1795,7 +1795,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66114726476845942a5c140e47629dd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Lobby.PlayerSpawnManager
-  playerPrefab: {fileID: 5506887279690856165, guid: 66df84143e4d88f4098c9830e1b77d0b, type: 3}
+  walkingPlayerPrefab: {fileID: 5506887279690856165, guid: 66df84143e4d88f4098c9830e1b77d0b, type: 3}
+  boatPlayerPrefab: {fileID: 1096962822472106403, guid: b9573272d3cb22d4e909fd4b6128efa4, type: 3}
   gameplaySceneNames:
   - Flood
   - Earthquake

@@ -352,11 +352,12 @@ namespace Lobby
             // Save game settings to PlayerPrefs
             SaveGameSettingsServerRpc();
 
-            // Load game scene
-            string sceneName = GetSceneNameFromDisasterIndex(disasterIndex.Value);
+            // Always load TestKen scene (both game modes are in one scene)
+            // GameManager will enable/disable Flood or Earthquake GameObjects based on DisasterType
+            string sceneName = "TestKen";
             
             if (showDebugLogs)
-                Debug.Log($"[LobbyRoomManager] Loading game scene: {sceneName}");
+                Debug.Log($"[LobbyRoomManager] Loading game scene: {sceneName} with DisasterType: {GetDisasterName(disasterIndex.Value)}");
 
             NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         }
@@ -366,13 +367,14 @@ namespace Lobby
         {
             // Save settings on server
             PlayerPrefs.SetInt("TaskCount", taskCount.Value);
-            PlayerPrefs.SetString("DisasterType", GetSceneNameFromDisasterIndex(disasterIndex.Value));
+            PlayerPrefs.SetString("DisasterType", GetDisasterName(disasterIndex.Value));
+            PlayerPrefs.SetInt("DisasterModeIndex", disasterIndex.Value); // Store index for GameManager
             PlayerPrefs.SetInt("GameDuration", durations[durationIndex.Value]);
             PlayerPrefs.SetInt("CameFromLobby", 1);
             PlayerPrefs.Save();
 
             if (showDebugLogs)
-                Debug.Log($"[LobbyRoomManager] Game settings saved: Tasks={taskCount.Value}, Disaster={GetSceneNameFromDisasterIndex(disasterIndex.Value)}, Duration={durations[durationIndex.Value]}");
+                Debug.Log($"[LobbyRoomManager] Game settings saved: Tasks={taskCount.Value}, Disaster={GetDisasterName(disasterIndex.Value)}, DisasterIndex={disasterIndex.Value}, Duration={durations[durationIndex.Value]}");
 
             // Tell all clients to save settings too
             SaveGameSettingsClientRpc();
@@ -384,13 +386,14 @@ namespace Lobby
             if (IsHost || IsServer) return; // Server already saved
 
             PlayerPrefs.SetInt("TaskCount", taskCount.Value);
-            PlayerPrefs.SetString("DisasterType", GetSceneNameFromDisasterIndex(disasterIndex.Value));
+            PlayerPrefs.SetString("DisasterType", GetDisasterName(disasterIndex.Value));
+            PlayerPrefs.SetInt("DisasterModeIndex", disasterIndex.Value); // Store index for GameManager
             PlayerPrefs.SetInt("GameDuration", durations[durationIndex.Value]);
             PlayerPrefs.SetInt("CameFromLobby", 1);
             PlayerPrefs.Save();
 
             if (showDebugLogs)
-                Debug.Log($"[LobbyRoomManager] Client: Game settings saved");
+                Debug.Log($"[LobbyRoomManager] Client: Game settings saved - DisasterType={GetDisasterName(disasterIndex.Value)}, DisasterIndex={disasterIndex.Value}");
         }
 
         [Rpc(SendTo.Server, RequireOwnership = false)]
