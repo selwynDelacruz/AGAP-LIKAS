@@ -3568,7 +3568,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &617858297
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8373,7 +8373,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1630998753
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9364,6 +9364,7 @@ MonoBehaviour:
   - {fileID: 5555166557944078259, guid: 8d1ff007b273b8844bb4045745eec26d, type: 3}
   - {fileID: 5030033664913929195, guid: 5d3641839a2153a418d3906cafadd7ba, type: 3}
   mapSize: 122
+  floodYAdjustment: -3
   safeZonePrefab: {fileID: 0}
   debugMode: 1
   spawnDelay: 0.5
