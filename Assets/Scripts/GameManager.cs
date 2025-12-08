@@ -35,9 +35,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int maxMedkits = 2;
     [SerializeField] private int currentMedkits = 2;
 
-    [Header("Safe Zone")]
-    [Tooltip("Safe zone GameObject that replenishes medkits when player enters")]
-    [SerializeField] private GameObject safeZone;
+    [Header("Safe Zones")]
+    [Tooltip("Array of safe zone GameObjects that replenish medkits when player enters")]
+    [SerializeField] private GameObject[] safeZones;
 
     [Header("Medkit UI References")]
     [Tooltip("Reference to the TextMeshProUGUI component that displays medkit count")]
@@ -57,7 +57,7 @@ public class GameManager : MonoBehaviour
     public int MaxMedkits => maxMedkits;
 
     private Color defaultColor;
-    private SafeZoneTrigger safeZoneTrigger;
+    private SafeZoneTrigger[] safeZoneTriggers;
     #endregion
 
     #region Duration Management
@@ -272,34 +272,47 @@ public class GameManager : MonoBehaviour
         }
         UpdateMedkitUI();
 
-        // Setup safe zone trigger
-        SetupSafeZone();
+        // Setup safe zones
+        SetupSafeZones();
     }
 
-    private void SetupSafeZone()
+    private void SetupSafeZones()
     {
-        if (safeZone != null)
+        if (safeZones == null || safeZones.Length == 0)
         {
-            // Check if SafeZoneTrigger component exists, if not add it
-            safeZoneTrigger = safeZone.GetComponent<SafeZoneTrigger>();
-            if (safeZoneTrigger == null)
+            Debug.LogWarning("[GameManager] No safe zone GameObjects assigned!");
+            return;
+        }
+
+        safeZoneTriggers = new SafeZoneTrigger[safeZones.Length];
+
+        for (int i = 0; i < safeZones.Length; i++)
+        {
+            if (safeZones[i] != null)
             {
-                safeZoneTrigger = safeZone.AddComponent<SafeZoneTrigger>();
+                // Check if SafeZoneTrigger component exists, if not add it
+                safeZoneTriggers[i] = safeZones[i].GetComponent<SafeZoneTrigger>();
+                if (safeZoneTriggers[i] == null)
+                {
+                    safeZoneTriggers[i] = safeZones[i].AddComponent<SafeZoneTrigger>();
+                }
+
+                // Subscribe to the safe zone entry event
+                safeZoneTriggers[i].OnPlayerEnterSafeZone += OnPlayerEnterSafeZone;
+
+                Debug.Log($"[GameManager] Safe zone {i + 1} configured successfully");
             }
-
-            // Subscribe to the safe zone entry event
-            safeZoneTrigger.OnPlayerEnterSafeZone += OnPlayerEnterSafeZone;
-
-            Debug.Log("[GameManager] Safe zone configured successfully");
+            else
+            {
+                Debug.LogWarning($"[GameManager] Safe zone at index {i} is null!");
+            }
         }
-        else
-        {
-            Debug.LogWarning("[GameManager] No safe zone GameObject assigned!");
-        }
+
+        Debug.Log($"[GameManager] Configured {safeZones.Length} safe zone(s)");
     }
 
     /// <summary>
-    /// Called when player enters the safe zone
+    /// Called when player enters any safe zone
     /// </summary>
     private void OnPlayerEnterSafeZone()
     {
@@ -616,9 +629,15 @@ public class GameManager : MonoBehaviour
         isTimerRunning = false;
 
         // Unsubscribe from safe zone events to prevent memory leaks
-        if (safeZoneTrigger != null)
+        if (safeZoneTriggers != null)
         {
-            safeZoneTrigger.OnPlayerEnterSafeZone -= OnPlayerEnterSafeZone;
+            for (int i = 0; i < safeZoneTriggers.Length; i++)
+            {
+                if (safeZoneTriggers[i] != null)
+                {
+                    safeZoneTriggers[i].OnPlayerEnterSafeZone -= OnPlayerEnterSafeZone;
+                }
+            }
         }
     }
 }

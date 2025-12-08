@@ -8,9 +8,6 @@ public class MapSpawner : MonoBehaviour
     [Header("Size of each map (adjust to your prefab size)")]
     public float mapSize = 121f;
 
-    [Header("Safe Zone Prefab")]
-    public GameObject safeZonePrefab;
-
     [Header("Y Position Adjustment")]
     [Tooltip("Y position offset for Flood disaster mode")]
     [SerializeField] private float floodYAdjustment = -3f;
@@ -99,15 +96,9 @@ public class MapSpawner : MonoBehaviour
 
         // STEP 3: Spawn them in a 2x2 grid with Y offset
         GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, yOffset, 55));                              // bottom-left
-        GameObject chunk1 = SpawnMap(selectedMaps[3], new Vector3(55, yOffset, 55 + mapSize));                    // top-left
+        GameObject chunk1 = SpawnMap(selectedMaps[1], new Vector3(55, yOffset, 55 + mapSize));                    // top-left
         GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, yOffset, 55));                    // bottom-right
         GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, yOffset, 55 + mapSize));          // top-right
-
-        // STEP 4: Place the safe zone inside the final chunk
-        if (chunk3 != null)
-        {
-            PlaceSafeZone(chunk3);
-        }
 
         if (debugMode)
         {
@@ -132,33 +123,6 @@ public class MapSpawner : MonoBehaviour
         }
 
         return map;
-    }
-
-    void PlaceSafeZone(GameObject mapChunk)
-    {
-        if (safeZonePrefab == null)
-        {
-            Debug.LogWarning("[MapSpawner] Safe zone prefab is not assigned!");
-            return;
-        }
-
-        // Find the ExitPoint in the mapChunk
-        Transform exitPoint = mapChunk.transform.Find("ExitPoint");
-
-        if (exitPoint == null)
-        {
-            Debug.LogWarning($"[MapSpawner] Chunk {mapChunk.name} does not have an ExitPoint! Add one in the prefab.");
-            Debug.LogWarning("[MapSpawner] Spawning safe zone at chunk center as fallback.");
-            exitPoint = mapChunk.transform; // Use chunk transform as fallback
-        }
-
-        // Instantiate safe zone
-        GameObject safeZone = Instantiate(safeZonePrefab, exitPoint.position, exitPoint.rotation);
-        
-        if (debugMode)
-        {
-            Debug.Log($"[MapSpawner] Spawned safe zone at {exitPoint.position}");
-        }
     }
 
     // Fisher-Yates shuffle algorithm
