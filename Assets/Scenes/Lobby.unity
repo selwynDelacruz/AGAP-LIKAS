@@ -695,7 +695,7 @@ MonoBehaviour:
   minusTaskButton: {fileID: 622967595}
   plusTaskButton: {fileID: 1251569489}
   taskCountText: {fileID: 657737659}
-  disasterDropdown: {fileID: 0}
+  disasterDropdown: {fileID: 1481044545}
   durationDropdown: {fileID: 22599336}
   startGameButton: {fileID: 821209742}
   clientPanel: {fileID: 468490839}
@@ -2147,7 +2147,7 @@ GameObject:
   - component: {fileID: 476405961}
   - component: {fileID: 476405962}
   m_Layer: 0
-  m_Name: IP-ADDRESS
+  m_Name: IPaddressTXT
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
