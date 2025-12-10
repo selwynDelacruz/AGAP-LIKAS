@@ -25,6 +25,12 @@ namespace Lobby
         [SerializeField] private TMP_Dropdown durationDropdown;
         [SerializeField] private Button startGameButton;
 
+        [Header("Leave Lobby UI")]
+        [Tooltip("Leave button for Instructor (closes entire lobby)")]
+        [SerializeField] private Button hostLeaveLobbyButton;
+        [Tooltip("Leave button for Trainee (leaves lobby, returns to LobbyMenu)")]
+        [SerializeField] private Button clientLeaveLobbyButton;
+
         [Header("Client Waiting UI")]
         [SerializeField] private GameObject clientPanel;
         [SerializeField] private TMP_Text waitingMessageText;
@@ -235,6 +241,13 @@ namespace Lobby
                 NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
             }
+
+            // Unsubscribe leave button listeners
+            if (hostLeaveLobbyButton != null)
+                hostLeaveLobbyButton.onClick.RemoveListener(OnHostLeaveLobbyClicked);
+
+            if (clientLeaveLobbyButton != null)
+                clientLeaveLobbyButton.onClick.RemoveListener(OnClientLeaveLobbyClicked);
         }
 
         private void SetupUIBasedOnRole()
@@ -264,6 +277,17 @@ namespace Lobby
                 if (startGameButton != null)
                     startGameButton.onClick.AddListener(OnStartGameClicked);
 
+                // Setup host leave button
+                if (hostLeaveLobbyButton != null)
+                {
+                    hostLeaveLobbyButton.gameObject.SetActive(true);
+                    hostLeaveLobbyButton.onClick.AddListener(OnHostLeaveLobbyClicked);
+                }
+
+                // Hide client leave button for host
+                if (clientLeaveLobbyButton != null)
+                    clientLeaveLobbyButton.gameObject.SetActive(false);
+
                 // Initialize dropdowns to match network variables
                 if (disasterDropdown != null)
                     disasterDropdown.value = disasterIndex.Value;
@@ -288,10 +312,154 @@ namespace Lobby
                 if (waitingMessageText != null)
                     waitingMessageText.text = "Waiting for host to start the game...";
 
+                // Hide host leave button for clients
+                if (hostLeaveLobbyButton != null)
+                    hostLeaveLobbyButton.gameObject.SetActive(false);
+
+                // Setup client leave button
+                if (clientLeaveLobbyButton != null)
+                {
+                    clientLeaveLobbyButton.gameObject.SetActive(true);
+                    clientLeaveLobbyButton.onClick.AddListener(OnClientLeaveLobbyClicked);
+                }
+
                 if (showDebugLogs)
                     Debug.Log("[LobbyRoomManager] Client UI configured");
             }
         }
+
+        #region Leave Lobby Methods
+
+        /// <summary>
+        /// Called when trainee clicks leave button.
+        /// Disconnects from server and returns to LobbyMenu.
+        /// </summary>
+        private void OnClientLeaveLobbyClicked()
+        {
+            if (showDebugLogs)
+                Debug.Log("[LobbyRoomManager] Client leave lobby button clicked");
+
+            LeaveLobby();
+        }
+
+        /// <summary>
+        /// Called when instructor/host clicks leave button.
+        /// Notifies all clients to leave, then shuts down the lobby.
+        /// </summary>
+        private void OnHostLeaveLobbyClicked()
+        {
+            if (showDebugLogs)
+                Debug.Log("[LobbyRoomManager] Host leave lobby button clicked - closing lobby");
+
+            CloseLobby();
+        }
+
+        /// <summary>
+        /// Trainee leaves the lobby and returns to LobbyMenu.
+        /// Can also be called from UI button directly.
+        /// </summary>
+        public void LeaveLobby()
+        {
+            if (NetworkManager.Singleton == null)
+            {
+                Debug.LogWarning("[LobbyRoomManager] NetworkManager not found - loading LobbyMenu directly");
+                SceneManager.LoadScene("LobbyMenu");
+                return;
+            }
+
+            // Don't allow host to use this method - they should use CloseLobby
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            {
+                Debug.LogWarning("[LobbyRoomManager] Host should use CloseLobby() instead of LeaveLobby()");
+                return;
+            }
+
+            if (showDebugLogs)
+                Debug.Log("[LobbyRoomManager] Client leaving lobby - shutting down and returning to LobbyMenu");
+
+            // Shutdown network connection
+            NetworkManager.Singleton.Shutdown();
+
+            // Return to lobby menu
+            SceneManager.LoadScene("LobbyMenu");
+        }
+
+        /// <summary>
+        /// Instructor/Host closes the entire lobby.
+        /// Notifies all connected clients to return to LobbyMenu before shutting down.
+        /// </summary>
+        public void CloseLobby()
+        {
+            if (NetworkManager.Singleton == null)
+            {
+                Debug.LogWarning("[LobbyRoomManager] NetworkManager not found - loading LobbyMenu directly");
+                SceneManager.LoadScene("LobbyMenu");
+                return;
+            }
+
+            // Only host/server can close the lobby
+            if (!NetworkManager.Singleton.IsHost && !NetworkManager.Singleton.IsServer)
+            {
+                Debug.LogWarning("[LobbyRoomManager] Only host can close the lobby. Use LeaveLobby() for clients.");
+                return;
+            }
+
+            if (showDebugLogs)
+                Debug.Log("[LobbyRoomManager] Host closing lobby - notifying all clients");
+
+            // Notify all clients that the lobby is closing
+            NotifyLobbyClosingClientRpc();
+
+            // Give clients a moment to receive the RPC before shutting down
+            Invoke(nameof(ShutdownAndReturnToLobbyMenu), 0.5f);
+        }
+
+        /// <summary>
+        /// RPC sent to all clients when host closes the lobby.
+        /// Clients will disconnect and return to LobbyMenu.
+        /// </summary>
+        [Rpc(SendTo.ClientsAndHost)]
+        private void NotifyLobbyClosingClientRpc()
+        {
+            if (showDebugLogs)
+                Debug.Log("[LobbyRoomManager] Received lobby closing notification");
+
+            // If we're the host, we handle shutdown separately
+            if (NetworkManager.Singleton != null && (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+            {
+                return;
+            }
+
+            // Client: shutdown and return to lobby menu
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+
+            SceneManager.LoadScene("LobbyMenu");
+        }
+
+        /// <summary>
+        /// Called after delay to shutdown host and return to LobbyMenu.
+        /// </summary>
+        private void ShutdownAndReturnToLobbyMenu()
+        {
+            if (showDebugLogs)
+                Debug.Log("[LobbyRoomManager] Host shutting down network and returning to LobbyMenu");
+
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+
+            // Clear lobby code from PlayerPrefs
+            PlayerPrefs.DeleteKey("LobbyCode");
+            PlayerPrefs.Save();
+
+            SceneManager.LoadScene("LobbyMenu");
+        }
+
+        #endregion
 
         #region Host Controls
 
