@@ -875,14 +875,127 @@ public class GameManager : NetworkBehaviour
         
         UpdateAllTimerDisplays(); // Ensure it shows 00:00
         
-        // Load result scene when time is up
-        LoadResultScene();
+        // Save and sync points before loading result scene
+        SaveAndSyncPointsBeforeResult();
     }
 
     /// <summary>
     /// Loads the result scene
     /// </summary>
     private void LoadResultScene()
+    {
+        // Save and sync points before loading result scene
+        SaveAndSyncPointsBeforeResult();
+    }
+
+    /// <summary>
+    /// RPC that sends actual point values from server to all clients AND tells them to load Result scene
+    /// </summary>
+    [Rpc(SendTo.ClientsAndHost)]
+    private void SyncPointsAndLoadResultRpc(int totalPoints, int rescuedPoints, int healedPoints, int rubblePoints)
+    {
+        // Save the SERVER's point values to client's PlayerPrefs
+        PlayerPrefs.SetInt("FinalPoints_Total", totalPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rescued", rescuedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Healed", healedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rubble", rubblePoints);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[GameManager] Received points and loading Result - Total: {totalPoints}, Rescued: {rescuedPoints}, Healed: {healedPoints}, Rubble: {rubblePoints}");
+
+        // Load the Result scene on this client
+        StartCoroutine(LoadResultSceneAfterShortDelay());
+    }
+
+    private IEnumerator LoadResultSceneAfterShortDelay()
+    {
+        // Small delay to ensure PlayerPrefs is saved
+        yield return new WaitForSeconds(0.1f);
+        ActuallyLoadResultScene();
+    }
+
+    /// <summary>
+    /// Saves points to PlayerPrefs and syncs to all clients before loading Result scene
+    /// </summary>
+    private void SaveAndSyncPointsBeforeResult()
+    {
+        if (IsServer)
+        {
+            // Get points from server's PointManager
+            int totalPoints = 0;
+            int rescuedPoints = 0;
+            int healedPoints = 0;
+            int rubblePoints = 0;
+
+            if (PointManager.Instance != null)
+            {
+                var pointLog = PointManager.Instance.GetPointLog();
+                totalPoints = PointManager.Instance.GetTotalPoints();
+                rescuedPoints = pointLog.ContainsKey("Rescued Victim") ? pointLog["Rescued Victim"] : 0;
+                healedPoints = pointLog.ContainsKey("Healed Victim") ? pointLog["Healed Victim"] : 0;
+                rubblePoints = pointLog.ContainsKey("Cleared Rubble") ? pointLog["Cleared Rubble"] : 0;
+            }
+
+            // Server saves points to PlayerPrefs
+            PlayerPrefs.SetInt("FinalPoints_Total", totalPoints);
+            PlayerPrefs.SetInt("FinalPoints_Rescued", rescuedPoints);
+            PlayerPrefs.SetInt("FinalPoints_Healed", healedPoints);
+            PlayerPrefs.SetInt("FinalPoints_Rubble", rubblePoints);
+            PlayerPrefs.Save();
+
+            Debug.Log($"[GameManager] Server saved points - Total: {totalPoints}, Rescued: {rescuedPoints}, Healed: {healedPoints}, Rubble: {rubblePoints}");
+
+            // Broadcast points AND tell ALL clients to load Result scene
+            SyncPointsAndLoadResultRpc(totalPoints, rescuedPoints, healedPoints, rubblePoints);
+        }
+        else
+        {
+            // Client should wait for RPC - but if called directly, just load scene
+            Debug.LogWarning("[GameManager] SaveAndSyncPointsBeforeResult called on client - waiting for server RPC");
+        }
+    }
+
+    /// <summary>
+    /// Saves current points from PointManager to PlayerPrefs
+    /// </summary>
+    private void SavePointsToPlayerPrefs()
+    {
+        if (PointManager.Instance == null)
+        {
+            Debug.LogWarning("[GameManager] PointManager not found, cannot save points!");
+            return;
+        }
+
+        var pointLog = PointManager.Instance.GetPointLog();
+        int totalPoints = PointManager.Instance.GetTotalPoints();
+
+        // Save individual point categories
+        int rescuedPoints = pointLog.ContainsKey("Rescued Victim") ? pointLog["Rescued Victim"] : 0;
+        int healedPoints = pointLog.ContainsKey("Healed Victim") ? pointLog["Healed Victim"] : 0;
+        int rubblePoints = pointLog.ContainsKey("Cleared Rubble") ? pointLog["Cleared Rubble"] : 0;
+
+        PlayerPrefs.SetInt("FinalPoints_Total", totalPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rescued", rescuedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Healed", healedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rubble", rubblePoints);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[GameManager] Server saved points to PlayerPrefs - Total: {totalPoints}, Rescued: {rescuedPoints}, Healed: {healedPoints}, Rubble: {rubblePoints}");
+    }
+
+    /// <summary>
+    /// RPC to notify all clients that the instructor is ending the game
+    /// </summary>
+    [Rpc(SendTo.ClientsAndHost)]
+    private void NotifyGameEndingRpc()
+    {
+        Debug.Log("[GameManager] Instructor has ended the session!");
+    }
+
+    /// <summary>
+    /// Actually loads the Result scene
+    /// </summary>
+    private void ActuallyLoadResultScene()
     {
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -930,6 +1043,30 @@ public class GameManager : NetworkBehaviour
     {
         if (totalDurationInSeconds <= 0) return 0f;
         return 1f - ((float)remainingTimeInSeconds / (float)totalDurationInSeconds);
+    }
+    #endregion
+
+    #region Instructor Controls
+    /// <summary>
+    /// Called by InstructorEndGameButton to end the game early
+    /// Only works for the instructor/host
+    /// </summary>
+    public void InstructorEndGame()
+    {
+        // Security check - only instructor/host can end game
+        if (!IsInstructor())
+        {
+            Debug.LogWarning("[GameManager] InstructorEndGame called by non-instructor!");
+            return;
+        }
+
+        Debug.Log("[GameManager] Instructor is ending the game early!");
+
+        // Stop the timer
+        isTimerRunning = false;
+
+        // Use the existing save and sync flow (this will sync points AND load scene for all clients)
+        SaveAndSyncPointsBeforeResult();
     }
     #endregion
 

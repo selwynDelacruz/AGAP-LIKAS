@@ -12,6 +12,9 @@ public class SimulationResultSummary : MonoBehaviour
     [Header("UI Labels/Parents (Optional)")]
     public GameObject rubbleDataParent;     // Parent GameObject containing rubble UI elements
 
+    [Header("Debug")]
+    [SerializeField] private bool showDebugLogs = true;
+
     void Start()
     {
         DisplayPointResults();
@@ -22,41 +25,91 @@ public class SimulationResultSummary : MonoBehaviour
         // Get the selected disaster type from PlayerPrefs (set by LobbyManager)
         string disasterType = PlayerPrefs.GetString("DisasterType", "TestKen");
 
-        // Check if PointManager exists
-        if (PointManager.Instance == null)
+        // Try to get points from PlayerPrefs first (synced by GameManager before scene load)
+        int totalPoints = PlayerPrefs.GetInt("FinalPoints_Total", -1);
+        
+        // If PlayerPrefs has synced data, use it
+        if (totalPoints >= 0)
         {
-            Debug.LogError("PointManager not found! Make sure it persists across scenes.");
-            SetDefaultValues(disasterType);
+            DisplayFromPlayerPrefs(disasterType);
             return;
         }
 
-        // Get the point log from PointManager
+        // Fallback to PointManager if PlayerPrefs doesn't have data
+        if (PointManager.Instance != null)
+        {
+            DisplayFromPointManager(disasterType);
+            return;
+        }
+
+        // No data available
+        Debug.LogError("[SimulationResultSummary] No point data found! Neither PlayerPrefs nor PointManager available.");
+        SetDefaultValues(disasterType);
+    }
+
+    /// <summary>
+    /// Display results from PlayerPrefs (synced by server before scene load)
+    /// </summary>
+    private void DisplayFromPlayerPrefs(string disasterType)
+    {
+        int totalPoints = PlayerPrefs.GetInt("FinalPoints_Total", 0);
+        int rescuedPoints = PlayerPrefs.GetInt("FinalPoints_Rescued", 0);
+        int healedPoints = PlayerPrefs.GetInt("FinalPoints_Healed", 0);
+        int rubblePoints = PlayerPrefs.GetInt("FinalPoints_Rubble", 0);
+
+        // Calculate counts based on points
+        int rescuedCount = rescuedPoints / 20;  // 20 points per rescued victim
+        int medkitCount = healedPoints / 10;     // 10 points per healed victim
+        int rubbleCount = rubblePoints / 10;     // 10 points per cleared rubble
+
+        if (showDebugLogs)
+        {
+            Debug.Log($"[SimulationResultSummary] Reading from PlayerPrefs - Total: {totalPoints}, Rescued: {rescuedCount}, Medkits: {medkitCount}, Rubble: {rubbleCount}");
+        }
+
+        DisplayResults(disasterType, rescuedCount, rubbleCount, medkitCount, totalPoints);
+    }
+
+    /// <summary>
+    /// Display results from PointManager (fallback for non-networked or if PlayerPrefs not set)
+    /// </summary>
+    private void DisplayFromPointManager(string disasterType)
+    {
         var pointLog = PointManager.Instance.GetPointLog();
         int totalPoints = PointManager.Instance.GetTotalPoints();
 
         // Calculate counts based on points
-        // Rescued Victim = 20 points each
         int rescuedCount = 0;
         if (pointLog.ContainsKey("Rescued Victim"))
         {
             rescuedCount = pointLog["Rescued Victim"] / 20;
         }
 
-        // Cleared Rubble = 10 points each
         int rubbleCount = 0;
         if (pointLog.ContainsKey("Cleared Rubble"))
         {
             rubbleCount = pointLog["Cleared Rubble"] / 10;
         }
 
-        // Healed Victim (Give Medkit to Victim) = 10 points each
         int medkitCount = 0;
         if (pointLog.ContainsKey("Healed Victim"))
         {
             medkitCount = pointLog["Healed Victim"] / 10;
         }
 
-        // Display data based on disaster type
+        if (showDebugLogs)
+        {
+            Debug.Log($"[SimulationResultSummary] Reading from PointManager - Total: {totalPoints}, Rescued: {rescuedCount}, Medkits: {medkitCount}, Rubble: {rubbleCount}");
+        }
+
+        DisplayResults(disasterType, rescuedCount, rubbleCount, medkitCount, totalPoints);
+    }
+
+    /// <summary>
+    /// Common method to display results based on disaster type
+    /// </summary>
+    private void DisplayResults(string disasterType, int rescuedCount, int rubbleCount, int medkitCount, int totalPoints)
+    {
         if (disasterType == "Earthquake")
         {
             // EARTHQUAKE: Show Rescued, Rubble, Medkit, Total
@@ -120,7 +173,7 @@ public class SimulationResultSummary : MonoBehaviour
 
     private void SetDefaultValues(string disasterType)
     {
-        // Set all values to 0 if PointManager is missing
+        // Set all values to 0 if no data available
         if (rescuedVictimDataText != null) rescuedVictimDataText.text = "0";
         if (medkitDataText != null) medkitDataText.text = "0";
         if (totalPointsDataText != null) totalPointsDataText.text = "0";
