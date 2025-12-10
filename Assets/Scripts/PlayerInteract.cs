@@ -115,12 +115,33 @@ public class PlayerInteract : NetworkBehaviour
         // Get the NetworkObject if it exists
         NetworkObject networkObject = interactableMono.GetComponent<NetworkObject>();
 
+        // Check if this is a RubbleInteractable for special handling
+        RubbleInteractable rubble = interactableMono.GetComponent<RubbleInteractable>();
+        bool isRubble = rubble != null;
+
         if (networkObject != null)
         {
-            // Network object - use ServerRpc
-            if (showDebugLogs)
+            // CRITICAL: Check if NetworkObject is actually spawned on the network
+            if (!networkObject.IsSpawned)
             {
-                Debug.Log($"[PlayerInteract] Networked interactable detected: {interactableMono.name} (NetworkObjectId: {networkObject.NetworkObjectId})");
+                Debug.LogError($"[PlayerInteract] NetworkObject on '{interactableMono.name}' exists but is NOT SPAWNED on the network! " +
+                    $"IsSpawned={networkObject.IsSpawned}, NetworkObjectId={networkObject.NetworkObjectId}. " +
+                    "The object must be spawned via netObj.Spawn() on the server.");
+                
+                if (isRubble)
+                {
+                    Debug.LogError("[PlayerInteract] RUBBLE FIX: Make sure BreakObject.cs spawns the breakedObjectPrefab using netObj.Spawn(). " +
+                        "Also ensure: 1) breakedObjectPrefab has NetworkObject component, 2) Prefab is in NetworkManager's Network Prefabs list, " +
+                        "3) BreakObject itself has NetworkObject and is network-spawned.");
+                }
+                return;
+            }
+
+            // Network object is properly spawned - use ServerRpc
+            if (showDebugLogs || isRubble) // Always log rubble for debugging
+            {
+                Debug.Log($"[PlayerInteract] Networked interactable detected: {interactableMono.name} " +
+                    $"(NetworkObjectId: {networkObject.NetworkObjectId}, IsSpawned: {networkObject.IsSpawned})");
             }
 
             // Check type and call appropriate ServerRpc
@@ -132,8 +153,9 @@ public class PlayerInteract : NetworkBehaviour
             {
                 RequestMedkitUseServerRpc(networkObject.NetworkObjectId);
             }
-            else if (interactableMono.GetComponent<RubbleInteractable>() != null)
+            else if (isRubble)
             {
+                Debug.Log($"[PlayerInteract] Sending RequestRubbleClearServerRpc for NetworkObjectId: {networkObject.NetworkObjectId}");
                 RequestRubbleClearServerRpc(networkObject.NetworkObjectId);
             }
             else
@@ -144,7 +166,15 @@ public class PlayerInteract : NetworkBehaviour
         }
         else
         {
-            // Non-networked object - interact locally (backwards compatibility)
+            // No NetworkObject component at all
+            if (isRubble)
+            {
+                Debug.LogError($"[PlayerInteract] Rubble '{interactableMono.name}' has NO NetworkObject component! " +
+                    "Add NetworkObject to the rubble prefab and ensure it's network-spawned.");
+                return;
+            }
+
+            // Non-networked object - interact locally (backwards compatibility for non-rubble)
             if (showDebugLogs)
             {
                 Debug.LogWarning($"[PlayerInteract] Non-networked interactable: {interactableMono.name}. Using local interaction.");
@@ -287,15 +317,21 @@ public class PlayerInteract : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestRubbleClearServerRpc(ulong networkObjectId)
     {
-        if (showDebugLogs)
-        {
-            Debug.Log($"[PlayerInteract] Server: Processing rubble clear request for NetworkObjectId: {networkObjectId}");
-        }
+        // Always log rubble interactions for debugging
+        Debug.Log($"[PlayerInteract] Server: Processing rubble clear request for NetworkObjectId: {networkObjectId}");
 
         // Find the NetworkObject
         if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject netObj))
         {
-            Debug.LogWarning($"[PlayerInteract] Server: NetworkObject {networkObjectId} not found!");
+            Debug.LogError($"[PlayerInteract] Server: NetworkObject {networkObjectId} NOT FOUND in SpawnedObjects! " +
+                $"Total spawned objects: {NetworkManager.Singleton.SpawnManager.SpawnedObjects.Count}");
+            
+            // Debug: List all spawned objects
+            Debug.Log("[PlayerInteract] Server: Currently spawned NetworkObjects:");
+            foreach (var kvp in NetworkManager.Singleton.SpawnManager.SpawnedObjects)
+            {
+                Debug.Log($"  - ID: {kvp.Key}, Name: {kvp.Value.gameObject.name}");
+            }
             return;
         }
 
@@ -303,27 +339,27 @@ public class PlayerInteract : NetworkBehaviour
         RubbleInteractable rubble = netObj.GetComponent<RubbleInteractable>();
         if (rubble == null)
         {
-            Debug.LogWarning($"[PlayerInteract] Server: Object {networkObjectId} is not a RubbleInteractable!");
+            Debug.LogError($"[PlayerInteract] Server: Object {networkObjectId} ({netObj.gameObject.name}) is NOT a RubbleInteractable!");
             return;
         }
+
+        Debug.Log($"[PlayerInteract] Server: Found rubble '{netObj.gameObject.name}'. Clearing...");
 
         // Award points on server
         if (PointManager.Instance != null)
         {
             PointManager.Instance.AddPoints("Cleared Rubble", 10);
-            if (showDebugLogs)
-            {
-                Debug.Log($"[PlayerInteract] Server: Awarded 10 points for clearing rubble");
-            }
+            Debug.Log($"[PlayerInteract] Server: Awarded 10 points for clearing rubble");
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerInteract] Server: PointManager.Instance is null! Points not awarded.");
         }
 
         // Despawn and destroy the rubble NetworkObject
         netObj.Despawn(true);
 
-        if (showDebugLogs)
-        {
-            Debug.Log($"[PlayerInteract] Server: Rubble cleared and despawned");
-        }
+        Debug.Log($"[PlayerInteract] Server: Rubble cleared and despawned successfully!");
     }
 
     /// <summary>
