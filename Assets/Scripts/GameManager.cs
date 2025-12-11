@@ -40,7 +40,13 @@ public class GameManager : NetworkBehaviour
     #region Medkit Management
     [Header("Medkit Settings")]
     [SerializeField] private int maxMedkits = 2;
-    [SerializeField] private int currentMedkits = 2;
+    
+    // Make currentMedkits networked so all clients see the same value
+    private NetworkVariable<int> currentMedkitsNetworked = new NetworkVariable<int>(
+        2,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
 
     [Header("Safe Zone")]
     [Tooltip("Safe zone GameObject that replenishes medkits when player enters")]
@@ -60,7 +66,7 @@ public class GameManager : NetworkBehaviour
     [SerializeField] private float replenishBlinkDuration = 0.5f;
 
     // Public properties
-    public int CurrentMedkits => currentMedkits;
+    public int CurrentMedkits => currentMedkitsNetworked.Value;
     public int MaxMedkits => maxMedkits;
 
     private Color defaultColor;
@@ -149,6 +155,9 @@ public class GameManager : NetworkBehaviour
         // Subscribe to saved victims changes for UI updates
         savedVictimsNetworked.OnValueChanged += OnSavedVictimsChanged;
         
+        // Subscribe to medkit changes for UI updates
+        currentMedkitsNetworked.OnValueChanged += OnMedkitsChanged;
+        
         if (debugRoleUI)
         {
             Debug.Log($"[GameManager] OnNetworkSpawn - IsServer: {IsServer}, IsClient: {IsClient}");
@@ -161,6 +170,7 @@ public class GameManager : NetworkBehaviour
         
         // Unsubscribe from events
         savedVictimsNetworked.OnValueChanged -= OnSavedVictimsChanged;
+        currentMedkitsNetworked.OnValueChanged -= OnMedkitsChanged;
     }
 
     private void OnSavedVictimsChanged(int previousValue, int newValue)
@@ -172,6 +182,12 @@ public class GameManager : NetworkBehaviour
         {
             Debug.Log("[GameManager] All victims saved!");
         }
+    }
+
+    private void OnMedkitsChanged(int previousValue, int newValue)
+    {
+        Debug.Log($"[GameManager] Medkits updated: {previousValue} -> {newValue}/{maxMedkits}");
+        UpdateMedkitUI();
     }
 
     void Update()
@@ -601,6 +617,13 @@ public class GameManager : NetworkBehaviour
         {
             defaultColor = medkitCountText.color;
         }
+        
+        // Initialize networked medkit count on server
+        if (IsServer)
+        {
+            currentMedkitsNetworked.Value = maxMedkits;
+        }
+        
         UpdateMedkitUI();
 
         // Setup safe zone trigger
@@ -634,6 +657,10 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     private void OnPlayerEnterSafeZone()
     {
+        // Only handle on server
+        if (!IsServer)
+            return;
+
         // Check if all victims are saved
         if (AreAllVictimsSaved())
         {
@@ -649,11 +676,18 @@ public class GameManager : NetworkBehaviour
 
     public bool UseMedkit()
     {
-        if (currentMedkits <= 0)
+        // Only server can modify the networked variable
+        if (!IsServer)
+        {
+            Debug.LogWarning("[GameManager] UseMedkit called on client - should only be called on server!");
+            return false;
+        }
+
+        if (currentMedkitsNetworked.Value <= 0)
             return false;
 
-        currentMedkits--;
-        UpdateMedkitUI();
+        currentMedkitsNetworked.Value--;
+        // UI will update automatically via OnMedkitsChanged callback
         return true;
     }
 
@@ -662,14 +696,20 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     public void ReplenishMedkits()
     {
-        int medkitsToAdd = maxMedkits - currentMedkits;
+        // Only server can modify the networked variable
+        if (!IsServer)
+        {
+            Debug.LogWarning("[GameManager] ReplenishMedkits called on client - should only be called on server!");
+            return;
+        }
+
+        int medkitsToAdd = maxMedkits - currentMedkitsNetworked.Value;
 
         if (medkitsToAdd > 0)
         {
-            currentMedkits = maxMedkits;
-            UpdateMedkitUI();
-            TriggerReplenishEffect();
-            Debug.Log($"[GameManager] Replenished {medkitsToAdd} medkit(s). Current: {currentMedkits}/{maxMedkits}");
+            currentMedkitsNetworked.Value = maxMedkits;
+            TriggerReplenishEffectClientRpc();
+            Debug.Log($"[GameManager] Replenished {medkitsToAdd} medkit(s). Current: {currentMedkitsNetworked.Value}/{maxMedkits}");
         }
         else
         {
@@ -681,7 +721,7 @@ public class GameManager : NetworkBehaviour
     {
         if (medkitCountText != null)
         {
-            medkitCountText.text = "Medkit: " + currentMedkits + "/" + maxMedkits;
+            medkitCountText.text = "Medkit: " + currentMedkitsNetworked.Value + "/" + maxMedkits;
         }
     }
 
@@ -690,13 +730,27 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     public void TriggerBlinkEffect()
     {
+        if (IsServer)
+        {
+            TriggerBlinkEffectClientRpc();
+        }
+        else
+        {
+            StartCoroutine(BlinkText());
+        }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerBlinkEffectClientRpc()
+    {
         StartCoroutine(BlinkText());
     }
 
     /// <summary>
     /// Triggers a green blink effect when medkits are replenished
     /// </summary>
-    private void TriggerReplenishEffect()
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerReplenishEffectClientRpc()
     {
         StartCoroutine(ReplenishBlinkText());
     }

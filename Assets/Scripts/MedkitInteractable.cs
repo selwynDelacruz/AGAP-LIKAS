@@ -99,9 +99,10 @@ public class MedkitInteractable : NetworkBehaviour, IInteractable
                     PointManager.Instance.AddPoints("Healed Victim", 10);
                 }
 
-                // Optionally notify the requesting client (could use ClientRpc for UI feedback)
-                Debug.Log($"[MedkitInteractable] Client {requestingClientId} healed victim {gameObject.name}.");
+                Debug.Log($"[MedkitInteractable] Client {requestingClientId} healed victim {gameObject.name}. Ready for rescue.");
             }
+            // DO NOT call return here - let it fall through to check if we should continue
+            // But we DO return after Stage 1 to prevent same-frame Stage 2
             return;
         }
 
