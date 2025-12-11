@@ -119,6 +119,10 @@ public class PlayerInteract : NetworkBehaviour
         RubbleInteractable rubble = interactableMono.GetComponent<RubbleInteractable>();
         bool isRubble = rubble != null;
 
+        // Check if this is a MedkitInteractable - it handles its own network logic
+        MedkitInteractable medkitInteractable = interactableMono.GetComponent<MedkitInteractable>();
+        bool isMedkitInteractable = medkitInteractable != null;
+
         if (networkObject != null)
         {
             // CRITICAL: Check if NetworkObject is actually spawned on the network
@@ -144,14 +148,22 @@ public class PlayerInteract : NetworkBehaviour
                     $"(NetworkObjectId: {networkObject.NetworkObjectId}, IsSpawned: {networkObject.IsSpawned})");
             }
 
-            // Check type and call appropriate ServerRpc
+            // MedkitInteractable handles its own two-stage interaction via ServerRpc
+            if (isMedkitInteractable)
+            {
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[PlayerInteract] MedkitInteractable detected - using its own Interact() method for two-stage process");
+                }
+                // Call Interact() which will handle the ServerRpc internally
+                medkitInteractable.Interact(transform);
+                return;
+            }
+
+            // Check type and call appropriate ServerRpc for other types
             if (interactableMono.GetComponent<NPCInteractable>() != null)
             {
                 RequestVictimRescueServerRpc(networkObject.NetworkObjectId);
-            }
-            else if (interactableMono.GetComponent<MedkitInteractable>() != null)
-            {
-                RequestMedkitUseServerRpc(networkObject.NetworkObjectId);
             }
             else if (isRubble)
             {
@@ -237,81 +249,6 @@ public class PlayerInteract : NetworkBehaviour
     }
 
     /// <summary>
-    /// Server RPC to use medkit on a victim
-    /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestMedkitUseServerRpc(ulong networkObjectId, ServerRpcParams rpcParams = default)
-    {
-        ulong clientId = rpcParams.Receive.SenderClientId;
-
-        if (showDebugLogs)
-        {
-            Debug.Log($"[PlayerInteract] Server: Processing medkit use request from client {clientId} for NetworkObjectId: {networkObjectId}");
-        }
-
-        // Validate GameManager exists
-        if (GameManager.Instance == null)
-        {
-            Debug.LogError("[PlayerInteract] Server: GameManager not found!");
-            NotifyMedkitUseFailedClientRpc(new ClientRpcParams
-            {
-                Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } }
-            });
-            return;
-        }
-
-        // Check if player has medkits
-        if (GameManager.Instance.CurrentMedkits <= 0)
-        {
-            if (showDebugLogs)
-            {
-                Debug.LogWarning($"[PlayerInteract] Server: Client {clientId} has no medkits available");
-            }
-            NotifyMedkitUseFailedClientRpc(new ClientRpcParams
-            {
-                Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } }
-            });
-            return;
-        }
-
-        // Use medkit
-        bool success = GameManager.Instance.UseMedkit();
-        if (!success)
-        {
-            NotifyMedkitUseFailedClientRpc(new ClientRpcParams
-            {
-                Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } }
-            });
-            return;
-        }
-
-        // Find the NetworkObject
-        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject netObj))
-        {
-            Debug.LogWarning($"[PlayerInteract] Server: NetworkObject {networkObjectId} not found!");
-            return;
-        }
-
-        // Award points on server
-        if (PointManager.Instance != null)
-        {
-            PointManager.Instance.AddPoints("Healed Victim", 10);
-            if (showDebugLogs)
-            {
-                Debug.Log($"[PlayerInteract] Server: Awarded 10 points for healing victim");
-            }
-        }
-
-        // Despawn the healed victim
-        netObj.Despawn(true);
-
-        if (showDebugLogs)
-        {
-            Debug.Log($"[PlayerInteract] Server: Medkit used successfully, victim healed and despawned");
-        }
-    }
-
-    /// <summary>
     /// Server RPC to clear rubble
     /// </summary>
     [ServerRpc(RequireOwnership = false)]
@@ -386,23 +323,6 @@ public class PlayerInteract : NetworkBehaviour
         {
             // Call interact on server
             interactable.Interact(transform);
-        }
-    }
-
-    #endregion
-
-    #region Client RPCs
-
-    /// <summary>
-    /// Notifies a specific client that medkit use failed
-    /// </summary>
-    [ClientRpc]
-    private void NotifyMedkitUseFailedClientRpc(ClientRpcParams clientRpcParams = default)
-    {
-        Debug.Log("[PlayerInteract] Medkit use failed! You don't have any medkits.");
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.TriggerBlinkEffect();
         }
     }
 
