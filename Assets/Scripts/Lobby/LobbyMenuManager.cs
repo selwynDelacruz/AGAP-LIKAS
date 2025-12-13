@@ -198,6 +198,41 @@ namespace Lobby
                 return;
             }
 
+            // Ensure NetworkManager is not already in an active state from a previous session
+            if (NetworkManager.Singleton.IsListening)
+            {
+                if (showDebugLogs)
+                    Debug.Log("[LobbyMenuManager] NetworkManager was still listening from previous session. Shutting down first...");
+                NetworkManager.Singleton.Shutdown();
+                // Small delay needed - use Invoke to retry after shutdown
+                Invoke(nameof(CreateLobbyAfterShutdown), 0.2f);
+                return;
+            }
+
+            CreateLobbyInternal();
+        }
+
+        /// <summary>
+        /// Called after shutdown to create lobby
+        /// </summary>
+        private void CreateLobbyAfterShutdown()
+        {
+            if (NetworkManager.Singleton.IsListening)
+            {
+                Debug.LogError("[LobbyMenuManager] NetworkManager still listening after shutdown!");
+                SetStatus("Error: Network busy. Try again.", StatusType.Error);
+                if (createLobbyButton != null)
+                    createLobbyButton.interactable = true;
+                return;
+            }
+            CreateLobbyInternal();
+        }
+
+        /// <summary>
+        /// Internal method that actually creates the lobby
+        /// </summary>
+        private void CreateLobbyInternal()
+        {
             // Generate lobby code
             currentLobbyCode = LobbyCodeGenerator.GenerateCode();
             
