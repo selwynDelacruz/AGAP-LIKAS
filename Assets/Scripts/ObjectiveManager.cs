@@ -35,9 +35,16 @@ public class ObjectiveManager : NetworkBehaviour
 
     [Tooltip("Status text showing ready count (e.g., '1/3 Players Ready')")]
     [SerializeField] private TMP_Text readyStatusText;
+    
+    [Tooltip("Text shown when player is waiting for others to be ready")]
+    [SerializeField] private TMP_Text waitingForOthersText;
 
     [Tooltip("Optional: Countdown text shown before game starts")]
     [SerializeField] private TMP_Text countdownText;
+    
+    [Header("User UI Reference")]
+    [Tooltip("The main User UI panel to hide during objective display")]
+    [SerializeField] private GameObject userUIPanel;
     #endregion
 
     #region Content Settings
@@ -136,11 +143,25 @@ public class ObjectiveManager : NetworkBehaviour
         {
             objectivePanel.SetActive(true);
         }
+        
+        // Hide UserUI while objective panel is showing
+        if (userUIPanel != null)
+        {
+            userUIPanel.SetActive(false);
+            if (showDebugLogs)
+                Debug.Log("[ObjectiveManager] UserUI hidden during objective display");
+        }
 
         // Hide countdown initially
         if (countdownText != null)
         {
             countdownText.gameObject.SetActive(false);
+        }
+        
+        // Hide waiting text initially
+        if (waitingForOthersText != null)
+        {
+            waitingForOthersText.gameObject.SetActive(false);
         }
 
         // Unlock cursor for UI interaction
@@ -259,7 +280,7 @@ public class ObjectiveManager : NetworkBehaviour
         // Set initial button text
         if (readyButtonText != null)
         {
-            readyButtonText.text = "I'M READY";
+            readyButtonText.text = "Ready";
         }
     }
 
@@ -281,22 +302,40 @@ public class ObjectiveManager : NetworkBehaviour
 
         localPlayerIsReady = true;
 
-        // Update button appearance
+        // Hide title, description, and objectives text
+        if (titleText != null)
+        {
+            titleText.gameObject.SetActive(false);
+        }
+        
+        if (descriptionText != null)
+        {
+            descriptionText.gameObject.SetActive(false);
+        }
+        
+        if (objectivesListText != null)
+        {
+            objectivesListText.gameObject.SetActive(false);
+        }
+
+        // Disable ready button (don't change its text)
         if (readyButton != null)
         {
             readyButton.interactable = false;
         }
-
-        if (readyButtonText != null)
+        
+        // Show "Waiting for others..." text
+        if (waitingForOthersText != null)
         {
-            readyButtonText.text = "WAITING FOR OTHERS...";
+            waitingForOthersText.gameObject.SetActive(true);
+            waitingForOthersText.text = "WAITING FOR OTHERS...";
         }
 
         // Notify server that this player is ready
         PlayerReadyServerRpc();
 
         if (showDebugLogs)
-            Debug.Log("[ObjectiveManager] Local player marked as ready");
+            Debug.Log("[ObjectiveManager] Local player marked as ready - hiding objective content");
     }
 
     /// <summary>
@@ -427,6 +466,18 @@ public class ObjectiveManager : NetworkBehaviour
         {
             readyButton.gameObject.SetActive(false);
         }
+        
+        // Hide ready status during countdown
+        if (readyStatusText != null)
+        {
+            readyStatusText.gameObject.SetActive(false);
+        }
+        
+        // Hide waiting text during countdown
+        if (waitingForOthersText != null)
+        {
+            waitingForOthersText.gameObject.SetActive(false);
+        }
 
         // Countdown loop (use unscaled time since Time.timeScale is 0)
         for (int i = countdownSeconds; i > 0; i--)
@@ -485,6 +536,14 @@ public class ObjectiveManager : NetworkBehaviour
         {
             objectivePanel.SetActive(false);
         }
+        
+        // Show UserUI now that game is starting
+        if (userUIPanel != null)
+        {
+            userUIPanel.SetActive(true);
+            if (showDebugLogs)
+                Debug.Log("[ObjectiveManager] UserUI shown - game starting");
+        }
 
         // Resume game time
         Time.timeScale = 1f;
@@ -531,6 +590,12 @@ public class ObjectiveManager : NetworkBehaviour
         if (objectivePanel != null)
         {
             objectivePanel.SetActive(false);
+        }
+        
+        // Show UserUI for late joiners
+        if (userUIPanel != null)
+        {
+            userUIPanel.SetActive(true);
         }
 
         // Resume game time

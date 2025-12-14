@@ -702,7 +702,7 @@ MonoBehaviour:
   clientLeaveLobbyButton: {fileID: 1886540894}
   clientPanel: {fileID: 468490839}
   waitingMessageText: {fileID: 1003740011}
-  lobbyCodeText: {fileID: 1868668081}
+  lobbyCodeText: {fileID: 0}
   hostIpText: {fileID: 476405962}
   connectedPlayersText: {fileID: 394098160}
   instructorNameText: {fileID: 1520616860}
