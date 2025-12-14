@@ -32,6 +32,7 @@ public class PauseMenu : NetworkBehaviour
 
     private float originalTimeScale = 1f;
     private bool isInstructor = false;
+    private bool isReturningToMainMenu = false; // Prevent multiple calls
 
     public override void OnNetworkSpawn()
     {
@@ -321,17 +322,17 @@ public class PauseMenu : NetworkBehaviour
             controller.LockCameraPosition = shouldLock;
 
             if (showDebugLogs)
-                Debug.Log($"[PauseMenu] Camera lock set to {shouldLock} for player: {controller.gameObject.name}");
+                Debug.Log($"[PauseMenu] Camera lock set to {shouldLock} for player controller: {controller.gameObject.name}");
         }
 
-        // Also handle BoatController if players are in boats
+        // FIXED: Also lock BoatController cameras
         BoatController[] boatControllers = FindObjectsOfType<BoatController>();
         foreach (var boat in boatControllers)
         {
-            // BoatController might have similar camera lock functionality
-            // Adjust based on your BoatController implementation
+            boat.LockCameraPosition = shouldLock;
+
             if (showDebugLogs)
-                Debug.Log($"[PauseMenu] Found boat controller: {boat.gameObject.name}");
+                Debug.Log($"[PauseMenu] Camera lock set to {shouldLock} for boat controller: {boat.gameObject.name}");
         }
     }
 
@@ -359,14 +360,55 @@ public class PauseMenu : NetworkBehaviour
 
     /// <summary>
     /// Called when Main Menu button is clicked
-    /// Handles multiplayer cleanup and returns to main menu
+    /// Handles multiplayer cleanup and returns ALL PLAYERS to main menu
     /// </summary>
     private void OnMainMenuClicked()
     {
-        if (showDebugLogs)
-            Debug.Log("[PauseMenu] Main Menu button clicked");
+        // Only instructor can trigger return to main menu
+        if (restrictToInstructorOnly && !isInstructor)
+        {
+            if (showDebugLogs)
+                Debug.LogWarning("[PauseMenu] Main Menu denied - Only instructors can return to main menu");
+            return;
+        }
 
-        // Resume time before transitioning (important for scene loading)
+        if (showDebugLogs)
+            Debug.Log("[PauseMenu] Main Menu button clicked - Requesting all players return to main menu");
+
+        // Request server to signal all clients to return to main menu
+        RequestReturnToMainMenuServerRpc();
+    }
+
+    /// <summary>
+    /// ServerRpc to request all clients return to main menu
+    /// FIXED: Now triggers ClientRpc to ensure all clients receive the signal
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestReturnToMainMenuServerRpc()
+    {
+        if (showDebugLogs)
+            Debug.Log("[PauseMenu] Server received request to return all players to main menu. Notifying all clients...");
+
+        // Immediately call ClientRpc to notify ALL clients (including host)
+        ReturnToMainMenuClientRpc();
+    }
+
+    /// <summary>
+    /// ClientRpc called on ALL clients to return to main menu
+    /// This ensures instructor and trainees all return together
+    /// </summary>
+    [ClientRpc]
+    private void ReturnToMainMenuClientRpc()
+    {
+        if (isReturningToMainMenu)
+            return;
+
+        isReturningToMainMenu = true;
+
+        if (showDebugLogs)
+            Debug.Log("[PauseMenu] ClientRpc received - Returning to main menu...");
+
+        // Resume time before transitioning
         Time.timeScale = originalTimeScale;
 
         // Re-enable camera rotation before leaving
