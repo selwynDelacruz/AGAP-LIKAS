@@ -725,7 +725,7 @@ namespace Lobby
                 string ipValue = syncedHostIp.Value.ToString();
                 if (!string.IsNullOrEmpty(ipValue))
                 {
-                    hostIpText.text = $"Host IP: {ipValue}\n(Use this for Direct Connect)";
+                    hostIpText.text = $"Host IP: {ipValue}";
                 }
                 else
                 {
