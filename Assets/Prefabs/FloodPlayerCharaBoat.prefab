@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 5625864733309181891}
   - component: {fileID: 6562566565648832226}
   - component: {fileID: 6246038058554706708}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Particle System
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5362,7 +5362,7 @@ GameObject:
   - component: {fileID: 5401688117231574816}
   - component: {fileID: 8161047615188400809}
   - component: {fileID: 6766327715570874358}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: MiniMapCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5419,7 +5419,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 20
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -6891,7 +6891,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2417887638654433323}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Fboat Upper L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6954,7 +6954,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9048452803747808030}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Fboat Lower L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7840,7 +7840,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6023653639675327530}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Fboat Lower R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8470,7 +8470,7 @@ GameObject:
   - component: {fileID: 4399930864557174424}
   - component: {fileID: 8524339994574554575}
   - component: {fileID: 7603440533839964839}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: CanvasPlayerMark
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9202,7 +9202,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 936923625068596246}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: floaters n Motor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9520,7 +9520,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 25}
-  m_SizeDelta: {x: 2, y: 2}
+  m_SizeDelta: {x: 8, y: 8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5178116448428927603
 CanvasRenderer:
@@ -10261,7 +10261,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2502576883623873047}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Fboat Upper R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10388,7 +10388,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7066721709011118299}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Motor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
