@@ -46,6 +46,9 @@ public class SpectatorController : MonoBehaviour
     private bool _isInstructor = false;
     private bool _isRightClickHeld = false;
     private bool _lastSpacebarState = false;
+    private bool _hasInitialized = false;
+    private float _initializationTimer = 0f;
+    private const float INITIALIZATION_DELAY = 0.5f;
 
     // List of all trainee players
     private List<GameObject> _traineePlayers = new List<GameObject>();
@@ -93,18 +96,37 @@ public class SpectatorController : MonoBehaviour
         _cinemachineTargetYaw = 0f;
         _cinemachineTargetPitch = 20f;
 
-        // Wait a frame for all players to spawn, then find trainees
-        Invoke(nameof(FindAllTraineePlayers), 0.5f);
+        // Reset initialization timer - we'll find trainees in Update using unscaled time
+        _hasInitialized = false;
+        _initializationTimer = 0f;
     }
 
     private void Update()
     {
         if (!_isInstructor) return;
 
+        // Handle delayed initialization using unscaled time (works even when Time.timeScale = 0)
+        if (!_hasInitialized)
+        {
+            _initializationTimer += Time.unscaledDeltaTime;
+            if (_initializationTimer >= INITIALIZATION_DELAY)
+            {
+                FindAllTraineePlayers();
+                _hasInitialized = true;
+            }
+        }
+
         // Refresh trainee list periodically (in case players join/leave)
-        if (Time.frameCount % 60 == 0) // Every ~1 second at 60 FPS
+        // Only refresh when game is running (Time.timeScale > 0)
+        if (_hasInitialized && Time.timeScale > 0 && Time.frameCount % 60 == 0)
         {
             RefreshTraineeList();
+            
+            // If we have no trainees, try to find them again
+            if (_traineePlayers.Count == 0)
+            {
+                FindAllTraineePlayers();
+            }
         }
 
         // Check for spacebar press to switch players
@@ -188,6 +210,14 @@ public class SpectatorController : MonoBehaviour
         {
             _currentPlayerIndex = 0;
             _currentTargetPlayer = _traineePlayers[_currentPlayerIndex];
+            
+            // Update Cinemachine to follow the new target immediately
+            if (virtualCamera != null && _currentTargetPlayer != null)
+            {
+                virtualCamera.Follow = _spectatorCameraTarget.transform;
+                virtualCamera.LookAt = _currentTargetPlayer.transform;
+            }
+            
             Debug.Log($"[SpectatorController] Now spectating: {_currentTargetPlayer.name}");
         }
         else
@@ -208,6 +238,13 @@ public class SpectatorController : MonoBehaviour
         {
             _currentPlayerIndex = 0;
             _currentTargetPlayer = _traineePlayers[_currentPlayerIndex];
+            
+            // Update camera to follow new target
+            if (virtualCamera != null && _currentTargetPlayer != null)
+            {
+                virtualCamera.Follow = _spectatorCameraTarget.transform;
+                virtualCamera.LookAt = _currentTargetPlayer.transform;
+            }
         }
     }
 
@@ -218,8 +255,14 @@ public class SpectatorController : MonoBehaviour
     {
         if (_traineePlayers.Count == 0)
         {
-            Debug.LogWarning("[SpectatorController] No trainees available to switch to!");
-            return;
+            // Try to find trainees again if none exist
+            FindAllTraineePlayers();
+            
+            if (_traineePlayers.Count == 0)
+            {
+                Debug.LogWarning("[SpectatorController] No trainees available to switch to!");
+                return;
+            }
         }
 
         // Increment index and wrap around
@@ -229,6 +272,13 @@ public class SpectatorController : MonoBehaviour
         // Reset camera angles when switching players
         _cinemachineTargetYaw = _currentTargetPlayer.transform.eulerAngles.y;
         _cinemachineTargetPitch = 20f;
+        
+        // Update Cinemachine to follow the new target
+        if (virtualCamera != null && _currentTargetPlayer != null)
+        {
+            virtualCamera.Follow = _spectatorCameraTarget.transform;
+            virtualCamera.LookAt = _currentTargetPlayer.transform;
+        }
 
         Debug.Log($"[SpectatorController] Switched to trainee {_currentPlayerIndex + 1}/{_traineePlayers.Count}: {_currentTargetPlayer.name}");
     }
@@ -306,6 +356,14 @@ public class SpectatorController : MonoBehaviour
     public static bool IsInstructor()
     {
         return PlayerPrefs.GetString("Type_Of_User", "") == "instructor";
+    }
+    
+    /// <summary>
+    /// Force refresh the trainee list (call after game starts)
+    /// </summary>
+    public void ForceRefreshTrainees()
+    {
+        FindAllTraineePlayers();
     }
 
     // Debug visualization

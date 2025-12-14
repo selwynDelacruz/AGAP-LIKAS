@@ -81,6 +81,8 @@ public class GameManager : NetworkBehaviour
 
     [Header("Timer Settings")]
     [SerializeField] private bool startOnAwake = true;
+    [Tooltip("If true, timer waits for ObjectiveManager to signal start (overrides startOnAwake)")]
+    [SerializeField] private bool waitForObjectiveManager = true;
 
     private int totalDurationInSeconds;
     private int remainingTimeInSeconds;
@@ -816,10 +818,23 @@ public class GameManager : NetworkBehaviour
         // Update all UI texts with initial time
         UpdateAllTimerDisplays();
 
-        // Start the timer if enabled
-        if (startOnAwake)
+        // Check if we should wait for ObjectiveManager
+        bool shouldWaitForObjectiveManager = false;
+        if (waitForObjectiveManager)
+        {
+            // Check if ObjectiveManager exists in the scene
+            var objectiveManager = FindAnyObjectByType(System.Type.GetType("ObjectiveManager"));
+            shouldWaitForObjectiveManager = objectiveManager != null;
+        }
+
+        // Start the timer if enabled and not waiting for ObjectiveManager
+        if (startOnAwake && !shouldWaitForObjectiveManager)
         {
             StartTimer();
+        }
+        else if (shouldWaitForObjectiveManager)
+        {
+            Debug.Log("[GameManager] Timer waiting for ObjectiveManager to signal start");
         }
     }
 
