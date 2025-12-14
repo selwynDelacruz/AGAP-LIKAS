@@ -148,8 +148,9 @@ public class MapSpawner : NetworkBehaviour
             Debug.Log($"[MapSpawner] Server: Waiting {spawnDelay}s before spawning maps...");
         }
 
-        // Wait for delay
-        yield return new WaitForSeconds(spawnDelay);
+        // Use WaitForSecondsRealtime so spawning works even when Time.timeScale = 0 
+        // (e.g., when ObjectiveManager is showing the ready screen)
+        yield return new WaitForSecondsRealtime(spawnDelay);
         
         if (debugMode)
         {

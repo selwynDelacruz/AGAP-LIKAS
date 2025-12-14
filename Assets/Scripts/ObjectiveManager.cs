@@ -42,6 +42,12 @@ public class ObjectiveManager : NetworkBehaviour
     [Tooltip("Optional: Countdown text shown before game starts")]
     [SerializeField] private TMP_Text countdownText;
     
+    [Tooltip("Optional: Loading indicator shown while map is loading")]
+    [SerializeField] private GameObject loadingIndicator;
+    
+    [Tooltip("Optional: Loading status text")]
+    [SerializeField] private TMP_Text loadingStatusText;
+    
     [Header("User UI Reference")]
     [Tooltip("The main User UI panel to hide during objective display")]
     [SerializeField] private GameObject userUIPanel;
@@ -102,6 +108,7 @@ public class ObjectiveManager : NetworkBehaviour
     private bool localPlayerIsReady = false;
     private AudioSource audioSource;
     private bool isCountingDown = false;
+    private bool mapsLoaded = false;
     #endregion
 
     #region Unity Lifecycle
@@ -163,8 +170,15 @@ public class ObjectiveManager : NetworkBehaviour
         {
             waitingForOthersText.gameObject.SetActive(false);
         }
+        
+        // Setup loading indicator - check if maps are already loaded
+        mapsLoaded = MapSpawner.MapsReady;
+        UpdateLoadingIndicator();
+        
+        // Subscribe to map spawning event
+        MapSpawner.OnMapsSpawned += OnMapsLoaded;
 
-        // Unlock cursor for UI interaction
+        // Unlock cursor for UI interaction - do this AFTER other setup
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -230,6 +244,9 @@ public class ObjectiveManager : NetworkBehaviour
         {
             readyButton.onClick.RemoveListener(OnReadyButtonClicked);
         }
+        
+        // Unsubscribe from map spawning event
+        MapSpawner.OnMapsSpawned -= OnMapsLoaded;
     }
 
     #endregion
@@ -429,6 +446,42 @@ public class ObjectiveManager : NetworkBehaviour
         {
             readyStatusText.text = $"{readyPlayerCount.Value}/{totalPlayerCount.Value} Players Ready";
         }
+    }
+    
+    /// <summary>
+    /// Called when maps have finished loading
+    /// </summary>
+    private void OnMapsLoaded()
+    {
+        mapsLoaded = true;
+        UpdateLoadingIndicator();
+        
+        if (showDebugLogs)
+            Debug.Log("[ObjectiveManager] Maps loaded in background");
+    }
+    
+    /// <summary>
+    /// Updates the loading indicator visibility
+    /// </summary>
+    private void UpdateLoadingIndicator()
+    {
+        if (loadingIndicator != null)
+        {
+            loadingIndicator.SetActive(!mapsLoaded);
+        }
+        
+        if (loadingStatusText != null)
+        {
+            loadingStatusText.text = mapsLoaded ? "Map Ready" : "Loading Map...";
+            loadingStatusText.gameObject.SetActive(!mapsLoaded);
+        }
+        
+        // Optionally disable ready button until maps are loaded
+        // Uncomment if you want to prevent ready until map loads:
+        // if (readyButton != null && !mapsLoaded)
+        // {
+        //     readyButton.interactable = false;
+        // }
     }
 
     #endregion
@@ -655,4 +708,20 @@ public class ObjectiveManager : NetworkBehaviour
     }
 
     #endregion
+
+    private void Update()
+    {
+        // Keep cursor visible while objective panel is showing and game hasn't started
+        if (!hasGameStarted.Value && objectivePanel != null && objectivePanel.activeSelf)
+        {
+            if (Cursor.lockState != CursorLockMode.None)
+            {
+                Cursor.lockState = CursorLockMode.None;
+            }
+            if (!Cursor.visible)
+            {
+                Cursor.visible = true;
+            }
+        }
+    }
 }
