@@ -1263,6 +1263,30 @@ public class AuthManager : MonoBehaviour
 	{
 		CreateAccount_RegisterPanel.SetActive(false);
 		MenuPanel_SuperAdmin.SetActive(true);
+		
+		// Clear the warning/success text when going back
+		if (CreateAccount_warningRegisterText != null)
+		{
+			CreateAccount_warningRegisterText.text = "";
+		}
+		
+		// Also clear the input fields
+		if (CreateAccount_Username != null) CreateAccount_Username.text = "";
+		if (CreateAccount_Password != null) CreateAccount_Password.text = "";
+		if (CreateAccount_Name != null) CreateAccount_Name.text = "";
+		if (CreateAccount_Age != null) CreateAccount_Age.text = "";
+		if (CreateAccount_Gender != null) CreateAccount_Gender.SetValueWithoutNotify(0);
+		
+		// Reset user data
+		User_Name = "";
+		User_Gender = "";
+		UsernameNew_ToSet = "";
+		User_Age = 0;
+		User_Password = "";
+		
+		// Re-enable the register button
+		if (ManageAccount_RegisterBTN_UI != null)
+			ManageAccount_RegisterBTN_UI.interactable = true;
 	}
 
 	public void ReturnToChooseUserType()
