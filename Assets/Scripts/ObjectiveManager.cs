@@ -48,6 +48,22 @@ public class ObjectiveManager : NetworkBehaviour
     [Tooltip("Optional: Loading status text")]
     [SerializeField] private TMP_Text loadingStatusText;
     
+    [Header("Panels to Hide on Ready")]
+    [Tooltip("Panel 1 to hide when player clicks Ready")]
+    [SerializeField] private GameObject panelToHide1;
+    
+    [Tooltip("Panel 2 to hide when player clicks Ready")]
+    [SerializeField] private GameObject panelToHide2;
+    
+    [Tooltip("Panel 3 to hide when player clicks Ready")]
+    [SerializeField] private GameObject panelToHide3;
+    
+    [Tooltip("Panel 4 to hide when player clicks Ready")]
+    [SerializeField] private GameObject panelToHide4;
+    
+    [Tooltip("Panel 5 to hide when player clicks Ready")]
+    [SerializeField] private GameObject panelToHide5;
+    
     [Header("User UI Reference")]
     [Tooltip("The main User UI panel to hide during objective display")]
     [SerializeField] private GameObject userUIPanel;
@@ -62,6 +78,10 @@ public class ObjectiveManager : NetworkBehaviour
 
     [SerializeField, TextArea(5, 10)]
     private string defaultObjectives = "• Locate and rescue trapped victims\n• Provide first aid using medkits\n• Clear rubble to access victims\n• Return rescued victims to the safe zone\n• Complete objectives before time runs out";
+    
+    [Header("Text Highlight Colors")]
+    [Tooltip("Color for highlighting important numbers (task count, duration)")]
+    [SerializeField] private Color highlightColor = new Color(1f, 0.082f, 0f, 1f); // #FF1500
     #endregion
 
     #region Countdown Settings
@@ -263,6 +283,11 @@ public class ObjectiveManager : NetworkBehaviour
         int taskCount = PlayerPrefs.GetInt("TaskCount", 5);
         int durationSeconds = PlayerPrefs.GetInt("GameDuration", 300);
         int durationMinutes = durationSeconds / 60;
+        
+        // Create formatted strings with bold and color for important values
+        string colorHex = ColorUtility.ToHtmlStringRGB(highlightColor);
+        string formattedTaskCount = $"<b><color=#{colorHex}>{taskCount}</color></b>";
+        string formattedDuration = $"<b><color=#{colorHex}>{durationMinutes} minutes</color></b>";
 
         // Set title
         if (titleText != null)
@@ -275,9 +300,9 @@ public class ObjectiveManager : NetworkBehaviour
         {
             string customDescription = disasterType switch
             {
-                "Flood" => $"A severe flood has struck the area. Victims are trapped and need immediate rescue.\n\nYour team has {durationMinutes} minutes to save as many lives as possible.",
-                "Earthquake" => $"A major earthquake has devastated the region. Victims are trapped under rubble and debris.\n\nYour team has {durationMinutes} minutes to rescue survivors.",
-                _ => $"{defaultDescription}\n\nTime Limit: {durationMinutes} minutes"
+                "Flood" => $"A severe flood has struck the area. Victims are trapped and need immediate rescue.\n\nYour team has {formattedDuration} to save as many lives as possible.",
+                "Earthquake" => $"A major earthquake has devastated the region. Victims are trapped under rubble and debris.\n\nYour team has {formattedDuration} to rescue survivors.",
+                _ => $"{defaultDescription}\n\nTime Limit: {formattedDuration}"
             };
             descriptionText.text = customDescription;
         }
@@ -287,9 +312,9 @@ public class ObjectiveManager : NetworkBehaviour
         {
             string customObjectives = disasterType switch
             {
-                "Flood" => $"• Rescue {taskCount} trapped victims from flood waters\n• Use boats to navigate flooded areas\n• Provide first aid with medkits\n• Bring victims to the safe zone\n• Complete before time runs out",
-                "Earthquake" => $"• Locate {taskCount} victims trapped under rubble\n• Clear debris to access victims\n• Provide medical assistance\n• Escort victims to safety\n• Work as a team to maximize rescues",
-                _ => $"• Rescue {taskCount} victims\n{defaultObjectives}"
+                "Flood" => $"• Rescue {formattedTaskCount} trapped victims from flood waters\n• Use boats to navigate flooded areas\n• Provide first aid with medkits\n• Bring victims to the safe zone\n• Complete before time runs out",
+                "Earthquake" => $"• Locate {formattedTaskCount} victims trapped under rubble\n• Clear debris to access victims\n• Provide medical assistance\n• Escort victims to safety\n• Work as a team to maximize rescues",
+                _ => $"• Rescue {formattedTaskCount} victims\n{defaultObjectives}"
             };
             objectivesListText.text = customObjectives;
         }
@@ -334,6 +359,32 @@ public class ObjectiveManager : NetworkBehaviour
         {
             objectivesListText.gameObject.SetActive(false);
         }
+        
+        // Hide additional panels
+        if (panelToHide1 != null)
+        {
+            panelToHide1.SetActive(false);
+        }
+        
+        if (panelToHide2 != null)
+        {
+            panelToHide2.SetActive(false);
+        }
+        
+        if (panelToHide3 != null)
+        {
+            panelToHide3.SetActive(false);
+        }
+        
+        if (panelToHide4 != null)
+        {
+            panelToHide4.SetActive(false);
+        }
+        
+        if (panelToHide5 != null)
+        {
+            panelToHide5.SetActive(false);
+        }
 
         // Disable ready button (don't change its text)
         if (readyButton != null)
@@ -352,7 +403,7 @@ public class ObjectiveManager : NetworkBehaviour
         PlayerReadyServerRpc();
 
         if (showDebugLogs)
-            Debug.Log("[ObjectiveManager] Local player marked as ready - hiding objective content");
+            Debug.Log("[ObjectiveManager] Local player marked as ready - hiding objective content and panels");
     }
 
     /// <summary>
@@ -724,4 +775,40 @@ public class ObjectiveManager : NetworkBehaviour
             }
         }
     }
+
+    #region Helper Methods
+
+    /// <summary>
+    /// Hides additional panels when the player clicks ready
+    /// </summary>
+    private void HideAdditionalPanels()
+    {
+        // Hide each panel if it's assigned
+        if (panelToHide1 != null)
+        {
+            panelToHide1.SetActive(false);
+        }
+        
+        if (panelToHide2 != null)
+        {
+            panelToHide2.SetActive(false);
+        }
+        
+        if (panelToHide3 != null)
+        {
+            panelToHide3.SetActive(false);
+        }
+        
+        if (panelToHide4 != null)
+        {
+            panelToHide4.SetActive(false);
+        }
+        
+        if (panelToHide5 != null)
+        {
+            panelToHide5.SetActive(false);
+        }
+    }
+
+    #endregion
 }
