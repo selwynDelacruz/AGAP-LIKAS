@@ -1348,7 +1348,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				Trainee_confirmLoginText.text = "";
-				Login_TraineeButton.interactable = true;
+				Login_TraineeButton.interactable = false;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1378,7 +1378,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				SuperAdmin_confirmLoginText.text = "";
-				Login_SuperAdminButton.interactable = true;
+				Login_SuperAdminButton.interactable = false;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1922,6 +1922,13 @@ public class AuthManager : MonoBehaviour
 	{
 		Debug.Log($"[AuthManager] ManageAccountButton - User: {_username}, Type: {_userType}");
 		
+		// Validate inputs before proceeding
+		if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
+		{
+			Debug.LogError("[AuthManager] ManageAccountButton - Username or password is empty!");
+			return;
+		}
+		
 		ManageAccountPanel.SetActive(true);
 		
 		ManageAccount_InputFields[0].text = _name;
@@ -1937,12 +1944,34 @@ public class AuthManager : MonoBehaviour
 		AccountToManage_Password = _password;
 		AccountToManage_Usertype = _userType;
 		
-		auth.SignOut();
-		StartCoroutine(Login_ManageAccount(AccountToManage_Username + "@gmail.com", AccountToManage_Password));
+		// Sign out current user and login as managed user with a delay
+		StartCoroutine(SignOutAndLoginAsManaged());
+	}
+	
+	private IEnumerator SignOutAndLoginAsManaged()
+	{
+		// Sign out current user first
+		if (auth.CurrentUser != null)
+		{
+			auth.SignOut();
+			Debug.Log("[AuthManager] Signed out current user before managing account");
+		}
+		
+		// Wait for sign out to complete
+		yield return new WaitForSeconds(0.5f);
+		
+		// Now login as the managed user
+		string email = AccountToManage_Username + "@gmail.com";
+		Debug.Log($"[AuthManager] Attempting to login as managed user: {email}");
+		
+		StartCoroutine(Login_ManageAccount(email, AccountToManage_Password));
 	}
 
 	public void DeleteAccount()
 	{
+		// Store the user type before deleting
+		string userTypeToRefresh = AccountToManage_Usertype;
+		
 		FirebaseDatabase.DefaultInstance.GetReference(AccountToManage_Usertype).Child(User.UserId).RemoveValueAsync();
 		auth.CurrentUser?.DeleteAsync().ContinueWith(delegate(Task task)
 		{
@@ -1954,9 +1983,74 @@ public class AuthManager : MonoBehaviour
 			{
 				Debug.LogError("DeleteAsync encountered an error: " + task.Exception);
 			}
+			else
+			{
+				Debug.Log("[AuthManager] Account deleted successfully!");
+			}
 		});
+		
 		isOnLoadingPanel = true;
+		
+		// Re-login as admin after deleting the managed account
+		StartCoroutine(ReloginAsAdminAndRefresh(userTypeToRefresh));
+	}
+	
+	private IEnumerator ReloginAsAdminAndRefresh(string userTypeToRefresh)
+	{
+		yield return new WaitForSeconds(0.5f);
+		
+		// Re-login as the super admin
+		string adminEmail = PlayerPrefs.GetString("LoginEmail");
+		string adminPassword = PlayerPrefs.GetString("LoginPassword");
+		
+		if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
+		{
+			Debug.Log("[AuthManager] Re-logging in as admin after delete...");
+			var loginTask = auth.SignInWithEmailAndPasswordAsync(adminEmail, adminPassword);
+			yield return new WaitUntil(() => loginTask.IsCompleted);
+			
+			if (loginTask.Exception != null)
+			{
+				Debug.LogError($"[AuthManager] Failed to re-login as admin: {loginTask.Exception}");
+			}
+			else
+			{
+				User = loginTask.Result.User;
+				Debug.Log($"[AuthManager] Re-logged in as admin: {User.Email}");
+			}
+		}
+		
+		isOnLoadingPanel = false;
 		GoBackToMainMenu_ByAdmin();
+		
+		// Auto-refresh the user list based on the deleted user's type
+		yield return new WaitForSeconds(0.3f);
+		
+		if (userTypeToRefresh == "instructor")
+		{
+			Load_Instructor_AllData_ByAdmin();
+			Debug.Log("[AuthManager] Auto-refreshed instructor list after delete");
+		}
+		else if (userTypeToRefresh == "trainee")
+		{
+			Load_Trainee_AllData_ByAdmin();
+			Debug.Log("[AuthManager] Auto-refreshed trainee list after delete");
+		}
+		else
+		{
+			// Fallback: refresh based on dropdown selection
+			if (SelectedUserTypeToShow != null)
+			{
+				if (SelectedUserTypeToShow.value == 0)
+				{
+					Load_Instructor_AllData_ByAdmin();
+				}
+				else
+				{
+					Load_Trainee_AllData_ByAdmin();
+				}
+			}
+		}
 	}
 
 	public void EditAccount()
@@ -2099,8 +2193,20 @@ public class AuthManager : MonoBehaviour
 		isOnLoadingPanel = false;
 		GoBackToMainMenu_ByAdmin();
 		
-		// Refresh the user list to show updated data
-		if (SelectedUserTypeToShow != null)
+		// Auto-refresh the user list to show updated data
+		yield return new WaitForSeconds(0.3f);
+		
+		if (_type == "instructor")
+		{
+			Load_Instructor_AllData_ByAdmin();
+			Debug.Log("[AuthManager] Auto-refreshed instructor list after edit");
+		}
+		else if (_type == "trainee")
+		{
+			Load_Trainee_AllData_ByAdmin();
+			Debug.Log("[AuthManager] Auto-refreshed trainee list after edit");
+		}
+		else if (SelectedUserTypeToShow != null)
 		{
 			if (SelectedUserTypeToShow.value == 0)
 			{
