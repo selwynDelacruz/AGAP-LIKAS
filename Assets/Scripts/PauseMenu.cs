@@ -30,7 +30,8 @@ public class PauseMenu : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
-    private float originalTimeScale = 1f;
+    // FIXED: Always use 1f as the target time scale when resuming
+    private const float NORMAL_TIME_SCALE = 1f;
     private bool isInstructor = false;
     private bool isReturningToMainMenu = false; // Prevent multiple calls
 
@@ -82,9 +83,6 @@ public class PauseMenu : NetworkBehaviour
 
         if (traineesPausePanel != null)
             traineesPausePanel.SetActive(false);
-
-        // Store original time scale
-        originalTimeScale = Time.timeScale;
 
         if (showDebugLogs)
             Debug.Log($"[PauseMenu] Initialized. User role: {(isInstructor ? "Instructor" : "Trainee")}. Press {pauseKey} to pause.");
@@ -281,7 +279,7 @@ public class PauseMenu : NetworkBehaviour
         else
         {
             // Restore game time
-            Time.timeScale = originalTimeScale;
+            Time.timeScale = NORMAL_TIME_SCALE;
 
             // Re-enable camera rotation for all players
             if (disableCameraRotationWhenPaused)
@@ -305,7 +303,7 @@ public class PauseMenu : NetworkBehaviour
             Cursor.visible = false;
 
             if (showDebugLogs)
-                Debug.Log("[PauseMenu] Game RESUMED locally. Time.timeScale = " + originalTimeScale);
+                Debug.Log("[PauseMenu] Game RESUMED locally. Time.timeScale = " + NORMAL_TIME_SCALE);
         }
     }
 
@@ -409,7 +407,7 @@ public class PauseMenu : NetworkBehaviour
             Debug.Log("[PauseMenu] ClientRpc received - Returning to main menu...");
 
         // Resume time before transitioning
-        Time.timeScale = originalTimeScale;
+        Time.timeScale = NORMAL_TIME_SCALE;
 
         // Re-enable camera rotation before leaving
         if (disableCameraRotationWhenPaused)
@@ -492,7 +490,7 @@ public class PauseMenu : NetworkBehaviour
             pauseButton.onClick.RemoveListener(OnPauseButtonClicked);
 
         // Ensure time scale is restored when this object is destroyed
-        Time.timeScale = originalTimeScale;
+        Time.timeScale = NORMAL_TIME_SCALE;
 
         // Ensure cameras are unlocked
         if (disableCameraRotationWhenPaused)
