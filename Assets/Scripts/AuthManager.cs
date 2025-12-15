@@ -1348,7 +1348,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				Trainee_confirmLoginText.text = "";
-				Login_TraineeButton.interactable = false;
+				Login_TraineeButton.interactable = true;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1361,6 +1361,7 @@ public class AuthManager : MonoBehaviour
 			case "super_admin":
 				// Clear UI fields
 				ClearAllLoginField(SuperAdmin_emailLoginField, SuperAdmin_passwordLoginField, SuperAdmin_confirmLoginText);
+				Login_SuperAdmin_Panel.SetActive(false);
 				MenuPanel_SuperAdmin.SetActive(false);
 				ChooseTypeOfUserPanel.SetActive(true);
 				
@@ -1377,7 +1378,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				SuperAdmin_confirmLoginText.text = "";
-				Login_SuperAdminButton.interactable = false;
+				Login_SuperAdminButton.interactable = true;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1540,7 +1541,7 @@ public class AuthManager : MonoBehaviour
 	}
 
 	private IEnumerator LoadInstructorList()
-{
+	{
     Debug.Log("Starting LoadInstructorList");
 
     // Validate references
