@@ -681,7 +681,7 @@ public class AuthManager : MonoBehaviour
 			else
 			{
 				CancelInvoke("RepeatSettingUpLoadingAfterLogin");
-				isOnLoadingPanel = false;
+			 isOnLoadingPanel = false;
 			}
 			break;
 		case "super_admin":
@@ -1348,7 +1348,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				Trainee_confirmLoginText.text = "";
-				Login_TraineeButton.interactable = true;
+				Login_TraineeButton.interactable = false;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1377,7 +1377,7 @@ public class AuthManager : MonoBehaviour
 				
 				// Reset UI state
 				SuperAdmin_confirmLoginText.text = "";
-				Login_SuperAdminButton.interactable = true;
+				Login_SuperAdminButton.interactable = false;
 				
 				// Clear cached user data
 				Current_Name = "";
@@ -1609,16 +1609,16 @@ public class AuthManager : MonoBehaviour
             if (newItem != null)
             {
                 var element = newItem.GetComponent<UsersElement>();
-					if (element != null)
-					{
-						element.ListData(usertype, name, age, gender, username, password);
-						Debug.Log($"Successfully created list item for {name}");
-						Debug.Log($"Successfully created list item for {username}");
+				if (element != null)
+				{
+					element.ListData(usertype, name, age, gender, username, password);
+					Debug.Log($"Successfully created list item for {name}");
+					Debug.Log($"Successfully created list item for {username}");
                 }
-					else
-					{
-						Debug.LogError("UsersElement component missing on prefab");
-					}
+				else
+				{
+					Debug.LogError("UsersElement component missing on prefab");
+				}
             }
         }
     }
@@ -1960,7 +1960,170 @@ public class AuthManager : MonoBehaviour
 
 	public void EditAccount()
 	{
+		// Read values directly from the input fields before saving
+		if (ManageAccount_InputFields != null && ManageAccount_InputFields.Length >= 5)
+		{
+			AccountToManage_Name = ManageAccount_InputFields[0].text;
+			AccountToManage_Age = ManageAccount_InputFields[1].text;
+			AccountToManage_Gender = ManageAccount_InputFields[2].text;
+			AccountToManage_Username = ManageAccount_InputFields[3].text;
+			AccountToManage_Password = ManageAccount_InputFields[4].text;
+			
+			Debug.Log($"[AuthManager] EditAccount - Saving: Name={AccountToManage_Name}, Age={AccountToManage_Age}, Gender={AccountToManage_Gender}, Username={AccountToManage_Username}");
+		}
+		else
+		{
+			Debug.LogError("[AuthManager] EditAccount - ManageAccount_InputFields not properly assigned!");
+			return;
+		}
+		
+		// Validate required fields
+		if (string.IsNullOrEmpty(AccountToManage_Name) || 
+			string.IsNullOrEmpty(AccountToManage_Age) || 
+			string.IsNullOrEmpty(AccountToManage_Username))
+		{
+			Debug.LogError("[AuthManager] EditAccount - Required fields are empty!");
+			return;
+		}
+		
 		StartCoroutine(DelayRegister_ManageAccount(AccountToManage_Usertype));
+	}
+
+	private IEnumerator DelayRegister_ManageAccount(string _type)
+	{
+		Debug.Log($"[AuthManager] DelayRegister_ManageAccount - Updating {_type} account: {AccountToManage_Username}");
+		
+		// Validate user is logged in
+		if (User == null)
+		{
+			Debug.LogError("[AuthManager] DelayRegister_ManageAccount - User is null! Cannot update.");
+			yield break;
+		}
+		
+		isOnLoadingPanel = true;
+		
+		// Parse age with validation
+		int age = 0;
+		if (!int.TryParse(AccountToManage_Age, out age))
+		{
+			Debug.LogError($"[AuthManager] DelayRegister_ManageAccount - Invalid age: {AccountToManage_Age}");
+			isOnLoadingPanel = false;
+			yield break;
+		}
+		
+		// Update all fields - wait for each to complete
+		var nameTask = DBreference.Child(_type).Child(User.UserId).Child("User_Name").SetValueAsync(AccountToManage_Name);
+		yield return new WaitUntil(() => nameTask.IsCompleted);
+		if (nameTask.Exception != null)
+		{
+			Debug.LogError($"[AuthManager] Failed to update name: {nameTask.Exception}");
+		}
+		else
+		{
+			Debug.Log($"[AuthManager] Name updated to: {AccountToManage_Name}");
+		}
+		
+		var ageTask = DBreference.Child(_type).Child(User.UserId).Child("User_Age").SetValueAsync(age);
+		yield return new WaitUntil(() => ageTask.IsCompleted);
+		if (ageTask.Exception != null)
+		{
+			Debug.LogError($"[AuthManager] Failed to update age: {ageTask.Exception}");
+		}
+		else
+		{
+			Debug.Log($"[AuthManager] Age updated to: {age}");
+		}
+		
+		var genderTask = DBreference.Child(_type).Child(User.UserId).Child("User_Gender").SetValueAsync(AccountToManage_Gender);
+		yield return new WaitUntil(() => genderTask.IsCompleted);
+		if (genderTask.Exception != null)
+		{
+			Debug.LogError($"[AuthManager] Failed to update gender: {genderTask.Exception}");
+		}
+		else
+		{
+			Debug.Log($"[AuthManager] Gender updated to: {AccountToManage_Gender}");
+		}
+		
+		var usernameTask = DBreference.Child(_type).Child(User.UserId).Child("User_Username").SetValueAsync(AccountToManage_Username);
+		yield return new WaitUntil(() => usernameTask.IsCompleted);
+		if (usernameTask.Exception != null)
+		{
+			Debug.LogError($"[AuthManager] Failed to update username: {usernameTask.Exception}");
+		}
+		else
+		{
+			Debug.Log($"[AuthManager] Username updated to: {AccountToManage_Username}");
+		}
+		
+		var passwordTask = DBreference.Child(_type).Child(User.UserId).Child("User_Password").SetValueAsync(AccountToManage_Password);
+		yield return new WaitUntil(() => passwordTask.IsCompleted);
+		if (passwordTask.Exception != null)
+		{
+			Debug.LogError($"[AuthManager] Failed to update password: {passwordTask.Exception}");
+		}
+		else
+		{
+			Debug.Log("[AuthManager] Password updated successfully");
+		}
+		
+		Debug.Log("[AuthManager] All account data updated successfully!");
+		
+		yield return new WaitForSeconds(0.5f);
+		
+		// Sign out the managed account and re-login as admin
+		auth.SignOut();
+		
+		// Re-login as the super admin
+		string adminEmail = PlayerPrefs.GetString("LoginEmail");
+		string adminPassword = PlayerPrefs.GetString("LoginPassword");
+		
+		if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
+		{
+			Debug.Log("[AuthManager] Re-logging in as admin...");
+			var loginTask = auth.SignInWithEmailAndPasswordAsync(adminEmail, adminPassword);
+			yield return new WaitUntil(() => loginTask.IsCompleted);
+			
+			if (loginTask.Exception != null)
+			{
+				Debug.LogError($"[AuthManager] Failed to re-login as admin: {loginTask.Exception}");
+			}
+			else
+			{
+				User = loginTask.Result.User;
+				Debug.Log($"[AuthManager] Re-logged in as admin: {User.Email}");
+			}
+		}
+		
+		isOnLoadingPanel = false;
+		GoBackToMainMenu_ByAdmin();
+		
+		// Refresh the user list to show updated data
+		if (SelectedUserTypeToShow != null)
+		{
+			if (SelectedUserTypeToShow.value == 0)
+			{
+				Load_Instructor_AllData_ByAdmin();
+			}
+			else
+			{
+				Load_Trainee_AllData_ByAdmin();
+			}
+		}
+	}
+
+	public void GoBackToMainMenu_ByAdmin()
+	{
+		isOnLoadingPanel = false;
+		if (ManageAccount_InputFields != null)
+		{
+			for (int i = 0; i < ManageAccount_InputFields.Length; i++)
+			{
+				ManageAccount_InputFields[i].text = "";
+			}
+		}
+		ManageAccountPanel.SetActive(false);
+		MenuPanel_SuperAdmin.SetActive(true);
 	}
 
 	public void Update_Name_ForEdit(string accountNewName)
@@ -1976,33 +2139,5 @@ public class AuthManager : MonoBehaviour
 	public void Update_Gender_ForEdit(string accountNewGender)
 	{
 		AccountToManage_Gender = accountNewGender;
-	}
-
-	private IEnumerator DelayRegister_ManageAccount(string _type)
-	{
-		StartCoroutine(UpdateName(AccountToManage_Name, _type));
-		StartCoroutine(UpdateUserAge(int.Parse(AccountToManage_Age), _type));
-		StartCoroutine(UpdateGender(AccountToManage_Gender, _type));
-		StartCoroutine(UpdateuserName(AccountToManage_Username, _type));
-		StartCoroutine(UpdateUserPassword(AccountToManage_Password, _type));
-		isOnLoadingPanel = true;
-		yield return new WaitForSeconds(1f);
-		GoBackToMainMenu_ByAdmin();
-	}
-
-	public void GoBackToMainMenu_ByAdmin()
-	{
-		isOnLoadingPanel = false;
-		if (ManageAccount_InputFields != null)
-		{
-			for (int i = 0; i < ManageAccount_InputFields.Length; i++)
-			{
-				ManageAccount_InputFields[i].text = "";
-			}
-
-		}
-		ManageAccountPanel.SetActive(false);
-    	MenuPanel_SuperAdmin.SetActive(true);
-		//RefreshData();
 	}
 }
