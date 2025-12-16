@@ -23,6 +23,10 @@ public class GameManager : NetworkBehaviour
     [Tooltip("Reference to the VictimSpawner to track total victims")]
     [SerializeField] private VictimSpawner victimSpawner;
 
+    [Header("Victim UI References")]
+    [Tooltip("Reference to the TextMeshProUGUI component that displays victim count")]
+    [SerializeField] private TextMeshProUGUI victimCountText;
+
     private int totalVictims = 0;
     
     // Networked saved victims count - synced across all clients
@@ -178,6 +182,9 @@ public class GameManager : NetworkBehaviour
     private void OnSavedVictimsChanged(int previousValue, int newValue)
     {
         Debug.Log($"[GameManager] Saved victims updated: {previousValue} -> {newValue}/{totalVictims}");
+        
+        // Update victim count UI
+        UpdateVictimCountUI();
         
         // Check if all victims are saved
         if (AreAllVictimsSaved())
@@ -571,10 +578,24 @@ public class GameManager : NetworkBehaviour
             // Get total victims from PlayerPrefs (set by LobbyManager)
             totalVictims = PlayerPrefs.GetInt("TaskCount", 0);
             Debug.Log($"[GameManager] Total victims to rescue: {totalVictims}");
+            
+            // Initialize victim count UI
+            UpdateVictimCountUI();
         }
         else
         {
             Debug.LogWarning("[GameManager] VictimSpawner not found! Victim tracking will not work properly.");
+        }
+    }
+
+    /// <summary>
+    /// Updates the victim count UI display (same logic as UpdateMedkitUI)
+    /// </summary>
+    private void UpdateVictimCountUI()
+    {
+        if (victimCountText != null)
+        {
+            victimCountText.text = "Victim: " + savedVictimsNetworked.Value + "/" + totalVictims;
         }
     }
 
@@ -593,6 +614,8 @@ public class GameManager : NetworkBehaviour
             // Client should not call this directly - NPCInteractable handles via RPC
             Debug.LogWarning("[GameManager] IncrementSavedVictims called on client - this should be server-only!");
         }
+
+        UpdateVictimCountUI();
     }
 
     /// <summary>

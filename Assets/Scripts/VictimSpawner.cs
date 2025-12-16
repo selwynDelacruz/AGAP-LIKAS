@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
 using System.Collections.Generic;
@@ -41,6 +41,10 @@ public class VictimSpawner : NetworkBehaviour
     private List<NetworkObject> spawnedVictims = new List<NetworkObject>();
     private int taskCount = 0;
     private Transform[] spawnPoints;
+
+    // Track victim type counts
+    private int medkitVictimCount = 0;
+    private int rubbleCount = 0;
 
     public override void OnNetworkSpawn()
     {
@@ -86,6 +90,12 @@ public class VictimSpawner : NetworkBehaviour
 
         // Spawn victims
         SpawnVictims();
+
+        // Wait a frame to ensure all victims are spawned
+        yield return null;
+
+        // Count and save victim types
+        CountAndSaveVictimTypes();
     }
 
     /// <summary>
@@ -216,6 +226,10 @@ public class VictimSpawner : NetworkBehaviour
         // Clear any previously spawned victims
         ClearSpawnedVictims();
 
+        // Reset counts
+        medkitVictimCount = 0;
+        rubbleCount = 0;
+
         // Use synced seed for deterministic randomization
         Random.State oldState = Random.state;
         Random.InitState(randomSeed.Value);
@@ -328,12 +342,12 @@ public class VictimSpawner : NetworkBehaviour
 
                 if (debugMode)
                 {
-                    Debug.Log($"[VictimSpawner] ? Spawned networked '{victimPrefab.name}' at spawn point {spawnPointIndex} ({spawnPoint.name}) - NetworkObjectId: {netObj.NetworkObjectId}");
+                    Debug.Log($"[VictimSpawner] ✓ Spawned networked '{victimPrefab.name}' at spawn point {spawnPointIndex} ({spawnPoint.name}) - NetworkObjectId: {netObj.NetworkObjectId}");
                 }
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[VictimSpawner] ? Failed to network spawn victim: {e.Message}");
+                Debug.LogError($"[VictimSpawner] ✗ Failed to network spawn victim: {e.Message}");
                 Destroy(spawnedVictim);
             }
         }
@@ -341,6 +355,77 @@ public class VictimSpawner : NetworkBehaviour
         {
             Debug.LogError($"[VictimSpawner] Victim prefab '{victimPrefab.name}' missing NetworkObject component!");
             Destroy(spawnedVictim);
+        }
+    }
+
+    /// <summary>
+    /// Counts spawned victims by type and saves to PlayerPrefs (Server only)
+    /// </summary>
+    private void CountAndSaveVictimTypes()
+    {
+        if (!IsServer)
+        {
+            Debug.LogWarning("[VictimSpawner] CountAndSaveVictimTypes called on client - only server should call this!");
+            return;
+        }
+
+        medkitVictimCount = 0;
+        rubbleCount = 0;
+
+        // Count victims with MedkitInteractable and rubble objects
+        foreach (NetworkObject netObj in spawnedVictims)
+        {
+            if (netObj != null && netObj.gameObject != null)
+            {
+                // Check for MedkitInteractable component
+                MedkitInteractable medkitComponent = netObj.GetComponent<MedkitInteractable>();
+                if (medkitComponent != null)
+                {
+                    medkitVictimCount++;
+                    if (debugMode)
+                    {
+                        Debug.Log($"[VictimSpawner] Found MedkitInteractable on: {netObj.gameObject.name}");
+                    }
+                }
+
+                // Check for RubbleInteractable component
+                RubbleInteractable rubbleComponent = netObj.GetComponent<RubbleInteractable>();
+                if (rubbleComponent != null)
+                {
+                    rubbleCount++;
+                    if (debugMode)
+                    {
+                        Debug.Log($"[VictimSpawner] Found RubbleInteractable on: {netObj.gameObject.name}");
+                    }
+                }
+            }
+        }
+
+        // Save counts to PlayerPrefs for SimulationResultSummary to read
+        PlayerPrefs.SetInt("MedkitVictimCount", medkitVictimCount);
+        PlayerPrefs.SetInt("RubbleCount", rubbleCount);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[VictimSpawner] ✓ Victim type counts saved - Medkit Victims: {medkitVictimCount}, Rubble: {rubbleCount}");
+
+        // Sync to all clients via RPC
+        SyncVictimCountsClientRpc(medkitVictimCount, rubbleCount);
+    }
+
+    /// <summary>
+    /// Syncs victim counts to all clients
+    /// </summary>
+    [Rpc(SendTo.ClientsAndHost)]
+    private void SyncVictimCountsClientRpc(int medkitCount, int rubble)
+    {
+        // Save to PlayerPrefs on all clients
+        PlayerPrefs.SetInt("MedkitVictimCount", medkitCount);
+        PlayerPrefs.SetInt("RubbleCount", rubble);
+        PlayerPrefs.Save();
+
+        if (debugMode)
+        {
+            Debug.Log($"[VictimSpawner] Client received victim counts - Medkit: {medkitCount}, Rubble: {rubble}");
         }
     }
 
@@ -375,6 +460,22 @@ public class VictimSpawner : NetworkBehaviour
     }
 
     /// <summary>
+    /// Gets the number of medkit victims spawned
+    /// </summary>
+    public int GetMedkitVictimCount()
+    {
+        return medkitVictimCount;
+    }
+
+    /// <summary>
+    /// Gets the number of rubble objects spawned
+    /// </summary>
+    public int GetRubbleCount()
+    {
+        return rubbleCount;
+    }
+
+    /// <summary>
     /// Manually set task count and respawn victims (Server only)
     /// </summary>
     public void SetTaskCountAndRespawn(int newTaskCount)
@@ -390,6 +491,18 @@ public class VictimSpawner : NetworkBehaviour
         // Refresh spawn points and respawn
         FindSpawnPointsBasedOnDisaster();
         SpawnVictims();
+        
+        // Count and save victim types after respawning
+        StartCoroutine(DelayedCountVictimTypes());
+    }
+
+    /// <summary>
+    /// Coroutine to count victim types after a short delay
+    /// </summary>
+    private IEnumerator DelayedCountVictimTypes()
+    {
+        yield return null; // Wait one frame
+        CountAndSaveVictimTypes();
     }
 
     /// <summary>
