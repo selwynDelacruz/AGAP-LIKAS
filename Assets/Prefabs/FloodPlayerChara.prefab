@@ -2443,6 +2443,7 @@ GameObject:
   - component: {fileID: 3978461948899385097}
   - component: {fileID: 5520887585713925677}
   - component: {fileID: 2660988811414177624}
+  - component: {fileID: 4172164983483054995}
   m_Layer: 8
   m_Name: FloodPlayerChara
   m_TagString: Player
@@ -2813,6 +2814,21 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   TransitionStateInfoList: []
   m_Animator: {fileID: 8323573298487551323}
+--- !u!114 &4172164983483054995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5506887279690856165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d5f018862fc7f1448fe950b27a2420b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VoiceChatRegistration
+  ShowTopMostFoldoutHeaderGroup: 1
+  username: 
+  role: 
 --- !u!1 &5663807489636831577
 GameObject:
   m_ObjectHideFlags: 0
