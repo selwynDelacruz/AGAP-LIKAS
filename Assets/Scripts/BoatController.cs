@@ -1,14 +1,16 @@
 using PlayerInputControl;
 using UnityEngine;
+using Unity.Netcode;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(NetworkObject))]
 #if ENABLE_INPUT_SYSTEM
 [RequireComponent(typeof(PlayerInput))]
 #endif
-public class BoatController :  MonoBehaviour
+public class BoatController : NetworkBehaviour
 {
     [Header("References")]
     public Transform Motor;                      // visual motor location (force applied here for turning)
@@ -106,6 +108,9 @@ public class BoatController :  MonoBehaviour
 
     void FixedUpdate()
     {
+        // ===== NETWORK: Only owner controls the boat =====
+        if (!IsOwner) return;
+        
         if (rb == null) return;
 
         // --- read input ---
@@ -171,6 +176,9 @@ public class BoatController :  MonoBehaviour
 
     void LateUpdate()
     {
+        // ===== NETWORK: Only owner controls the camera =====
+        if (!IsOwner) return;
+        
         CameraRotation();
     }
 

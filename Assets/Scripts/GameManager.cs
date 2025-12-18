@@ -4,7 +4,7 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using Unity.Netcode;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     // Singleton for easy access
     public static GameManager Instance { get; private set; }
@@ -23,18 +23,34 @@ public class GameManager : MonoBehaviour
     [Tooltip("Reference to the VictimSpawner to track total victims")]
     [SerializeField] private VictimSpawner victimSpawner;
 
+    [Header("Victim UI References")]
+    [Tooltip("Reference to the TextMeshProUGUI component that displays victim count")]
+    [SerializeField] private TextMeshProUGUI victimCountText;
+
     private int totalVictims = 0;
-    private int savedVictims = 0;
+    
+    // Networked saved victims count - synced across all clients
+    private NetworkVariable<int> savedVictimsNetworked = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
 
     // Public properties for victim tracking
     public int TotalVictims => totalVictims;
-    public int SavedVictims => savedVictims;
+    public int SavedVictims => savedVictimsNetworked.Value;
     #endregion
 
     #region Medkit Management
     [Header("Medkit Settings")]
     [SerializeField] private int maxMedkits = 2;
-    [SerializeField] private int currentMedkits = 2;
+    
+    // Make currentMedkits networked so all clients see the same value
+    private NetworkVariable<int> currentMedkitsNetworked = new NetworkVariable<int>(
+        2,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
 
     [Header("Safe Zone")]
     [Tooltip("Safe zone GameObject that replenishes medkits when player enters")]
@@ -54,7 +70,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float replenishBlinkDuration = 0.5f;
 
     // Public properties
-    public int CurrentMedkits => currentMedkits;
+    public int CurrentMedkits => currentMedkitsNetworked.Value;
     public int MaxMedkits => maxMedkits;
 
     private Color defaultColor;
@@ -69,6 +85,8 @@ public class GameManager : MonoBehaviour
 
     [Header("Timer Settings")]
     [SerializeField] private bool startOnAwake = true;
+    [Tooltip("If true, timer waits for ObjectiveManager to signal start (overrides startOnAwake)")]
+    [SerializeField] private bool waitForObjectiveManager = true;
 
     private int totalDurationInSeconds;
     private int remainingTimeInSeconds;
@@ -92,6 +110,12 @@ public class GameManager : MonoBehaviour
     private bool hasInitializedRole = false;
     #endregion
 
+    #region Network Disconnect Handling
+    [Header("Disconnect Handling")]
+    [Tooltip("Auto-add HostDisconnectHandler if missing")]
+    [SerializeField] private bool autoAddDisconnectHandler = true;
+    #endregion
+
     void Awake()
     {
         // Singleton setup
@@ -111,6 +135,9 @@ public class GameManager : MonoBehaviour
         // Initialize Role Detection (must be first)
         InitializeRoleDetection();
 
+        // Initialize Disconnect Handler
+        InitializeDisconnectHandler();
+
         // Initialize Disaster Scene Management
         InitializeDisasterScene();
 
@@ -127,11 +154,105 @@ public class GameManager : MonoBehaviour
         InitializeRoleBasedUI();
     }
 
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        
+        // Subscribe to saved victims changes for UI updates
+        savedVictimsNetworked.OnValueChanged += OnSavedVictimsChanged;
+        
+        // Subscribe to medkit changes for UI updates
+        currentMedkitsNetworked.OnValueChanged += OnMedkitsChanged;
+        
+        if (debugRoleUI)
+        {
+            Debug.Log($"[GameManager] OnNetworkSpawn - IsServer: {IsServer}, IsClient: {IsClient}");
+        }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        
+        // Unsubscribe from events
+        savedVictimsNetworked.OnValueChanged -= OnSavedVictimsChanged;
+        currentMedkitsNetworked.OnValueChanged -= OnMedkitsChanged;
+    }
+
+    private void OnSavedVictimsChanged(int previousValue, int newValue)
+    {
+        Debug.Log($"[GameManager] Saved victims updated: {previousValue} -> {newValue}/{totalVictims}");
+        
+        // Update victim count UI
+        UpdateVictimCountUI();
+        
+        // Check if all victims are saved
+        if (AreAllVictimsSaved())
+        {
+            Debug.Log("[GameManager] All victims saved!");
+        }
+    }
+
+    private void OnMedkitsChanged(int previousValue, int newValue)
+    {
+        Debug.Log($"[GameManager] Medkits updated: {previousValue} -> {newValue}/{maxMedkits}");
+        UpdateMedkitUI();
+    }
+
     void Update()
     {
         // Check for network status changes
         CheckNetworkStatusChange();
     }
+
+    #region Network Disconnect Handling
+    /// <summary>
+    /// Initializes the host disconnect handler using reflection to avoid compile-time dependency
+    /// </summary>
+    private void InitializeDisconnectHandler()
+    {
+        if (!autoAddDisconnectHandler)
+            return;
+
+        // Check if NetworkManager exists
+        if (NetworkManager.Singleton == null)
+        {
+            if (debugRoleUI)
+            {
+                Debug.LogWarning("[GameManager] NetworkManager not found. Skipping disconnect handler setup.");
+            }
+            return;
+        }
+
+        // Use reflection to find/add HostDisconnectHandler without compile-time dependency
+        var handlerType = System.Type.GetType("HostDisconnectHandler");
+        if (handlerType == null)
+        {
+            if (debugRoleUI)
+            {
+                Debug.LogWarning("[GameManager] HostDisconnectHandler type not found. It may not be compiled yet.");
+            }
+            return;
+        }
+
+        // Try to find existing handler
+        var existingHandler = NetworkManager.Singleton.GetComponent(handlerType);
+
+        if (existingHandler == null)
+        {
+            // Add new handler
+            NetworkManager.Singleton.gameObject.AddComponent(handlerType);
+            if (debugRoleUI)
+            {
+                Debug.Log("[GameManager] Added HostDisconnectHandler to NetworkManager");
+            }
+        }
+        else if (debugRoleUI)
+        {
+            Debug.Log("[GameManager] HostDisconnectHandler already exists on NetworkManager");
+        }
+    }
+    #endregion
 
     #region Role Detection and UI Management
     /// <summary>
@@ -449,7 +570,7 @@ public class GameManager : MonoBehaviour
         // Auto-find VictimSpawner if not assigned
         if (victimSpawner == null)
         {
-            victimSpawner = Object.FindAnyObjectByType<VictimSpawner>();
+            victimSpawner = FindAnyObjectByType<VictimSpawner>();
         }
 
         if (victimSpawner != null)
@@ -457,6 +578,9 @@ public class GameManager : MonoBehaviour
             // Get total victims from PlayerPrefs (set by LobbyManager)
             totalVictims = PlayerPrefs.GetInt("TaskCount", 0);
             Debug.Log($"[GameManager] Total victims to rescue: {totalVictims}");
+            
+            // Initialize victim count UI
+            UpdateVictimCountUI();
         }
         else
         {
@@ -465,18 +589,33 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Increments the saved victims count
+    /// Updates the victim count UI display (same logic as UpdateMedkitUI)
+    /// </summary>
+    private void UpdateVictimCountUI()
+    {
+        if (victimCountText != null)
+        {
+            victimCountText.text = "Victim: " + savedVictimsNetworked.Value + "/" + totalVictims;
+        }
+    }
+
+    /// <summary>
+    /// Increments the saved victims count (Server only - called by NPCInteractable)
     /// </summary>
     public void IncrementSavedVictims()
     {
-        savedVictims++;
-        Debug.Log($"[GameManager] Saved victims: {savedVictims}/{totalVictims}");
-
-        // Check if all victims are saved
-        if (AreAllVictimsSaved())
+        if (IsServer)
         {
-            Debug.Log("[GameManager] All victims saved!");
+            savedVictimsNetworked.Value++;
+            Debug.Log($"[GameManager] Server: Saved victims: {savedVictimsNetworked.Value}/{totalVictims}");
         }
+        else
+        {
+            // Client should not call this directly - NPCInteractable handles via RPC
+            Debug.LogWarning("[GameManager] IncrementSavedVictims called on client - this should be server-only!");
+        }
+
+        UpdateVictimCountUI();
     }
 
     /// <summary>
@@ -484,7 +623,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public bool AreAllVictimsSaved()
     {
-        return savedVictims >= totalVictims && totalVictims > 0;
+        return savedVictimsNetworked.Value >= totalVictims && totalVictims > 0;
     }
 
     /// <summary>
@@ -492,7 +631,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public int GetRescuedVictimCount()
     {
-        return savedVictims;
+        return savedVictimsNetworked.Value;
     }
     #endregion
 
@@ -503,6 +642,13 @@ public class GameManager : MonoBehaviour
         {
             defaultColor = medkitCountText.color;
         }
+        
+        // Initialize networked medkit count on server
+        if (IsServer)
+        {
+            currentMedkitsNetworked.Value = maxMedkits;
+        }
+        
         UpdateMedkitUI();
 
         // Setup safe zone trigger
@@ -536,6 +682,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void OnPlayerEnterSafeZone()
     {
+        // Only handle on server
+        if (!IsServer)
+            return;
+
         // Check if all victims are saved
         if (AreAllVictimsSaved())
         {
@@ -551,11 +701,18 @@ public class GameManager : MonoBehaviour
 
     public bool UseMedkit()
     {
-        if (currentMedkits <= 0)
+        // Only server can modify the networked variable
+        if (!IsServer)
+        {
+            Debug.LogWarning("[GameManager] UseMedkit called on client - should only be called on server!");
+            return false;
+        }
+
+        if (currentMedkitsNetworked.Value <= 0)
             return false;
 
-        currentMedkits--;
-        UpdateMedkitUI();
+        currentMedkitsNetworked.Value--;
+        // UI will update automatically via OnMedkitsChanged callback
         return true;
     }
 
@@ -564,14 +721,20 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void ReplenishMedkits()
     {
-        int medkitsToAdd = maxMedkits - currentMedkits;
+        // Only server can modify the networked variable
+        if (!IsServer)
+        {
+            Debug.LogWarning("[GameManager] ReplenishMedkits called on client - should only be called on server!");
+            return;
+        }
+
+        int medkitsToAdd = maxMedkits - currentMedkitsNetworked.Value;
 
         if (medkitsToAdd > 0)
         {
-            currentMedkits = maxMedkits;
-            UpdateMedkitUI();
-            TriggerReplenishEffect();
-            Debug.Log($"[GameManager] Replenished {medkitsToAdd} medkit(s). Current: {currentMedkits}/{maxMedkits}");
+            currentMedkitsNetworked.Value = maxMedkits;
+            TriggerReplenishEffectClientRpc();
+            Debug.Log($"[GameManager] Replenished {medkitsToAdd} medkit(s). Current: {currentMedkitsNetworked.Value}/{maxMedkits}");
         }
         else
         {
@@ -583,7 +746,7 @@ public class GameManager : MonoBehaviour
     {
         if (medkitCountText != null)
         {
-            medkitCountText.text = "Medkit: " + currentMedkits + "/" + maxMedkits;
+            medkitCountText.text = "Medkit: " + currentMedkitsNetworked.Value + "/" + maxMedkits;
         }
     }
 
@@ -592,13 +755,27 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void TriggerBlinkEffect()
     {
+        if (IsServer)
+        {
+            TriggerBlinkEffectClientRpc();
+        }
+        else
+        {
+            StartCoroutine(BlinkText());
+        }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerBlinkEffectClientRpc()
+    {
         StartCoroutine(BlinkText());
     }
 
     /// <summary>
     /// Triggers a green blink effect when medkits are replenished
     /// </summary>
-    private void TriggerReplenishEffect()
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerReplenishEffectClientRpc()
     {
         StartCoroutine(ReplenishBlinkText());
     }
@@ -664,10 +841,23 @@ public class GameManager : MonoBehaviour
         // Update all UI texts with initial time
         UpdateAllTimerDisplays();
 
-        // Start the timer if enabled
-        if (startOnAwake)
+        // Check if we should wait for ObjectiveManager
+        bool shouldWaitForObjectiveManager = false;
+        if (waitForObjectiveManager)
+        {
+            // Check if ObjectiveManager exists in the scene
+            var objectiveManager = FindAnyObjectByType(System.Type.GetType("ObjectiveManager"));
+            shouldWaitForObjectiveManager = objectiveManager != null;
+        }
+
+        // Start the timer if enabled and not waiting for ObjectiveManager
+        if (startOnAwake && !shouldWaitForObjectiveManager)
         {
             StartTimer();
+        }
+        else if (shouldWaitForObjectiveManager)
+        {
+            Debug.Log("[GameManager] Timer waiting for ObjectiveManager to signal start");
         }
     }
 
@@ -777,14 +967,127 @@ public class GameManager : MonoBehaviour
         
         UpdateAllTimerDisplays(); // Ensure it shows 00:00
         
-        // Load result scene when time is up
-        LoadResultScene();
+        // Save and sync points before loading result scene
+        SaveAndSyncPointsBeforeResult();
     }
 
     /// <summary>
     /// Loads the result scene
     /// </summary>
     private void LoadResultScene()
+    {
+        // Save and sync points before loading result scene
+        SaveAndSyncPointsBeforeResult();
+    }
+
+    /// <summary>
+    /// RPC that sends actual point values from server to all clients AND tells them to load Result scene
+    /// </summary>
+    [Rpc(SendTo.ClientsAndHost)]
+    private void SyncPointsAndLoadResultRpc(int totalPoints, int rescuedPoints, int healedPoints, int rubblePoints)
+    {
+        // Save the SERVER's point values to client's PlayerPrefs
+        PlayerPrefs.SetInt("FinalPoints_Total", totalPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rescued", rescuedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Healed", healedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rubble", rubblePoints);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[GameManager] Received points and loading Result - Total: {totalPoints}, Rescued: {rescuedPoints}, Healed: {healedPoints}, Rubble: {rubblePoints}");
+
+        // Load the Result scene on this client
+        StartCoroutine(LoadResultSceneAfterShortDelay());
+    }
+
+    private IEnumerator LoadResultSceneAfterShortDelay()
+    {
+        // Small delay to ensure PlayerPrefs is saved
+        yield return new WaitForSeconds(0.1f);
+        ActuallyLoadResultScene();
+    }
+
+    /// <summary>
+    /// Saves points to PlayerPrefs and syncs to all clients before loading Result scene
+    /// </summary>
+    private void SaveAndSyncPointsBeforeResult()
+    {
+        if (IsServer)
+        {
+            // Get points from server's PointManager
+            int totalPoints = 0;
+            int rescuedPoints = 0;
+            int healedPoints = 0;
+            int rubblePoints = 0;
+
+            if (PointManager.Instance != null)
+            {
+                var pointLog = PointManager.Instance.GetPointLog();
+                totalPoints = PointManager.Instance.GetTotalPoints();
+                rescuedPoints = pointLog.ContainsKey("Rescued Victim") ? pointLog["Rescued Victim"] : 0;
+                healedPoints = pointLog.ContainsKey("Healed Victim") ? pointLog["Healed Victim"] : 0;
+                rubblePoints = pointLog.ContainsKey("Cleared Rubble") ? pointLog["Cleared Rubble"] : 0;
+            }
+
+            // Server saves points to PlayerPrefs
+            PlayerPrefs.SetInt("FinalPoints_Total", totalPoints);
+            PlayerPrefs.SetInt("FinalPoints_Rescued", rescuedPoints);
+            PlayerPrefs.SetInt("FinalPoints_Healed", healedPoints);
+            PlayerPrefs.SetInt("FinalPoints_Rubble", rubblePoints);
+            PlayerPrefs.Save();
+
+            Debug.Log($"[GameManager] Server saved points - Total: {totalPoints}, Rescued: {rescuedPoints}, Healed: {healedPoints}, Rubble: {rubblePoints}");
+
+            // Broadcast points AND tell ALL clients to load Result scene
+            SyncPointsAndLoadResultRpc(totalPoints, rescuedPoints, healedPoints, rubblePoints);
+        }
+        else
+        {
+            // Client should wait for RPC - but if called directly, just load scene
+            Debug.LogWarning("[GameManager] SaveAndSyncPointsBeforeResult called on client - waiting for server RPC");
+        }
+    }
+
+    /// <summary>
+    /// Saves current points from PointManager to PlayerPrefs
+    /// </summary>
+    private void SavePointsToPlayerPrefs()
+    {
+        if (PointManager.Instance == null)
+        {
+            Debug.LogWarning("[GameManager] PointManager not found, cannot save points!");
+            return;
+        }
+
+        var pointLog = PointManager.Instance.GetPointLog();
+        int totalPoints = PointManager.Instance.GetTotalPoints();
+
+        // Save individual point categories
+        int rescuedPoints = pointLog.ContainsKey("Rescued Victim") ? pointLog["Rescued Victim"] : 0;
+        int healedPoints = pointLog.ContainsKey("Healed Victim") ? pointLog["Healed Victim"] : 0;
+        int rubblePoints = pointLog.ContainsKey("Cleared Rubble") ? pointLog["Cleared Rubble"] : 0;
+
+        PlayerPrefs.SetInt("FinalPoints_Total", totalPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rescued", rescuedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Healed", healedPoints);
+        PlayerPrefs.SetInt("FinalPoints_Rubble", rubblePoints);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[GameManager] Server saved points to PlayerPrefs - Total: {totalPoints}, Rescued: {rescuedPoints}, Healed: {healedPoints}, Rubble: {rubblePoints}");
+    }
+
+    /// <summary>
+    /// RPC to notify all clients that the instructor is ending the game
+    /// </summary>
+    [Rpc(SendTo.ClientsAndHost)]
+    private void NotifyGameEndingRpc()
+    {
+        Debug.Log("[GameManager] Instructor has ended the session!");
+    }
+
+    /// <summary>
+    /// Actually loads the Result scene
+    /// </summary>
+    private void ActuallyLoadResultScene()
     {
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -832,6 +1135,30 @@ public class GameManager : MonoBehaviour
     {
         if (totalDurationInSeconds <= 0) return 0f;
         return 1f - ((float)remainingTimeInSeconds / (float)totalDurationInSeconds);
+    }
+    #endregion
+
+    #region Instructor Controls
+    /// <summary>
+    /// Called by InstructorEndGameButton to end the game early
+    /// Only works for the instructor/host
+    /// </summary>
+    public void InstructorEndGame()
+    {
+        // Security check - only instructor/host can end game
+        if (!IsInstructor())
+        {
+            Debug.LogWarning("[GameManager] InstructorEndGame called by non-instructor!");
+            return;
+        }
+
+        Debug.Log("[GameManager] Instructor is ending the game early!");
+
+        // Stop the timer
+        isTimerRunning = false;
+
+        // Use the existing save and sync flow (this will sync points AND load scene for all clients)
+        SaveAndSyncPointsBeforeResult();
     }
     #endregion
 

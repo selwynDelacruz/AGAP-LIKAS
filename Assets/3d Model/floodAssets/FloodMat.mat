@@ -47,11 +47,11 @@ Material:
     m_Ints: []
     m_Floats:
     - _Depth_Fade: 0.3
-    - _NormalMap_Tilting: 1
+    - _NormalMap_Tilting: 0.5
     - _Normal_Strength: 1
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Smoothness: 0.8
+    - _Smoothness: 0.7
     - _WavesFrequency: 0.1
     - _WavesHeight: 0.2
     - _WavesSpeed: 0.05
