@@ -116,6 +116,66 @@ public class GameManager : NetworkBehaviour
     [SerializeField] private bool autoAddDisconnectHandler = true;
     #endregion
 
+    #region Voice Chat Integration
+    [Header("Voice Chat")]
+    [Tooltip("Enable voice chat in this scene")]
+    [SerializeField] private bool enableVoiceChat = true;
+
+    [Tooltip("Prefab containing GameVoiceChatManager component")]
+    [SerializeField] private GameObject voiceChatManagerPrefab;
+
+    private GameObject voiceChatManagerInstance;
+
+    /// <summary>
+    /// Initialize voice chat system for the game scene
+    /// Called from Start() after other initializations
+    /// </summary>
+    private void InitializeVoiceChat()
+    {
+        if (!enableVoiceChat)
+        {
+            if (debugRoleUI)
+                Debug.Log("[GameManager] Voice chat disabled in settings");
+            return;
+        }
+
+        // Ensure VivoxServiceManager singleton exists
+        if (VivoxServiceManager.Instance == null)
+        {
+            Debug.LogWarning("[GameManager] VivoxServiceManager not found! It should exist from Main Menu scene and persist via DontDestroyOnLoad.");
+            return;
+        }
+
+        // Spawn voice chat manager prefab
+        if (voiceChatManagerPrefab != null)
+        {
+            voiceChatManagerInstance = Instantiate(voiceChatManagerPrefab);
+            
+            if (debugRoleUI)
+                Debug.Log("[GameManager] Voice chat manager instantiated");
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] Voice chat manager prefab not assigned! Assign it in the Inspector.");
+        }
+    }
+
+    /// <summary>
+    /// Cleanup voice chat when leaving the scene
+    /// </summary>
+    private void CleanupVoiceChat()
+    {
+        if (voiceChatManagerInstance != null)
+        {
+            Destroy(voiceChatManagerInstance);
+            voiceChatManagerInstance = null;
+            
+            if (debugRoleUI)
+                Debug.Log("[GameManager] Voice chat manager cleaned up");
+        }
+    }
+    #endregion
+
     void Awake()
     {
         // Singleton setup
@@ -152,6 +212,9 @@ public class GameManager : NetworkBehaviour
 
         // Initialize Role-Based UI (must be after role detection)
         InitializeRoleBasedUI();
+
+        // Initialize Voice Chat (ADD THIS LINE - should be last)
+        InitializeVoiceChat();
     }
 
     public override void OnNetworkSpawn()
@@ -1172,6 +1235,9 @@ public class GameManager : NetworkBehaviour
         {
             safeZoneTrigger.OnPlayerEnterSafeZone -= OnPlayerEnterSafeZone;
         }
+
+        // Cleanup voice chat manager
+        CleanupVoiceChat();
     }
 }
 

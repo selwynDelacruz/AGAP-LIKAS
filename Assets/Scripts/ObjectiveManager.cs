@@ -160,6 +160,12 @@ public class ObjectiveManager : NetworkBehaviour
         if (readyButton != null)
         {
             readyButton.onClick.AddListener(OnReadyButtonClicked);
+            // Disable button initially until voice chat is ready
+            readyButton.interactable = false;
+            if (readyButtonText != null)
+            {
+                readyButtonText.text = "Initializing...";
+            }
         }
 
         // Initialize UI content
@@ -191,14 +197,23 @@ public class ObjectiveManager : NetworkBehaviour
             waitingForOthersText.gameObject.SetActive(false);
         }
         
-        // Setup loading indicator - check if maps are already loaded
+        // Setup loading indicator
         mapsLoaded = MapSpawner.MapsReady;
         UpdateLoadingIndicator();
         
         // Subscribe to map spawning event
         MapSpawner.OnMapsSpawned += OnMapsLoaded;
 
-        // Unlock cursor for UI interaction - do this AFTER other setup
+        // BETTER APPROACH: Subscribe to voice chat ready event
+        if (GameVoiceChatManager.Instance != null)
+        {
+            GameVoiceChatManager.Instance.OnVoiceChatReady += OnVoiceChatReady;
+        }
+        
+        // Also start the coroutine as a fallback
+        StartCoroutine(WaitForVoiceChatInitialization());
+
+        // Unlock cursor for UI interaction
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -207,6 +222,54 @@ public class ObjectiveManager : NetworkBehaviour
 
         if (showDebugLogs)
             Debug.Log("[ObjectiveManager] Initialized - Showing objective panel");
+    }
+
+    /// <summary>
+    /// Called when voice chat is ready
+    /// </summary>
+    private void OnVoiceChatReady()
+    {
+        if (showDebugLogs)
+            Debug.Log("[ObjectiveManager] Voice chat ready event received!");
+        
+        // Enable the ready button
+        if (readyButton != null)
+        {
+            readyButton.interactable = true;
+            if (readyButtonText != null)
+            {
+                readyButtonText.text = "Ready";
+            }
+        }
+    }
+
+    /// <summary>
+    /// Wait for voice chat to initialize before allowing ready (optional safety check)
+    /// </summary>
+    private IEnumerator WaitForVoiceChatInitialization()
+    {
+        // Wait a bit for GameVoiceChatManager to be ready (using real time)
+        float waitTime = 0f;
+        float maxWaitTime = 5f; // Max 5 seconds
+        
+        while (waitTime < maxWaitTime)
+        {
+            // Check if GameVoiceChatManager exists and is ready
+            if (GameVoiceChatManager.Instance != null && GameVoiceChatManager.Instance.IsReady())
+            {
+                if (showDebugLogs)
+                    Debug.Log("[ObjectiveManager] Voice chat is ready!");
+                yield break; // Voice chat ready, exit coroutine
+            }
+            
+            // Wait using real time (unaffected by timeScale)
+            yield return new WaitForSecondsRealtime(0.1f);
+            waitTime += 0.1f;
+        }
+        
+        // If we reach here, voice chat might not be ready yet
+        if (showDebugLogs)
+            Debug.LogWarning("[ObjectiveManager] Voice chat not ready after 5 seconds - continuing anyway");
     }
 
     public override void OnNetworkSpawn()
@@ -267,6 +330,12 @@ public class ObjectiveManager : NetworkBehaviour
         
         // Unsubscribe from map spawning event
         MapSpawner.OnMapsSpawned -= OnMapsLoaded;
+        
+        // Unsubscribe from voice chat event
+        if (GameVoiceChatManager.Instance != null)
+        {
+            GameVoiceChatManager.Instance.OnVoiceChatReady -= OnVoiceChatReady;
+        }
     }
 
     #endregion
