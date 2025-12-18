@@ -19,6 +19,10 @@ public class VoiceChatRegistration : NetworkBehaviour
     [Tooltip("Role - if empty, will try to get from PlayerPrefs")]
     [SerializeField] private string role = "";
 
+    [Header("Debug")]
+    [Tooltip("Enable detailed logging")]
+    [SerializeField] private bool debugMode = true;
+
     // Network variables to sync username and role across all clients
     private NetworkVariable<NetworkString> networkUsername = new NetworkVariable<NetworkString>(
         new NetworkString(""),
@@ -41,12 +45,22 @@ public class VoiceChatRegistration : NetworkBehaviour
         base.OnNetworkSpawn();
 
 #if METAVC_NGO
+        // Find MetaVc component - search in children and parent
         _metaVc = GetComponentInChildren<MetaVc>();
+        
+        if (_metaVc == null)
+        {
+            _metaVc = GetComponentInParent<MetaVc>();
+        }
 
         if (_metaVc == null)
         {
-            Debug.LogWarning("[VoiceChatRegistration] No MetaVc found on this object or children!");
-            return;
+            if (debugMode)
+            {
+                Debug.LogWarning($"[VoiceChatRegistration] No MetaVc found on {gameObject.name}! Voice chat will not work. This is OK if this prefab doesn't need voice chat.");
+            }
+            
+            // Don't return - still register the player for tracking purposes
         }
 
         // Determine username
@@ -101,7 +115,10 @@ public class VoiceChatRegistration : NetworkBehaviour
             networkUsername.Value = new NetworkString(displayName);
             networkRole.Value = new NetworkString(userRole);
             
-            Debug.Log($"[VoiceChatRegistration] Owner setting networked data: {displayName} ({userRole})");
+            if (debugMode)
+            {
+                Debug.Log($"[VoiceChatRegistration] Owner setting networked data: {displayName} ({userRole})");
+            }
         }
         else
         {
@@ -113,7 +130,10 @@ public class VoiceChatRegistration : NetworkBehaviour
         // Register with VoiceChatManager (for local player immediately)
         RegisterWithManager(displayName, userRole);
 #else
-        Debug.LogWarning("[VoiceChatRegistration] METAVC_NGO not defined. Voice chat registration disabled.");
+        if (debugMode)
+        {
+            Debug.LogWarning("[VoiceChatRegistration] METAVC_NGO not defined. Voice chat registration disabled.");
+        }
 #endif
     }
 
@@ -134,7 +154,10 @@ public class VoiceChatRegistration : NetworkBehaviour
             userRole = IsHost ? "instructor" : "trainee";
         }
 
-        Debug.Log($"[VoiceChatRegistration] Remote player synced: {displayName} ({userRole})");
+        if (debugMode)
+        {
+            Debug.Log($"[VoiceChatRegistration] Remote player synced: {displayName} ({userRole})");
+        }
 
         RegisterWithManager(displayName, userRole);
 #endif
@@ -143,22 +166,29 @@ public class VoiceChatRegistration : NetworkBehaviour
     private void RegisterWithManager(string displayName, string userRole)
     {
 #if METAVC_NGO
-        // Register with VoiceChatManager
+        // Register with VoiceChatManager (even if MetaVc is null - for tracking purposes)
         if (VoiceChatManager.Instance != null)
         {
             VoiceChatManager.Instance.RegisterUser(
                 OwnerClientId,
-                _metaVc,
+                _metaVc, // Can be null - VoiceChatManager will handle it
                 displayName,
                 userRole,
                 IsOwner
             );
 
-            Debug.Log($"[VoiceChatRegistration] Registered: {displayName} (ID: {OwnerClientId}, Role: {userRole}, IsLocal: {IsOwner})");
+            if (debugMode)
+            {
+                string vcStatus = _metaVc != null ? "with voice chat" : "WITHOUT voice chat (MetaVc missing)";
+                Debug.Log($"[VoiceChatRegistration] Registered: {displayName} (ID: {OwnerClientId}, Role: {userRole}, IsLocal: {IsOwner}) {vcStatus}");
+            }
         }
         else
         {
-            Debug.LogWarning("[VoiceChatRegistration] VoiceChatManager not found! Voice chat tracking won't work.");
+            if (debugMode)
+            {
+                Debug.LogWarning("[VoiceChatRegistration] VoiceChatManager not found! Voice chat tracking won't work.");
+            }
         }
 #endif
     }

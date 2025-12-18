@@ -5144,7 +5144,7 @@ GameObject:
   - component: {fileID: 584694706031303759}
   - component: {fileID: 2710624262945088361}
   - component: {fileID: 4641524831244904672}
-  - component: {fileID: 3203736584021443449}
+  - component: {fileID: -5856379561409870507}
   m_Layer: 7
   m_Name: FloodPlayerCharaBoat
   m_TagString: Player
@@ -5451,7 +5451,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AddCameraTarget
   ShowTopMostFoldoutHeaderGroup: 1
   cameraRoot: {fileID: 5232437134773934645}
---- !u!114 &3203736584021443449
+--- !u!114 &-5856379561409870507
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5460,9 +5460,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1096962822472106403}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d35568b78b052e428bc3618102cf35e, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d5f018862fc7f1448fe950b27a2420b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VoiceChatManager
+  m_EditorClassIdentifier: Assembly-CSharp::VoiceChatRegistration
+  ShowTopMostFoldoutHeaderGroup: 1
+  username: 
+  role: 
   debugMode: 1
 --- !u!1 &1166881511128324564
 GameObject:

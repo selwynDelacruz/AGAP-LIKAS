@@ -394,6 +394,14 @@ namespace Lobby
             Quaternion spawnRot = GetSpawnRotation();
             
             var instance = Instantiate(selectedPrefab, spawnPos, spawnRot);
+            
+            // Add null check for instance
+            if (instance == null)
+            {
+                Debug.LogError($"[PlayerSpawnManager] Failed to instantiate prefab {selectedPrefab.name}");
+                return;
+            }
+            
             var netObj = instance.GetComponent<NetworkObject>();
             if (netObj == null)
             {
@@ -401,8 +409,20 @@ namespace Lobby
                 Destroy(instance);
                 return;
             }
-            netObj.SpawnAsPlayerObject(clientId);
-            if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] Spawned {selectedPrefab.name} for TRAINEE client {clientId} at {spawnPos}.");
+            
+            try
+            {
+                netObj.SpawnAsPlayerObject(clientId);
+                if (showDebugLogs) Debug.Log($"[PlayerSpawnManager] ✓ Spawned {selectedPrefab.name} for TRAINEE client {clientId} at {spawnPos}.");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[PlayerSpawnManager] Failed to spawn player for client {clientId}: {e.Message}\n{e.StackTrace}");
+                if (instance != null)
+                {
+                    Destroy(instance);
+                }
+            }
         }
 
         /// <summary>
