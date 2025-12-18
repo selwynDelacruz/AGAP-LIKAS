@@ -209,10 +209,17 @@ namespace Lobby
 
         /// <summary>
         /// Spawns the instructor spectator prefab if the current user is an instructor.
-        /// This is a local (non-networked) object for camera control only.
+        /// This is now a NETWORKED object so voice chat can work.
         /// </summary>
         private void SpawnInstructorSpectatorIfNeeded()
         {
+            // Only server can spawn networked objects
+            if (!NetworkManager.Singleton.IsServer)
+            {
+                if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Not server, skipping instructor spectator spawn.");
+                return;
+            }
+
             // Check if user is instructor
             string userType = PlayerPrefs.GetString("Type_Of_User", "");
             if (userType != "instructor")
@@ -243,13 +250,26 @@ namespace Lobby
                 return;
             }
 
-            // Instantiate the spectator (local only, not networked)
-            _instructorSpectatorInstance = Instantiate(spectatorPrefab, Vector3.zero, Quaternion.identity);
-            _instructorSpectatorInstance.name = "InstructorSpectator";
-
-            if (showDebugLogs) 
+            // Check if prefab has NetworkObject (required for voice chat)
+            if (spectatorPrefab.GetComponent<NetworkObject>() != null)
             {
-                Debug.Log("[PlayerSpawnManager] ✓ Spawned Instructor Spectator successfully!");
+                // Spawn as networked object (required for MetaVoiceChat)
+                _instructorSpectatorInstance = Instantiate(spectatorPrefab, Vector3.zero, Quaternion.identity);
+                var netObj = _instructorSpectatorInstance.GetComponent<NetworkObject>();
+                netObj.SpawnAsPlayerObject(NetworkManager.Singleton.LocalClientId);
+                
+                if (showDebugLogs) 
+                {
+                    Debug.Log("[PlayerSpawnManager] ✓ Spawned Instructor Spectator as NETWORKED object (voice chat enabled)!");
+                }
+            }
+            else
+            {
+                // Fallback: spawn as local object (no voice chat)
+                _instructorSpectatorInstance = Instantiate(spectatorPrefab, Vector3.zero, Quaternion.identity);
+                _instructorSpectatorInstance.name = "InstructorSpectator";
+                
+                Debug.LogWarning("[PlayerSpawnManager] InstructorSpectator spawned WITHOUT NetworkObject - voice chat will NOT work! Add NetworkObject component to enable voice chat.");
             }
         }
 
