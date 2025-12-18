@@ -26,6 +26,10 @@ namespace Lobby
         [Tooltip("Instructor spectator prefab (non-networked, local only)")]
         [SerializeField] private GameObject instructorSpectatorPrefab;
 
+        [Header("Instructor Voice Chat")]
+        [Tooltip("Instructor voice proxy prefab (networked, for voice transmission). Must have NetworkObject, MetaVc, VcMicAudioInput, VcAudioSourceOutput, and NGONetProvider.")]
+        [SerializeField] private GameObject instructorVoiceProxyPrefab;
+
         [Header("Gameplay Scenes That Require Spawning")]
         [SerializeField] private string[] gameplaySceneNames = {"Flood","Earthquake","TestKen"};
 
@@ -49,6 +53,7 @@ namespace Lobby
         private bool pendingSpawn = false;
         private string pendingSceneName = "";
         private GameObject _instructorSpectatorInstance;
+        private GameObject _instructorVoiceProxyInstance;
 
         // Current disaster type cached for spawn position calculations
         private string currentDisasterType = "Earthquake";
@@ -135,6 +140,13 @@ namespace Lobby
             {
                 Destroy(_instructorSpectatorInstance);
                 _instructorSpectatorInstance = null;
+            }
+
+            // Clean up instructor voice proxy instance
+            if (_instructorVoiceProxyInstance != null)
+            {
+                // Note: NetworkObject cleanup is handled by NetworkManager
+                _instructorVoiceProxyInstance = null;
             }
 
             // Clear instructor status cache
@@ -250,6 +262,74 @@ namespace Lobby
             if (showDebugLogs) 
             {
                 Debug.Log("[PlayerSpawnManager] ✓ Spawned Instructor Spectator successfully!");
+            }
+
+            // Also spawn the voice proxy for instructor voice chat
+            SpawnInstructorVoiceProxyIfNeeded();
+        }
+
+        /// <summary>
+        /// Spawns the instructor voice proxy for voice chat.
+        /// This is a networked object that allows the instructor to broadcast voice to all trainees.
+        /// </summary>
+        private void SpawnInstructorVoiceProxyIfNeeded()
+        {
+            // Check if user is instructor
+            string userType = PlayerPrefs.GetString("Type_Of_User", "");
+            if (userType != "instructor")
+            {
+                return;
+            }
+
+            // Check if already spawned
+            if (_instructorVoiceProxyInstance != null)
+            {
+                if (showDebugLogs) Debug.Log("[PlayerSpawnManager] Instructor voice proxy already spawned. Skipping.");
+                return;
+            }
+
+            // Check if prefab is assigned
+            if (instructorVoiceProxyPrefab == null)
+            {
+                // Try loading from Resources
+                instructorVoiceProxyPrefab = Resources.Load<GameObject>("InstructorVoiceProxy");
+                
+                if (instructorVoiceProxyPrefab == null)
+                {
+                    Debug.LogWarning("[PlayerSpawnManager] Instructor voice proxy prefab not assigned and not found in Resources. Instructor will not have voice chat.");
+                    return;
+                }
+            }
+
+            // Verify prefab has NetworkObject
+            if (instructorVoiceProxyPrefab.GetComponent<NetworkObject>() == null)
+            {
+                Debug.LogError("[PlayerSpawnManager] Instructor voice proxy prefab is missing NetworkObject component!");
+                return;
+            }
+
+            // Spawn the voice proxy (networked)
+            Vector3 spawnPos = Vector3.zero; // Position doesn't matter for voice (it's non-spatial for instructor)
+            _instructorVoiceProxyInstance = Instantiate(instructorVoiceProxyPrefab, spawnPos, Quaternion.identity);
+            _instructorVoiceProxyInstance.name = "InstructorVoiceProxy";
+
+            var netObj = _instructorVoiceProxyInstance.GetComponent<NetworkObject>();
+            if (netObj != null)
+            {
+                // Spawn as the instructor's "player object" for voice only
+                ulong instructorClientId = NetworkManager.Singleton.LocalClientId;
+                netObj.SpawnAsPlayerObject(instructorClientId);
+
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[PlayerSpawnManager] ✓ Spawned Instructor Voice Proxy for client {instructorClientId}!");
+                }
+            }
+            else
+            {
+                Debug.LogError("[PlayerSpawnManager] Failed to get NetworkObject from instructor voice proxy instance.");
+                Destroy(_instructorVoiceProxyInstance);
+                _instructorVoiceProxyInstance = null;
             }
         }
 

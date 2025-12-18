@@ -86,6 +86,9 @@ public class SpectatorController : MonoBehaviour
             mainCamera = Camera.main;
         }
 
+        // Ensure main camera has AudioListener for hearing trainees
+        EnsureAudioListener();
+
         // Find Cinemachine virtual camera if not assigned
         if (virtualCamera == null)
         {
@@ -99,6 +102,38 @@ public class SpectatorController : MonoBehaviour
         // Reset initialization timer - we'll find trainees in Update using unscaled time
         _hasInitialized = false;
         _initializationTimer = 0f;
+    }
+
+    /// <summary>
+    /// Ensures the spectator camera has an AudioListener to hear trainee voices
+    /// </summary>
+    private void EnsureAudioListener()
+    {
+        if (mainCamera == null) return;
+
+        // Check if main camera already has AudioListener
+        AudioListener existingListener = mainCamera.GetComponent<AudioListener>();
+        if (existingListener == null)
+        {
+            // Add AudioListener to main camera
+            mainCamera.gameObject.AddComponent<AudioListener>();
+            Debug.Log("[SpectatorController] Added AudioListener to spectator camera for voice chat");
+        }
+        else
+        {
+            Debug.Log("[SpectatorController] AudioListener already present on camera");
+        }
+
+        // Disable any other AudioListeners in the scene to avoid warnings
+        AudioListener[] allListeners = FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
+        foreach (var listener in allListeners)
+        {
+            if (listener.gameObject != mainCamera.gameObject)
+            {
+                listener.enabled = false;
+                Debug.Log($"[SpectatorController] Disabled AudioListener on {listener.gameObject.name}");
+            }
+        }
     }
 
     private void Update()
