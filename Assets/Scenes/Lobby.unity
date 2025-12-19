@@ -414,7 +414,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7482667652216324306, guid: efa5b417ac9e49b4698b8b5528924754, type: 3}
+  m_Sprite: {fileID: 21300000, guid: eaf02300b9a7b104b96e8b965d9bffd3, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -466,8 +466,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 421.94, y: -483.02}
-  m_SizeDelta: {x: 879.251, y: 53.9555}
+  m_AnchoredPosition: {x: 421.94, y: -475.263}
+  m_SizeDelta: {x: 879.251, y: 69.469}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &59215156
 MonoBehaviour:
@@ -2910,7 +2910,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7482667652216324306, guid: efa5b417ac9e49b4698b8b5528924754, type: 3}
+  m_Sprite: {fileID: 21300000, guid: f0c78118ae2a2404fb57ed23d06a4fa7, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4186,7 +4186,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7482667652216324306, guid: efa5b417ac9e49b4698b8b5528924754, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d035225a393dfbb4c886ab117a420e4b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4440,7 +4440,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7482667652216324306, guid: efa5b417ac9e49b4698b8b5528924754, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 330f35c7ab6fac34491726cf5d964982, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6768,14 +6768,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.41568628}
+  m_Color: {r: 0.6377357, g: 0, b: 0.013895366, a: 0.41568628}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7482667652216324306, guid: efa5b417ac9e49b4698b8b5528924754, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 372451f16172cdb40a3d273cf1d3b36a, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -7535,7 +7535,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7482667652216324306, guid: efa5b417ac9e49b4698b8b5528924754, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b3cec856d93b365479a33834541a4bf6, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
