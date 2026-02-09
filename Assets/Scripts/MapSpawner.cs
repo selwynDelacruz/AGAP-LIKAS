@@ -1,5 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class MapSpawner : NetworkBehaviour
 {
@@ -9,6 +11,10 @@ public class MapSpawner : NetworkBehaviour
     [Header("Size of each map (adjust to your prefab size)")]
     public float mapSize = 121f;
 
+    [Header("Y Position Adjustment")]
+    [Tooltip("Y position offset for Flood disaster mode")]
+    [SerializeField] private float floodYAdjustment = -3f;
+
     [Header("Safe Zone Prefab")]
     public GameObject safeZonePrefab;
 
@@ -16,33 +22,157 @@ public class MapSpawner : NetworkBehaviour
     [Tooltip("Enable detailed logging for debugging")]
     public bool debugMode = true;
 
+    [Tooltip("Delay in seconds before spawning maps (helps ensure clients are ready)")]
+    public float spawnDelay = 0.5f;
+
+    /// <summary>
+    /// Event fired when maps have finished spawning. Other systems can subscribe to this.
+    /// </summary>
+    public static event System.Action OnMapsSpawned;
+
+    /// <summary>
+    /// Returns true if maps have been spawned this session.
+    /// </summary>
+    public static bool MapsReady { get; private set; }
+
+    // Synced random seed so all clients shuffle identically
+    private NetworkVariable<int> randomSeed = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
     private GameObject[] selectedMaps = new GameObject[4];
+    private bool hasSpawned = false;
+    private float yOffset = 0f; // Current Y offset to use based on disaster type
+
+    private string[] gameplayScenes = { "TestKen", "Flood", "Earthquake" };
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
 
-        // ONLY THE HOST/SERVER SPAWNS THE MAPS
-        // Clients will receive the spawned objects automatically via Netcode
-        if (!IsServer)
+        // Only spawn maps in gameplay scenes
+        string currentScene = SceneManager.GetActiveScene().name;
+        if (System.Array.IndexOf(gameplayScenes, currentScene) < 0)
         {
-            if (debugMode)
-            {
-                Debug.Log("[MapSpawner] Client - waiting for server to spawn maps");
-            }
+            if (debugMode) Debug.Log($"[MapSpawner] Scene '{currentScene}' is not a gameplay scene. Skipping map spawn.");
             return;
         }
 
+        // Determine Y offset based on disaster type
+        DetermineYOffset();
+
+        if (IsServer)
+        {
+            // Server generates and sets seed
+            randomSeed.Value = Random.Range(int.MinValue, int.MaxValue);
+            if (debugMode) Debug.Log($"[MapSpawner] Server generated seed: {randomSeed.Value}");
+            
+            // Debug: Check if prefabs are registered
+            if (debugMode)
+            {
+                Debug.Log($"[MapSpawner] Network Prefabs Count: {NetworkManager.Singleton.NetworkConfig.Prefabs.Prefabs.Count}");
+                Debug.Log($"[MapSpawner] Connected clients: {NetworkManager.Singleton.ConnectedClientsIds.Count}");
+            }
+            
+            // Delay spawning to ensure clients are synchronized
+            StartCoroutine(DelayedSpawnMaps());
+        }
+        else
+        {
+            // Client logs that it's waiting for server to spawn maps
+            if (debugMode) Debug.Log($"[MapSpawner] Client waiting for server to spawn maps (seed: {randomSeed.Value})");
+            
+            // Subscribe to NetworkVariable change to detect when server spawns
+            randomSeed.OnValueChanged += OnRandomSeedChanged;
+        }
+    }
+
+    /// <summary>
+    /// Determines the Y offset based on the selected disaster type from PlayerPrefs
+    /// </summary>
+    private void DetermineYOffset()
+    {
+        // Get disaster type from PlayerPrefs (set by LobbyRoomManager)
+        string disasterType = PlayerPrefs.GetString("DisasterType", "Earthquake");
+
+        switch (disasterType)
+        {
+            case "Flood":
+                yOffset = floodYAdjustment;
+                if (debugMode)
+                {
+                    Debug.Log($"[MapSpawner] Flood mode detected - applying Y offset: {yOffset}");
+                }
+                break;
+            case "Earthquake":
+                yOffset = 0f;
+                if (debugMode)
+                {
+                    Debug.Log("[MapSpawner] Earthquake mode detected - no Y offset");
+                }
+                break;
+            case "TestKen":
+                yOffset = 0f;
+                if (debugMode)
+                {
+                    Debug.Log("[MapSpawner] TestKen mode detected - no Y offset");
+                }
+                break;
+            default:
+                yOffset = 0f;
+                Debug.LogWarning($"[MapSpawner] Unknown disaster type: {disasterType}, using default Y offset: 0");
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Called on clients when the random seed changes (when server sets it)
+    /// </summary>
+    private void OnRandomSeedChanged(int previousValue, int newValue)
+    {
         if (debugMode)
         {
-            Debug.Log("[MapSpawner] Server - starting map spawn process");
+            Debug.Log($"[MapSpawner] Client: Random seed updated from {previousValue} to {newValue}");
+        }
+    }
+
+    /// <summary>
+    /// Delays map spawning to ensure clients have time to connect and sync
+    /// </summary>
+    private IEnumerator DelayedSpawnMaps()
+    {
+        if (debugMode)
+        {
+            Debug.Log($"[MapSpawner] Server: Waiting {spawnDelay}s before spawning maps...");
         }
 
+        // Use WaitForSecondsRealtime so spawning works even when Time.timeScale = 0 
+        // (e.g., when ObjectiveManager is showing the ready screen)
+        yield return new WaitForSecondsRealtime(spawnDelay);
+        
+        if (debugMode)
+        {
+            Debug.Log($"[MapSpawner] Server: Starting map spawn. Connected clients: {NetworkManager.Singleton.ConnectedClientsIds.Count}");
+            foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                Debug.Log($"[MapSpawner] - Client ID: {clientId}");
+            }
+        }
+        
         SpawnMaps();
     }
 
     private void SpawnMaps()
     {
+        if (hasSpawned)
+        {
+            if (debugMode) Debug.LogWarning("[MapSpawner] Already spawned maps!");
+            return;
+        }
+        hasSpawned = true;
+
         // Validate prefabs are assigned
         if (mapPrefabs == null || mapPrefabs.Length < 4)
         {
@@ -50,20 +180,32 @@ public class MapSpawner : NetworkBehaviour
             return;
         }
 
-        // STEP 1: Shuffle the mapPrefabs array
-        ShuffleArray(mapPrefabs);
+        // Use synced seed for deterministic shuffle
+        Random.State oldState = Random.state;
+        Random.InitState(randomSeed.Value);
 
-        // STEP 2: Take the first 4 maps after shuffle
+        // Shuffle using the synced seed
+        ShuffleArray(mapPrefabs);
+                    
+        // Select first 4 maps after shuffle
         for (int i = 0; i < 4; i++)
         {
             selectedMaps[i] = mapPrefabs[i];
         }
 
-        // STEP 3: Spawn them in a 2x2 grid
-        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, 0, 55));                         // bottom-left
-        GameObject chunk1 = SpawnMap(selectedMaps[3], new Vector3(55, 0, 55 + mapSize));                // top-left
-        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, 0, 55));               // bottom-right
-        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, 0, 55 + mapSize));     // top-right
+        // Restore previous random state
+        Random.state = oldState;
+
+        if (debugMode)
+        {
+            Debug.Log($"[MapSpawner] Selected maps (seed {randomSeed.Value}): {selectedMaps[0].name}, {selectedMaps[1].name}, {selectedMaps[2].name}, {selectedMaps[3].name}");
+        }
+
+        // STEP 3: Spawn them in a 2x2 grid with Y offset (only server does this)
+        GameObject chunk0 = SpawnMap(selectedMaps[0], new Vector3(55, yOffset, 55));                              // bottom-left
+        GameObject chunk1 = SpawnMap(selectedMaps[1], new Vector3(55, yOffset, 55 + mapSize));                    // top-left
+        GameObject chunk2 = SpawnMap(selectedMaps[2], new Vector3(55 + mapSize, yOffset, 55));                    // bottom-right
+        GameObject chunk3 = SpawnMap(selectedMaps[3], new Vector3(55 + mapSize, yOffset, 55 + mapSize));          // top-right
 
         // STEP 4: Place the safe zone inside the final chunk
         if (chunk3 != null)
@@ -73,8 +215,14 @@ public class MapSpawner : NetworkBehaviour
 
         if (debugMode)
         {
-            Debug.Log("[MapSpawner] Map spawning complete!");
+            Debug.Log("[MapSpawner] Server: Map spawning complete!");
+            Debug.Log($"[MapSpawner] Server: Total spawned NetworkObjects: {NetworkManager.Singleton.SpawnManager.SpawnedObjectsList.Count}");
         }
+
+        // Mark maps as ready and notify listeners
+        MapsReady = true;
+        OnMapsSpawned?.Invoke();
+        if (debugMode) Debug.Log("[MapSpawner] OnMapsSpawned event fired.");
     }
 
     GameObject SpawnMap(GameObject prefab, Vector3 position)
@@ -85,25 +233,47 @@ public class MapSpawner : NetworkBehaviour
             return null;
         }
 
+        if (prefab.GetComponent<NetworkObject>() == null)
+        {
+            Debug.LogError($"[MapSpawner] Prefab '{prefab.name}' MUST have NetworkObject component in the prefab asset!");
+            return null;
+        }
+
+        // Check if prefab is registered in NetworkManager
+        bool isRegistered = NetworkManager.Singleton.NetworkConfig.Prefabs.Contains(prefab);
+        if (!isRegistered)
+        {
+            Debug.LogError($"[MapSpawner] Prefab '{prefab.name}' is NOT registered in NetworkManager's Network Prefabs List! Add it in NetworkManager inspector.");
+            return null;
+        }
+
+        if (debugMode)
+        {
+            Debug.Log($"[MapSpawner] ✓ Prefab '{prefab.name}' is registered. Spawning at {position}...");
+        }
+
         // Instantiate the map locally first
         GameObject map = Instantiate(prefab, position, Quaternion.identity);
         
         // Get NetworkObject component
         NetworkObject networkObject = map.GetComponent<NetworkObject>();
-        
-        if (networkObject == null)
-        {
-            Debug.LogWarning($"[MapSpawner] Map prefab '{prefab.name}' is missing NetworkObject component! Adding one...");
-            networkObject = map.AddComponent<NetworkObject>();
-        }
 
-        // Spawn on the network
-        // true = destroy with scene (maps are cleaned up when scene changes)
-        networkObject.Spawn(true);
-        
-        if (debugMode)
+        try
         {
-            Debug.Log($"[MapSpawner] Spawned networked map: {prefab.name} at position {position}");
+            // Spawn on the network
+            // true = destroy with scene (maps are cleaned up when scene changes)
+            networkObject.Spawn(true);
+            
+            if (debugMode)
+            {
+                Debug.Log($"[MapSpawner] ✓ Server spawned: {prefab.name} at {position} (NetworkObjectId: {networkObject.NetworkObjectId}, IsSpawned: {networkObject.IsSpawned})");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[MapSpawner] ❌ Failed to spawn {prefab.name}: {e.Message}\n{e.StackTrace}");
+            Destroy(map);
+            return null;
         }
 
         return map;
@@ -114,6 +284,13 @@ public class MapSpawner : NetworkBehaviour
         if (safeZonePrefab == null)
         {
             Debug.LogWarning("[MapSpawner] Safe zone prefab is not assigned!");
+            return;
+        }
+
+        // Check prefab has NetworkObject
+        if (safeZonePrefab.GetComponent<NetworkObject>() == null)
+        {
+            Debug.LogError("[MapSpawner] SafeZone prefab MUST have NetworkObject component! Add it in the prefab editor.");
             return;
         }
 
@@ -132,19 +309,21 @@ public class MapSpawner : NetworkBehaviour
         
         // Get NetworkObject component
         NetworkObject networkObject = safeZone.GetComponent<NetworkObject>();
-        
-        if (networkObject == null)
-        {
-            Debug.LogWarning("[MapSpawner] SafeZone prefab is missing NetworkObject component! Adding one...");
-            networkObject = safeZone.AddComponent<NetworkObject>();
-        }
 
-        // Spawn safe zone on network
-        networkObject.Spawn(true);
-        
-        if (debugMode)
+        try
         {
-            Debug.Log($"[MapSpawner] Spawned networked safe zone at {exitPoint.position}");
+            // Spawn safe zone on network
+            networkObject.Spawn(true);
+            
+            if (debugMode)
+            {
+                Debug.Log($"[MapSpawner] ✓ Server spawned networked safe zone at {exitPoint.position} (NetworkObjectId: {networkObject.NetworkObjectId})");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[MapSpawner] ❌ Failed to spawn safe zone: {e.Message}");
+            Destroy(safeZone);
         }
     }
 
@@ -158,5 +337,17 @@ public class MapSpawner : NetworkBehaviour
             array[i] = array[randomIndex];
             array[randomIndex] = temp;
         }
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from events
+        if (!IsServer)
+        {
+            randomSeed.OnValueChanged -= OnRandomSeedChanged;
+        }
+        
+        // Reset static state when MapSpawner is destroyed (scene change)
+        MapsReady = false;
     }
 }

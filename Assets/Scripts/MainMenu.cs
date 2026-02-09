@@ -1,44 +1,67 @@
- using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    private string selectedDisasterScene = ""; // Stores the next scene to load
-    public void Flood()
-    {
-        selectedDisasterScene = "Flood"; // Change to your actual scene name
-        Debug.Log("Player chose the Flood disaster mode");
-    }
+    [Header("UI References - Instructor")]
+    [SerializeField] private Button instructorPlayGameButton;
 
-    public void Earthquake()
-    {
-        selectedDisasterScene = "Earthquake"; // Change to your actual scene name
-        Debug.Log($"{selectedDisasterScene}");
-        Debug.Log("Player chose the Earthquake disaster mode");
-    }
+    [Header("UI References - Trainee")]
+    [SerializeField] private Button traineePlayGameButton;
 
-    public void StartGame()
+    private void Start()
     {
-        if (!string.IsNullOrEmpty(selectedDisasterScene))
+        // Setup instructor button listener
+        if (instructorPlayGameButton != null)
         {
-            SceneManager.LoadScene(selectedDisasterScene);
+            instructorPlayGameButton.onClick.AddListener(GoToLobby);
         }
         else
         {
-            Debug.LogWarning("No disaster mode selected! Choose Flood or Earthquake first.");
+            Debug.LogWarning("[MainMenu] Instructor Play Game button not assigned in Inspector!");
+        }
+
+        // Setup trainee button listener
+        if (traineePlayGameButton != null)
+        {
+            traineePlayGameButton.onClick.AddListener(GoToLobby);
+        }
+        else
+        {
+            Debug.LogWarning("[MainMenu] Trainee Play Game button not assigned in Inspector!");
         }
     }
 
+    /// <summary>
+    /// Loads the LobbyMenu scene where users can create or join networked lobbies
+    /// </summary>
     public void GoToLobby()
     {
-        Debug.Log("Loading Lobby scene...");
-        SceneManager.LoadScene("Lobby");
+        Debug.Log("Loading Lobby Menu scene...");
+        SceneManager.LoadScene("LobbyMenu");
     }
 
+    /// <summary>
+    /// Quits the application
+    /// </summary>
     public void QuitGame()
     {
         Debug.Log("Quit button pressed. Exiting application...");
         Application.Quit();
+    }
 
+    private void OnDestroy()
+    {
+        // Cleanup listeners
+        if (instructorPlayGameButton != null)
+        {
+            instructorPlayGameButton.onClick.RemoveListener(GoToLobby);
+        }
+
+        if (traineePlayGameButton != null)
+        {
+            traineePlayGameButton.onClick.RemoveListener(GoToLobby);
+        }
     }
 }

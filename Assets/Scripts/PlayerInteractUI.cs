@@ -15,10 +15,15 @@ public class PlayerInteractUI : MonoBehaviour
     [Header("Auto-Find Settings")]
     [Tooltip("Tag used to identify the local player")]
     [SerializeField] private string playerTag = "Player";
+    [Tooltip("Enable debug logging for troubleshooting")]
+    [SerializeField] private bool showDebugLogs = true;
 
     private PlayerInteract playerInteract;
     private PlayerInteract boatInteract;
     private PlayerInteract currentActiveInteract;
+
+    private float nextSearchTime = 0f;
+    private const float searchInterval = 1f; // Search every second if not found
 
     private void Start()
     {
@@ -28,9 +33,10 @@ public class PlayerInteractUI : MonoBehaviour
 
     private void Update()
     {
-        // If components not found yet, try to find them
-        if (playerInteract == null && boatInteract == null)
+        // If components not found yet, try to find them (but not every frame to avoid performance issues)
+        if (playerInteract == null && boatInteract == null && Time.time >= nextSearchTime)
         {
+            nextSearchTime = Time.time + searchInterval;
             FindPlayerInteractComponents();
         }
 
@@ -70,6 +76,10 @@ public class PlayerInteractUI : MonoBehaviour
         if (localPlayer == null)
         {
             // Player not spawned yet
+            if (showDebugLogs)
+            {
+                Debug.LogWarning("[PlayerInteractUI] Local player not found yet. Will retry...");
+            }
             return;
         }
 
@@ -78,7 +88,7 @@ public class PlayerInteractUI : MonoBehaviour
 
         if (interacts.Length == 0)
         {
-            Debug.LogWarning("[PlayerInteractUI] No PlayerInteract components found on local player!");
+            Debug.LogWarning($"[PlayerInteractUI] No PlayerInteract components found on local player: {localPlayer.name}!");
             return;
         }
 
@@ -90,10 +100,18 @@ public class PlayerInteractUI : MonoBehaviour
             if (interact.gameObject.name.Contains("Boat") || interact.gameObject.name.Contains("boat"))
             {
                 boatInteract = interact;
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[PlayerInteractUI] Found boat interact: {interact.gameObject.name}");
+                }
             }
             else
             {
                 playerInteract = interact;
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[PlayerInteractUI] Found player interact: {interact.gameObject.name}");
+                }
             }
         }
 
@@ -103,7 +121,10 @@ public class PlayerInteractUI : MonoBehaviour
             playerInteract = interacts[0];
         }
 
-        Debug.Log($"[PlayerInteractUI] Found {interacts.Length} PlayerInteract component(s)");
+        if (showDebugLogs)
+        {
+            Debug.Log($"[PlayerInteractUI] Successfully found {interacts.Length} PlayerInteract component(s) on local player!");
+        }
     }
 
     /// <summary>
@@ -111,51 +132,55 @@ public class PlayerInteractUI : MonoBehaviour
     /// </summary>
     private GameObject FindLocalPlayer()
     {
-        // Method 1: Try to find by tag
-        GameObject player = GameObject.FindGameObjectWithTag(playerTag);
-        
-        if (player != null)
+        // Wait for NetworkManager to be ready
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
-            // Check if this is the local player in networked game
-            NetworkObject networkObject = player.GetComponent<NetworkObject>();
-            if (networkObject != null)
+            // Network not ready yet or single player mode
+            GameObject player = GameObject.FindGameObjectWithTag(playerTag);
+            if (player != null)
             {
-                if (networkObject.IsOwner)
-                {
-                    return player;
-                }
-                // Not the local player, keep searching
-                player = null;
-            }
-            else
-            {
-                // No networking, this is the player
+                Debug.Log($"[PlayerInteractUI] Found player (non-networked or network not ready): {player.name}");
                 return player;
             }
+            return null;
         }
 
-        // Method 2: Find all players and check for local ownership
+        // Method 1: Find all players and check for local ownership
         GameObject[] players = GameObject.FindGameObjectsWithTag(playerTag);
         foreach (GameObject p in players)
         {
             NetworkObject networkObject = p.GetComponent<NetworkObject>();
             if (networkObject != null && networkObject.IsOwner)
             {
+                Debug.Log($"[PlayerInteractUI] Found local player by tag: {p.name} (ClientId: {NetworkManager.Singleton.LocalClientId})");
                 return p;
             }
         }
 
-        // Method 3: Look for any PlayerInteract component owned by local player
+        // Method 2: Look for any PlayerInteract component owned by local player
         PlayerInteract[] allInteracts = Object.FindObjectsByType<PlayerInteract>(FindObjectsSortMode.None);
         foreach (var interact in allInteracts)
         {
             NetworkObject networkObject = interact.GetComponentInParent<NetworkObject>();
             if (networkObject != null && networkObject.IsOwner)
             {
-                return interact.gameObject;
+                Debug.Log($"[PlayerInteractUI] Found local player via PlayerInteract: {interact.gameObject.name}");
+                return networkObject.gameObject;
             }
         }
 
+        // Method 3: Search in parent hierarchy
+        NetworkObject[] allNetworkObjects = Object.FindObjectsByType<NetworkObject>(FindObjectsSortMode.None);
+        foreach (var netObj in allNetworkObjects)
+        {
+            if (netObj.IsOwner && netObj.CompareTag(playerTag))
+            {
+                Debug.Log($"[PlayerInteractUI] Found local player via NetworkObject search: {netObj.gameObject.name}");
+                return netObj.gameObject;
+            }
+        }
+
+        Debug.LogWarning($"[PlayerInteractUI] Could not find local player. IsClient: {NetworkManager.Singleton.IsClient}, IsServer: {NetworkManager.Singleton.IsServer}, LocalClientId: {NetworkManager.Singleton.LocalClientId}");
         return null;
     }
 
